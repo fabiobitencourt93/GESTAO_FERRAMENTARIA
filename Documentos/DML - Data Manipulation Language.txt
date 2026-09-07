@@ -1,6 +1,6 @@
 -- 1. Criando o Projeto
 INSERT INTO projetos (nome, cliente, data_inicio) 
-VALUES ('Destacador Macho', 'SENAI', 19/01/2026),('Destacador Fêmea', 'SENAI', 19/01/2026),('Crashform', 'SENAI', 19/01/2026);
+VALUES ('Destacador Macho', 'SENAI', '2026-01-19'),('Destacador Fêmea', 'SENAI', '2026-01-19'),('Crashform', 'SENAI', '2026-01-19');
 
 -- 2. Criando os 3 Estampos para o Projeto (ID = 1)
 INSERT INTO estampos (projeto_id, nome, tipo) VALUES 
@@ -13,73 +13,73 @@ INSERT INTO estampos (projeto_id, nome, tipo) VALUES
 -- =======================================================================
 -- Peças
 INSERT INTO pecas (estampo_id, pos, quantidade, nome, material, tratamento_termico) VALUES 
-('1','1','1','placa base inferior','sae 1020','sem tratamento'),
-('1','2','1','placa base superior','sae 1020','sem tratamento'),
-('1','3','1','placa flutuante','sae 1020','sem tratamento'),
-('1','4','1','placa porta matriz - 1','sae 1045','sem tratamento'),
-('1','5','1','placa porta matriz - 2','sae 1045','sem tratamento'),
-('1','6','1','placa porta punção 1','sae 1045','sem tratamento'),
-('1','7','1','placa porta punção 2','sae 1045','sem tratamento'),
-('1','8','1','placa de choque inferior - 1','vnd','temperado e revenido'),
-('1','9','1','placa de choque inferior - 2','vnd','temperado e revenido'),
-('1','10','1','placa de choque superior 1','vnd','temperado e revenido'),
-('1','11','1','placa de choque superior 2','vnd','temperado e revenido'),
-('1','12','1','placa de choque superior 3','vnd','temperado e revenido'),
-('1','13','1','placa pisadora 1','vnd','temperado e revenido'),
-('1','14','1','placa pisadora 2','vnd','temperado e revenido'),
-('1','15','1','placa pisadora 3','vnd','temperado e revenido'),
-('1','16','1','placa pisadora 4','vnd','temperado e revenido'),
-('1','17','2','matriz - piloto ø3,02','d2','temperado e revenido'),
-('1','18','4','matriz - furador ø3,2','d2','temperado e revenido'),
-('1','19','1','matriz - faca de avanço','d2','temperado e revenido'),
-('1','20','1','matriz - perfil externo 1.1','d2','temperado e revenido'),
-('1','21','1','matriz - perfil externo 1.2','d2','temperado e revenido'),
-('1','22','1','matriz - perfil externo 1.3','d2','temperado e revenido'),
-('1','23','1','matriz - perfil externo 2.1','d2','temperado e revenido'),
-('1','24','1','matriz - perfil externo 2.2','d2','temperado e revenido'),
-('1','25','1','matriz - perfil externo 2.3','d2','temperado e revenido'),
-('1','26','1','matriz - dobra 90º','d2','temperado e revenido'),
-('1','27','1','matriz - corte final 1','d2','temperado e revenido'),
-('1','28','1','matriz - corte final 2','d2','temperado e revenido'),
-('1','29','1','matriz - retalhador 1','d2','temperado e revenido'),
-('1','30','1','matriz - retalhador 2','d2','temperado e revenido'),
-('1','31','2','punção - piloto ø3,02','vc 131','temperado e revenido'),
-('1','32','4','punção - furador ø3,2','vc 131','temperado e revenido'),
-('1','33','1','punção - faca de avanço','vc 131','temperado e revenido'),
-('1','34','1','punção - perfil externo 1.1','vc 131','temperado e revenido'),
-('1','35','1','punção - perfil externo 1.2','vc 131','temperado e revenido'),
-('1','36','1','punção - perfil externo 1.3','vc 131','temperado e revenido'),
-('1','37','1','punção - perfil externo 2.1','vc 131','temperado e revenido'),
-('1','38','1','punção - perfil externo 2.2','vc 131','temperado e revenido'),
-('1','39','1','punção - perfil externo 2.3','vc 131','temperado e revenido'),
-('1','40','1','punção - dobra 90º','vc 131','temperado e revenido'),
-('1','41','2','punção - corte final','vc 131','temperado e revenido'),
-('1','42','2','punção - retalhador','vc 131','temperado e revenido'),
-('1','43','1','calço inferior 1','sae 1020','sem tratamento'),
-('1','44','1','calço inferior 2','sae 1020','sem tratamento'),
-('1','45','1','calço inferior 3','sae 1020','sem tratamento'),
-('1','46','1','calço inferior 4','sae 1020','sem tratamento'),
-('1','47','1','calço superior 1','sae 1020','sem tratamento'),
-('1','48','1','calço superior 2','sae 1020','sem tratamento'),
-('1','49','1','calço superior 3','sae 1020','sem tratamento'),
-('1','50','1','apoio guia de entrada','sae 1020','sem tratamento'),
-('1','51','1','régua esquerda','vnd','temperado e revenido'),
-('1','52','1','régua direita','vnd','temperado e revenido'),
-('1','53','8','régua cilíndrica','sae 1045','sem tratamento'),
-('1','54','1','suporte punção retalhador','sae 1020','sem tratamento'),
-('1','56','1','suporte - tope faca de avanço','sae 1045','sem tratamento'),
-('1','57','1','tope faca de avanço','sae 1045','temperado e revenido'),
-('1','58','16','piloto','vnd','temperado e revenido'),
-('1','59','10','extrator do piloto','sae 1045','sem tratamento'),
-('1','60','4','limitador superior','sae 1045','temperado e revenido'),
-('1','61','4','limitador inferior','sae 1045','temperado e revenido'),
-('1','62','10','estabilizador superior','sae 1045','temperado e revenido'),
-('1','63','10','estabilizador inferior','sae 1045','temperado e revenido'),
-('1','64','6','batoque punção cilíndrico','vnd','temperado e revenido'),
-('1','65','1','pino puxador - tope inicial','sae 1020','sem tratamento'),
-('1','66','1','tope_inicial','sae 1045','sem tratamento'),
-('1','67','1','puxador_tope_inicial','sae 1020','sem tratamento'),
-('1','68','1','parafuso_tope_inicial','sae 1020','sem tratamento');
+('1','1','1','Placa Base Inferior','SAE 1020','Sem Tratamento'),
+('1','2','1','Placa Base Superior','SAE 1020','Sem Tratamento'),
+('1','3','1','Placa Flutuante','SAE 1020','Sem Tratamento'),
+('1','4','1','Placa Porta Matriz - 1','SAE 1045','Sem Tratamento'),
+('1','5','1','Placa Porta Matriz - 2','SAE 1045','Sem Tratamento'),
+('1','6','1','Placa Porta Punção 1','SAE 1045','Sem Tratamento'),
+('1','7','1','Placa Porta Punção 2','SAE 1045','Sem Tratamento'),
+('1','8','1','Placa de Choque Inferior - 1','VND','Temperado e Revenido'),
+('1','9','1','Placa de Choque Inferior - 2','VND','Temperado e Revenido'),
+('1','10','1','Placa de Choque Superior 1','VND','Temperado e Revenido'),
+('1','11','1','Placa de Choque Superior 2','VND','Temperado e Revenido'),
+('1','12','1','Placa de Choque Superior 3','VND','Temperado e Revenido'),
+('1','13','1','Placa Pisadora 1','VND','Temperado e Revenido'),
+('1','14','1','Placa Pisadora 2','VND','Temperado e Revenido'),
+('1','15','1','Placa Pisadora 3','VND','Temperado e Revenido'),
+('1','16','1','Placa Pisadora 4','VND','Temperado e Revenido'),
+('1','17','2','Matriz - Piloto ø3,02','D2','Temperado e Revenido'),
+('1','18','4','Matriz - Furador ø3,2','D2','Temperado e Revenido'),
+('1','19','1','Matriz - Faca de Avanço','D2','Temperado e Revenido'),
+('1','20','1','Matriz - Perfil Externo 1.1','D2','Temperado e Revenido'),
+('1','21','1','Matriz - Perfil Externo 1.2','D2','Temperado e Revenido'),
+('1','22','1','Matriz - Perfil Externo 1.3','D2','Temperado e Revenido'),
+('1','23','1','Matriz - Perfil Externo 2.1','D2','Temperado e Revenido'),
+('1','24','1','Matriz - Perfil Externo 2.2','D2','Temperado e Revenido'),
+('1','25','1','Matriz - Perfil Externo 2.3','D2','Temperado e Revenido'),
+('1','26','1','Matriz - Dobra 90°','D2','Temperado e Revenido'),
+('1','27','1','Matriz - Corte final 1','D2','Temperado e Revenido'),
+('1','28','1','Matriz - Corte final 2','D2','Temperado e Revenido'),
+('1','29','1','Matriz - Retalhador 1','D2','Temperado e Revenido'),
+('1','30','1','Matriz - Retalhador 2','D2','Temperado e Revenido'),
+('1','31','2','Punção - Riloto ø3,02','VC 131','Temperado e Revenido'),
+('1','32','4','Punção - Furador ø3,2','VC 131','Temperado e Revenido'),
+('1','33','1','Punção - Faca de Avanço','VC 131','Temperado e Revenido'),
+('1','34','1','Punção - Perfil Externo 1.1','VC 131','Temperado e Revenido'),
+('1','35','1','Punção - Perfil Externo 1.2','VC 131','Temperado e Revenido'),
+('1','36','1','Punção - Perfil Externo 1.3','VC 131','Temperado e Revenido'),
+('1','37','1','Punção - Perfil Externo 2.1','VC 131','Temperado e Revenido'),
+('1','38','1','Punção - Perfil Externo 2.2','VC 131','Temperado e Revenido'),
+('1','39','1','Punção - Perfil Externo 2.3','VC 131','Temperado e Revenido'),
+('1','40','1','Punção - dobra 90°','VC 131','Temperado e Revenido'),
+('1','41','2','Punção - corte final','VC 131','Temperado e Revenido'),
+('1','42','2','Punção - retalhador','VC 131','Temperado e Revenido'),
+('1','43','1','Calço Inferior 1','SAE 1020','Sem Tratamento'),
+('1','44','1','Calço Inferior 2','SAE 1020','Sem Tratamento'),
+('1','45','1','Calço Inferior 3','SAE 1020','Sem Tratamento'),
+('1','46','1','Calço Inferior 4','SAE 1020','Sem Tratamento'),
+('1','47','1','Calço Superior 1','SAE 1020','Sem Tratamento'),
+('1','48','1','Calço Superior 2','SAE 1020','Sem Tratamento'),
+('1','49','1','Calço Superior 3','SAE 1020','Sem Tratamento'),
+('1','50','1','Apoio Guia de Entrada','SAE 1020','Sem Tratamento'),
+('1','51','1','Régua Esquerda','VND','Temperado e Revenido'),
+('1','52','1','Régua Direita','VND','Temperado e Revenido'),
+('1','53','8','Régua Cilíndrica','SAE 1045','Sem Tratamento'),
+('1','54','1','suporte Punção retalhador','SAE 1020','Sem Tratamento'),
+('1','55','1','Suporte - Tope Faca de Avanço','SAE 1045','Sem Tratamento'),
+('1','56','1','Tope Faca de Avanço','SAE 1045','Temperado e Revenido'),
+('1','57','16','Piloto','VND','Temperado e Revenido'),
+('1','58','10','Extrator do piloto','SAE 1045','Sem Tratamento'),
+('1','59','4','Limitador Superior','SAE 1045','Temperado e Revenido'),
+('1','60','4','Limitador Inferior','SAE 1045','Temperado e Revenido'),
+('1','61','10','Estabilizador Superior','SAE 1045','Temperado e Revenido'),
+('1','62','10','Estabilizador Inferior','SAE 1045','Temperado e Revenido'),
+('1','63','6','Batoque Punção Cilíndrico','VND','Temperado e Revenido'),
+('1','64','1','Pino Puxador - Tope Inicial','SAE 1020','Sem Tratamento'),
+('1','65','1','Tope Inicial','SAE 1045','Sem Tratamento'),
+('1','66','1','Puxador Tope Inicial','SAE 1020','Sem Tratamento'),
+('1','67','1','Parafuso Tope Inicial','SAE 1020','Sem Tratamento');
 
 
 
@@ -88,7 +88,7 @@ INSERT INTO pecas (estampo_id, pos, quantidade, nome, material, tratamento_termi
 
 -- Processos Sequenciais da Base Inferior (ID 1)
 INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida, tempo_estimado_horas) VALUES 
-(1, 1, 'Desmontar porta estampo', 'Bancada de Ferramentas, pórtico'),
+(1, 1, 'Desmontar Porta estampo', 'Bancada de Ferramentas, pórtico'),
 (1, 2, 'Programação CNC', 'Software CAM'),
 (1, 3, 'Fresamento CNC', 'Centro de Usinagem'),
 (1, 4, 'Rebarbação e usinagem das roscas', 'Bancada de Ferramentas e Furadeira de Coluna'),
@@ -97,7 +97,7 @@ INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida,
 
 -- Processos Sequenciais da Base Superior (ID 2)
 INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida, tempo_estimado_horas) VALUES 
-(2, 1, 'Desmontar porta estampo', 'Bancada de Ferramentas, Pórtico', 1),
+(2, 1, 'Desmontar Porta estampo', 'Bancada de Ferramentas, Pórtico', 1),
 (2, 2, 'Programação CNC', 'Software CAM', 6),
 (2, 3, 'Fresamento CNC', 'Centro de Usinagem', 16),
 (2, 4, 'Rebarbação e usinagem das roscas', 'Bancada de Ferramentas e Furadeira de Coluna', 4),
@@ -106,7 +106,7 @@ INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida,
 
 -- Processos Sequenciais da Placa Flutuante (ID 3)
 INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida, tempo_estimado_horas) VALUES 
-(3, 1, 'Desmontar porta estampo', 'Bancada de Ferramentas, Pórtico', 1),
+(3, 1, 'Desmontar Porta estampo', 'Bancada de Ferramentas, Pórtico', 1),
 (3, 2, 'Programação CNC', 'Software CAM', 6),
 (3, 3, 'Fresamento CNC', 'Centro de Usinagem', 16),
 (3, 4, 'Rebarbação e usinagem das roscas', 'Bancada de Ferramentas e Furadeira de Coluna', 4),
@@ -135,7 +135,7 @@ INSERT INTO pecas (estampo_id, nome, material) VALUES
 (2, 'Matriz de Dobra', 'Aço D2'),
 (2, 'Punção de Dobra', 'Aço D2');
 
--- Processos Sequenciais do PUNÇÃO DE DOBRA (ID 5)
+-- Processos Sequenciais do Punção DE DOBRA (ID 5)
 INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida) VALUES 
 (5, 1, 'Esquadrejamento', 'Fresadora'),
 (5, 2, 'Usinagem de Perfil 3D', 'Centro de Usinagem CNC'),
@@ -152,7 +152,7 @@ INSERT INTO pecas (estampo_id, nome, material) VALUES
 (3, 'Matriz Cavidade de Repuxo', 'Aço D2'),
 (3, 'Prensa-Chapas (Sujeitador)', 'Aço P20');
 
--- Processos Sequenciais da MATRIZ DE REPUXO (ID 7)
+-- Processos Sequenciais da Matriz DE REPUXO (ID 7)
 INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida) VALUES 
 (7, 1, 'Faceamento e Esquadrejamento', 'Fresadora Grande Porte'),
 (7, 2, 'Desbaste de Cavidade 3D', 'Centro de Usinagem CNC'),

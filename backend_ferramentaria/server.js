@@ -7,12 +7,16 @@ app.use(cors());
 app.use(express.json());
 
 // Configuração de conexão com o seu banco de dados Docker
+
 const pool = new Pool({
-    user: 'admin',                // Usuário que configuramos no Docker
-    host: 'localhost',            // Seu próprio computador
-    database: 'gestao_ferramentaria', // Nome do banco
-    password: 'adminpassword',    // Senha do Docker
-    port: 5433,                   // A porta que você liberou no docker-compose
+    host: 'db.qvttpmwhvaokwmefafle.supabase.co',
+    port: 5432,
+    database: 'postgres',
+    user: 'postgres',
+    password: 'gestaoferramentaria', // Coloque aqui a senha que você criou para o projeto
+    ssl: {
+        rejectUnauthorized: false // Obrigatório para conexões seguras na nuvem
+    }
 });
 
 // ==========================================
