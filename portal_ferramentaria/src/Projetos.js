@@ -8,7 +8,7 @@ function Projetos() {
 
   useEffect(() => {
     // Pede os dados ao nosso servidor Back-end (que está na porta 3000)
-    axios.get('http://localhost:3000/api/projetos')
+    axios.get('https://gestao-ferramentaria.onrender.com/api/projetos')
       .then(response => setProjetos(response.data))
       .catch(error => console.error("Erro ao procurar projetos:", error));
   }, []);

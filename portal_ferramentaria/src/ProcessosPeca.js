@@ -13,7 +13,7 @@ function ProcessosPeca() {
   const [operadorId, setOperadorId] = useState('');
 
   useEffect(() => {
-    axios.get(`http://localhost:3000/api/pecas/${id}/processos`)
+    axios.get(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}/processos`)
       .then(response => setProcessos(response.data))
       .catch(error => console.error("Erro:", error));
   }, [id]);
@@ -27,7 +27,7 @@ function ProcessosPeca() {
     if (!operadorId) return alert("Digite o ID do Operador!");
     
     try {
-      await axios.post('http://localhost:3000/api/apontamentos/iniciar', {
+      await axios.post('https://gestao-ferramentaria.onrender.com/api/apontamentos/iniciar', {
         processo_id: processoSelecionado.id,
         operador_id: operadorId
       });

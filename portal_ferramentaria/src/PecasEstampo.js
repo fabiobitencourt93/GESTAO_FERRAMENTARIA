@@ -8,7 +8,7 @@ function PecasEstampo() {
   const [pecas, setPecas] = useState([]);
 
   useEffect(() => {
-    axios.get(`http://localhost:3000/api/estampos/${id}/pecas`)
+    axios.get(`https://gestao-ferramentaria.onrender.com/api/estampos/${id}/pecas`)
       .then(response => setPecas(response.data))
       .catch(error => console.error("Erro:", error));
   }, [id]);
