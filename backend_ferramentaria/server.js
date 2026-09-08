@@ -33,49 +33,26 @@ app.get('/api/projetos', async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Erro ao buscar projetos');
+        res.status(500).json({error:err.message});
     }
 });
 
 // ==========================================
 // ROTA 2: Lista as Peças de um Estampo (Para a Tela 2)
 // ==========================================
-//app.get('/api/estampos/:id/pecas', async (req, res) => {
-    //try {
-        //const { id } = req.params;
-        //const result = await pool.query(
-            //'SELECT * FROM pecas WHERE estampo_id = $1 ORDER BY pos ASC',
-           // [id]
-        //);
-        //res.json(result.rows);
-    //} catch (err) {
-        //console.error(err.message);
-        //res.status(500).send('Erro ao buscar as peças do estampo');
-    //}
-//});
-
-
-app.get('/api/projetos', async (req, res) => {
+app.get('/api/estampos/:id/pecas', async (req, res) => {
     try {
-        const query = `
-            SELECT 
-                p.id as projeto_id, p.nome as projeto, 
-                e.id as estampo_id, e.nome as estampo, 
-                e.tipo, TO_CHAR(p.data_inicio, 'DD/MM/YYYY') as data_inicio, p.status 
-            FROM projetos p
-            JOIN estampos e ON p.id = e.projeto_id
-            ORDER BY p.id, e.id;
-        `;
-        const result = await pool.query(query);
+        const { id } = req.params;
+        const result = await pool.query(
+            'SELECT * FROM pecas WHERE estampo_id = $1 ORDER BY pos ASC',
+            [id]
+        );
         res.json(result.rows);
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ error: err.message }); // <--- Mostra o erro exato na tela
+        res.status(500).send('Erro ao buscar as peças do estampo');
     }
 });
-
-
-
 
 // ==========================================
 // ROTA 3: Lista os Processos de uma Peça
