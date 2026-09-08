@@ -6,16 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuração de conexão com o seu banco de dados Docker
-
+// Configuração de conexão segura com o Supabase via Variáveis de Ambiente
 const pool = new Pool({
-    host: 'db.qvttpmwhvaokwmefafle.supabase.co',
-    port: 5432,
-    database: 'postgres',
-    user: 'postgres',
-    password: 'gestaoferramentaria', // Coloque aqui a senha que você criou para o projeto
+    connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Obrigatório para conexões seguras na nuvem
+        rejectUnauthorized: false // Obrigatório para conexões seguras na nuvem do Supabase
     }
 });
 
@@ -59,13 +54,29 @@ app.get('/api/estampos/:id/pecas', async (req, res) => {
 });
 
 // ==========================================
+// ROTA 3: Lista os Processos de uma Peça
+// ==========================================
+app.get('/api/pecas/:id/processos', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(
+            'SELECT * FROM processos WHERE peca_id = $1 ORDER BY ordem_execucao ASC',
+            [id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erro ao buscar processos');
+    }
+});
+
+// ==========================================
 // ROTA 4: Iniciar Apontamento (Terminal do Operador)
 // ==========================================
 app.post('/api/apontamentos/iniciar', async (req, res) => {
     try {
         const { processo_id, operador_id } = req.body;
         
-        // Insere o registro pegando a data/hora automática do servidor (CURRENT_TIMESTAMP)
         const result = await pool.query(
             `INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio) 
              VALUES ($1, $2, CURRENT_TIMESTAMP) RETURNING *`,
@@ -79,24 +90,7 @@ app.post('/api/apontamentos/iniciar', async (req, res) => {
     }
 });
 
-
-
 // Inicia o Servidor
 app.listen(3000, () => {
     console.log('✅ Servidor Back-end rodando na porta 3000');
-});
-
-// ROTA 3: Lista os Processos de uma Peça
-app.get('/api/pecas/:id/processos', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const result = await pool.query(
-            'SELECT * FROM processos WHERE peca_id = $1 ORDER BY ordem_execucao ASC',
-            [id]
-        );
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erro ao buscar processos');
-    }
 });
