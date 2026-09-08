@@ -62,10 +62,17 @@ app.get('/api/estampos/:id/pecas', async (req, res) => {
 app.get('/api/pecas/:id/processos', async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await pool.query(
-            'SELECT * FROM processos WHERE peca_id = $1 ORDER BY ordem_execucao ASC',
-            [id]
-        );
+        const query = `
+            SELECT 
+                pr.*, 
+                pe.pos AS posicao_peca, 
+                pe.nome AS nome_peca
+            FROM processos pr
+            JOIN pecas pe ON pr.peca_id = pe.id
+            WHERE pr.peca_id = $1 
+            ORDER BY pr.ordem_execucao ASC
+        `;
+        const result = await pool.query(query, [id]);
         res.json(result.rows);
     } catch (err) {
         console.error(err.message);
