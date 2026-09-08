@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, {useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -6,8 +6,7 @@ function ProcessosPeca() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [processos, setProcessos] = useState([]);
-  const modalRef = useRef(null); // Correto: dentro da função
-    // ...
+  
   
   // Controles do Modal do Operador
   const [modalAberto, setModalAberto] = useState(false);

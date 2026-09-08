@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, {useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -6,8 +6,7 @@ function PecasEstampo() {
   const { id } = useParams(); // ID do estampo
   const navigate = useNavigate();
   const [pecas, setPecas] = useState([]);
-  const modalRef = useRef(null); // Correto: dentro da função
-    // ...
+  
 
   useEffect(() => {
     axios.get(`https://gestao-ferramentaria.onrender.com/api/estampos/${id}/pecas`)
