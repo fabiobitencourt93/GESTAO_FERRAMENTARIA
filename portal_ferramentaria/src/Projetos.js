@@ -7,7 +7,7 @@ function Projetos() {
   const navigate = useNavigate();
   const modalRef = useRef(null); // Correto: dentro da função
     // ...
-}
+
 
   useEffect(() => {
     // Pede os dados ao nosso servidor Back-end (que está na porta 3000)
@@ -46,5 +46,5 @@ function Projetos() {
       </table>
     </div>
   );
-
+}
 export default Projetos;
