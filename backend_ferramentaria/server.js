@@ -8,11 +8,12 @@ app.use(express.json());
 
 // Configuração de conexão segura com o Supabase via Variáveis de Ambiente
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    // Tenta ler a variável do Render; se ela vier vazia, usa a string direta
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:gestaoferramentaria@db.qvttpmwhvaokwmefafle.supabase.co:5432/postgres',
     ssl: {
         rejectUnauthorized: false
     },
-    family: 4 // Força o uso de IPv4, evitando o erro de rede ENETUNREACH no Render
+    family: 4 
 });
 
 // ==========================================
