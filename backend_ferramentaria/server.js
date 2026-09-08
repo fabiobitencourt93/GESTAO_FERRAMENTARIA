@@ -10,8 +10,9 @@ app.use(express.json());
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Obrigatório para conexões seguras na nuvem do Supabase
-    }
+        rejectUnauthorized: false
+    },
+    family: 4 // Força o uso de IPv4, evitando o erro de rede ENETUNREACH no Render
 });
 
 // ==========================================
