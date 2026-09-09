@@ -24,6 +24,7 @@ function ProcessosPeca() {
   // Carrega ao entrar na página
   useEffect(() => {
     carregarProcessos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Relógio que atualiza a cada 1 segundo para o cronômetro
