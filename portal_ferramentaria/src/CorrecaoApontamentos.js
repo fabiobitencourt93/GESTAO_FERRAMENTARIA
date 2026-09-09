@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Home, Bell, Clock, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Home, Bell, AlertCircle } from 'lucide-react';
 
 function CorrecaoApontamentos() {
   const navigate = useNavigate();

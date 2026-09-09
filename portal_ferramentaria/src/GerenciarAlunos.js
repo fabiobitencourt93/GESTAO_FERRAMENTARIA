@@ -5,7 +5,7 @@ import { ChevronLeft, Home, Bell, Plus, Trash2, Users } from 'lucide-react';
 function GerenciarAlunos() {
   const navigate = useNavigate();
   // Estado temporário para visualização. Depois conectaremos ao GET/POST do Supabase.
-  const [alunos, setAlunos] = useState([
+  const [alunos] = useState([
     { id: 20261, nome: 'Allan' },
     { id: 20265, nome: 'Fabio' }
   ]);
