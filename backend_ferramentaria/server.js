@@ -182,6 +182,34 @@ app.get('/api/relatorios/desempenho', async (req, res) => {
 });
 
 // ==========================================
+// ROTA 7: Status Ao Vivo dos Alunos (Chão de Fábrica)
+// ==========================================
+app.get('/api/relatorios/ao-vivo', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                o.id AS operador_id,
+                o.nome AS operador_nome,
+                pr.nome_operacao,
+                pr.maquina_sugerida,
+                pe.nome AS nome_peca,
+                a.data_hora_inicio
+            FROM operadores o
+            LEFT JOIN apontamentos a ON o.id = a.operador_id AND a.data_hora_fim IS NULL
+            LEFT JOIN processos pr ON a.processo_id = pr.id
+            LEFT JOIN pecas pe ON pr.peca_id = pe.id
+            ORDER BY o.nome ASC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro na Rota Ao Vivo:", err.message);
+        res.status(500).send('Erro ao buscar status ao vivo');
+    }
+});
+
+
+// ==========================================
 // Inicialização do Servidor
 // ==========================================
 app.listen(port, () => {
