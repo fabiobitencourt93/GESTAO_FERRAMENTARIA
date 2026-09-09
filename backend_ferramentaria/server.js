@@ -13,7 +13,7 @@ app.use(express.json());
 const pool = new Pool({
     // Lembre-se da Dívida Técnica: cadastre a variável DATABASE_URL no Render
     // para não deixar sua senha exposta aqui!
-    connectionString: process.env.DATABASE_URL || 'SUA_STRING_DO_SESSION_POOLER_AQUI',
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres.qvttpmwhvaokwmefafle:gestaoferramentaria@aws-0-us-west-2.pooler.supabase.com:5432/postgres',
     ssl: { rejectUnauthorized: false }
 });
 
