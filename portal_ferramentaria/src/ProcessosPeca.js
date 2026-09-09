@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Activity, Clock, Timer } from 'lucide-react';
+import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Activity, Clock, Timer, Home} from 'lucide-react';
 
 function ProcessosPeca() {
   const { id } = useParams();
@@ -100,7 +100,14 @@ function ProcessosPeca() {
           </button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Roteiro de Fabricação</h1>
         </div>
-        <Bell size={24} color="#111827" />
+        
+        {/* Agrupamento de ícones à direita */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}>
+            <Home size={24} />
+          </button>
+          <Bell size={24} color="#111827" />
+        </div>
       </div>
 
       {/* Conteúdo Principal */}

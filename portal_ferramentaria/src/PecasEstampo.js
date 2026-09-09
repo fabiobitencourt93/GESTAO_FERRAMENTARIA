@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Bell, ArrowRight, LayoutGrid, BarChart2, Settings } from 'lucide-react';
+import { ChevronLeft, Bell, ArrowRight, LayoutGrid, BarChart2, Settings, Home } from 'lucide-react';
 
 function PecasEstampo() {
   const { id } = useParams();
@@ -17,18 +17,22 @@ function PecasEstampo() {
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', -apple-system, sans-serif", paddingBottom: '80px' }}>
       
-      {/* Top Bar (Cabeçalho com botão Voltar) */}
+      {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 12px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button 
-            onClick={() => navigate('/')}
-            style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}
-          >
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}>
             <ChevronLeft size={28} />
           </button>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Detalhes do Estampo</h1>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Roteiro de Fabricação</h1>
         </div>
-        <Bell size={24} color="#111827" />
+        
+        {/* Agrupamento de ícones à direita */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}>
+            <Home size={24} />
+          </button>
+          <Bell size={24} color="#111827" />
+        </div>
       </div>
 
       {/* Conteúdo Principal */}
