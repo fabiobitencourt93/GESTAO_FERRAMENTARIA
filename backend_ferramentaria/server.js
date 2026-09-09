@@ -138,3 +138,26 @@ app.get('/api/relatorios/desempenho', async (req, res) => {
         res.status(500).send('Erro ao gerar relatório de desempenho');
     }
 });
+
+app.put('/api/apontamentos/finalizar', async (req, res) => {
+    try {
+        const { processo_id } = req.body;
+        
+        // Atualiza o registro em aberto inserindo o horário atual
+        const result = await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP 
+            WHERE processo_id = $1 AND data_hora_fim IS NULL 
+            RETURNING *
+        `, [processo_id]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Nenhuma operação em andamento encontrada para este processo.' });
+        }
+
+        res.json({ message: 'Operação finalizada com sucesso!', apontamento: result.rows[0] });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erro ao finalizar apontamento');
+    }
+});

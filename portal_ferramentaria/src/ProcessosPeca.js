@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Bell, Play, LayoutGrid, BarChart2, Settings, X, Activity, Clock } from 'lucide-react';
+import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Activity, Clock } from 'lucide-react';
 
-function ProcessosPeca() {
+
+  function ProcessosPeca() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [processos, setProcessos] = useState([]);
@@ -38,6 +39,20 @@ function ProcessosPeca() {
       alert('Erro ao iniciar. O ID deste operador existe no banco de dados?');
     }
   };
+
+  const finalizarApontamento = async (processoId) => {
+  if (window.confirm("Deseja realmente finalizar esta operação?")) {
+    try {
+      await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
+        processo_id: processoId
+      });
+      alert('Operação finalizada e tempo computado!');
+      // Opcional: Atualizar a lista chamando o GET novamente
+    } catch (error) {
+      alert('Erro ao finalizar. Verifique se a operação realmente foi iniciada.');
+    }
+  }
+};
 
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', -apple-system, sans-serif", paddingBottom: '80px' }}>
