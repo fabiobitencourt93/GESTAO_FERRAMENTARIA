@@ -55,6 +55,28 @@ app.get('/api/estampos/:id/pecas', async (req, res) => {
         res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 });
+app.get('/api/pecas/:id/processos', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = `
+            SELECT 
+                pr.*, 
+                pe.pos AS posicao_peca, 
+                pe.nome AS nome_peca,
+                (SELECT MIN(data_hora_inicio) FROM apontamentos WHERE processo_id = pr.id AND data_hora_fim IS NULL) as data_hora_inicio
+            FROM processos pr
+            JOIN pecas pe ON pr.peca_id = pe.id
+            WHERE pr.peca_id = $1 
+            ORDER BY pr.ordem_execucao ASC
+        `;
+        const result = await pool.query(query, [id]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro na Rota 3:", err.message);
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    }
+});
+
 
 // ==========================================
 // ROTA 3: Roteiro de Fabricação (Processos da Peça com JOIN)
