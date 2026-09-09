@@ -104,3 +104,37 @@ app.post('/api/apontamentos/iniciar', async (req, res) => {
 app.listen(3000, () => {
     console.log('✅ Servidor Back-end rodando na porta 3000');
 });
+
+// ==========================================
+// ROTA 5: Relatório de Desempenho (Visitantes/Dashboards)
+// ==========================================
+app.get('/api/relatorios/desempenho', async (req, res) => {
+    try {
+        const query = `
+            WITH tempo_real AS (
+                SELECT 
+                    processo_id,
+                    SUM(EXTRACT(EPOCH FROM (data_hora_fim - data_hora_inicio)) / 60.0) AS total_realizado_min
+                FROM apontamentos
+                WHERE data_hora_fim IS NOT NULL
+                GROUP BY processo_id
+            )
+            SELECT 
+                p.nome AS projeto,
+                SUM(pr.tempo_planejado_min) AS total_planejado,
+                SUM(COALESCE(tr.total_realizado_min, 0)) AS total_realizado
+            FROM processos pr
+            JOIN pecas pe ON pr.peca_id = pe.id
+            JOIN estampos e ON pe.estampo_id = e.id
+            JOIN projetos p ON e.projeto_id = p.id
+            LEFT JOIN tempo_real tr ON pr.id = tr.processo_id
+            GROUP BY p.nome
+            ORDER BY p.nome;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Erro ao gerar relatório de desempenho');
+    }
+});
