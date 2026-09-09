@@ -3,27 +3,30 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Activity, Clock } from 'lucide-react';
 
-
-  function ProcessosPeca() {
+function ProcessosPeca() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [processos, setProcessos] = useState([]);
   
+  // Controles do Modal do Operador
   const [modalAberto, setModalAberto] = useState(false);
   const [processoSelecionado, setProcessoSelecionado] = useState(null);
   const [operadorId, setOperadorId] = useState('');
 
+  // Busca os processos da peça ao carregar a página
   useEffect(() => {
     axios.get(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}/processos`)
       .then(response => setProcessos(response.data))
       .catch(error => console.error("Erro:", error));
   }, [id]);
 
+  // Função para abrir o modal de início
   const abrirModal = (proc) => {
     setProcessoSelecionado(proc);
     setModalAberto(true);
   };
 
+  // Rota de Início
   const iniciarApontamento = async () => {
     if (!operadorId) return alert("Digite o ID do Operador!");
     
@@ -40,19 +43,19 @@ import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Ac
     }
   };
 
+  // Rota de Finalização
   const finalizarApontamento = async (processoId) => {
-  if (window.confirm("Deseja realmente finalizar esta operação?")) {
-    try {
-      await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
-        processo_id: processoId
-      });
-      alert('Operação finalizada e tempo computado!');
-      // Opcional: Atualizar a lista chamando o GET novamente
-    } catch (error) {
-      alert('Erro ao finalizar. Verifique se a operação realmente foi iniciada.');
+    if (window.confirm("Deseja realmente finalizar esta operação?")) {
+      try {
+        await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
+          processo_id: processoId
+        });
+        alert('Operação finalizada e tempo computado!');
+      } catch (error) {
+        alert('Erro ao finalizar. Verifique se a operação realmente foi iniciada e ainda não foi finalizada.');
+      }
     }
-  }
-};
+  };
 
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', -apple-system, sans-serif", paddingBottom: '80px' }}>
@@ -60,7 +63,10 @@ import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Ac
       {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 12px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}>
+          <button 
+            onClick={() => navigate(-1)} 
+            style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}
+          >
             <ChevronLeft size={28} />
           </button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Roteiro de Fabricação</h1>
@@ -83,6 +89,8 @@ import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Ac
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {processos.map((proc) => (
             <div key={proc.id} style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              
+              {/* Esquerda: Ordem e Textos */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ backgroundColor: '#FFF4ED', color: '#C2410C', minWidth: '48px', height: '48px', borderRadius: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                   <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.5px' }}>OP</span>
@@ -102,9 +110,25 @@ import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Ac
                 </div>
               </div>
 
-              <button onClick={() => abrirModal(proc)} style={{ backgroundColor: '#007A33', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0, 122, 51, 0.25)' }}>
-                <Play size={20} fill="currentColor" />
-              </button>
+              {/* Direita: Botões de Ação */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => abrirModal(proc)} 
+                  title="Iniciar Operação"
+                  style={{ backgroundColor: '#007A33', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0, 122, 51, 0.25)' }}
+                >
+                  <Play size={20} fill="currentColor" />
+                </button>
+                
+                <button 
+                  onClick={() => finalizarApontamento(proc.id)} 
+                  title="Finalizar Operação"
+                  style={{ backgroundColor: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.25)' }}
+                >
+                  <Square size={18} fill="currentColor" />
+                </button>
+              </div>
+
             </div>
           ))}
         </div>
@@ -132,7 +156,13 @@ import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Ac
             </div>
             
             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>ID do Aluno</label>
-            <input type="number" value={operadorId} onChange={(e) => setOperadorId(e.target.value)} placeholder="Ex: 1234" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', marginBottom: '24px', backgroundColor: '#FAFBFC' }} />
+            <input 
+              type="number" 
+              value={operadorId} 
+              onChange={(e) => setOperadorId(e.target.value)} 
+              placeholder="Ex: 20265" 
+              style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', marginBottom: '24px', backgroundColor: '#FAFBFC' }} 
+            />
             
             <button onClick={iniciarApontamento} style={{ width: '100%', padding: '16px', backgroundColor: '#007A33', color: 'white', border: 'none', borderRadius: '14px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(0, 122, 51, 0.2)' }}>
               <Play size={18} fill="currentColor" /> Confirmar Início
