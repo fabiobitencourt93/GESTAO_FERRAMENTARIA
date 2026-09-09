@@ -1,46 +1,46 @@
 const express = require('express');
-const { Pool } = require('pg');
 const cors = require('cors');
+const { Pool } = require('pg');
 
 const app = express();
-app.use(cors());
+const port = process.env.PORT || 3000;
+
+// Configuração de Middlewares
+app.use(cors()); // Se for colocar em produção, restrinja para a URL da Vercel
 app.use(express.json());
 
-// Configuração de conexão segura com o Supabase via Variáveis de Ambiente
+// Configuração do Banco de Dados (Use o Session Pooler IPv4)
 const pool = new Pool({
-    connectionString: 'postgresql://postgres.qvttpmwhvaokwmefafle:gestaoferramentaria@aws-0-us-west-2.pooler.supabase.com:5432/postgres',
-    ssl: {
-        rejectUnauthorized: false
-    }
+    // Lembre-se da Dívida Técnica: cadastre a variável DATABASE_URL no Render
+    // para não deixar sua senha exposta aqui!
+    connectionString: process.env.DATABASE_URL || 'SUA_STRING_DO_SESSION_POOLER_AQUI',
+    ssl: { rejectUnauthorized: false }
 });
 
 // ==========================================
-// ROTA 1: Lista os Projetos (Para a Tela 1)
+// ROTA 1: Lista Geral de Projetos e Estampos
 // ==========================================
 app.get('/api/projetos', async (req, res) => {
     try {
         const query = `
             SELECT 
-                p.id as projeto_id, p.nome as projeto, 
-                e.id as estampo_id, e.nome as estampo, 
-                e.tipo, TO_CHAR(p.data_inicio, 'DD/MM/YYYY') as data_inicio, p.status 
+                p.nome AS projeto, 
+                e.nome AS estampo, 
+                e.id AS estampo_id
             FROM projetos p
             JOIN estampos e ON p.id = e.projeto_id
-            ORDER BY p.id, e.id;
+            ORDER BY p.id;
         `;
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ 
-            error: err.message || "Erro desconhecido", 
-            detalheCompleto: JSON.stringify(err, Object.getOwnPropertyNames(err)) 
-        });
+        console.error("Erro na Rota 1:", err.message);
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 });
 
 // ==========================================
-// ROTA 2: Lista as Peças de um Estampo (Para a Tela 2)
+// ROTA 2: Lista as Peças de um Estampo Específico
 // ==========================================
 app.get('/api/estampos/:id/pecas', async (req, res) => {
     try {
@@ -51,13 +51,13 @@ app.get('/api/estampos/:id/pecas', async (req, res) => {
         );
         res.json(result.rows);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erro ao buscar as peças do estampo');
+        console.error("Erro na Rota 2:", err.message);
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 });
 
 // ==========================================
-// ROTA 3: Lista os Processos de uma Peça
+// ROTA 3: Roteiro de Fabricação (Processos da Peça com JOIN)
 // ==========================================
 app.get('/api/pecas/:id/processos', async (req, res) => {
     try {
@@ -75,38 +75,58 @@ app.get('/api/pecas/:id/processos', async (req, res) => {
         const result = await pool.query(query, [id]);
         res.json(result.rows);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erro ao buscar processos');
+        console.error("Erro na Rota 3:", err.message);
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 });
 
 // ==========================================
-// ROTA 4: Iniciar Apontamento (Terminal do Operador)
+// ROTA 4: Iniciar Apontamento (Play)
 // ==========================================
 app.post('/api/apontamentos/iniciar', async (req, res) => {
     try {
         const { processo_id, operador_id } = req.body;
-        
-        const result = await pool.query(
-            `INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio) 
-             VALUES ($1, $2, CURRENT_TIMESTAMP) RETURNING *`,
-            [processo_id, operador_id]
-        );
-        
-        res.json({ sucesso: true, apontamento: result.rows[0] });
+        const query = `
+            INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio)
+            VALUES ($1, $2, CURRENT_TIMESTAMP)
+            RETURNING *
+        `;
+        const result = await pool.query(query, [processo_id, operador_id]);
+        res.json({ message: 'Operação iniciada', apontamento: result.rows[0] });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erro ao iniciar a operação. Verifique se o ID do Operador existe.');
+        console.error("Erro na Rota 4:", err.message);
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 });
 
-// Inicia o Servidor
-app.listen(3000, () => {
-    console.log('✅ Servidor Back-end rodando na porta 3000');
+// ==========================================
+// ROTA 5: Finalizar Apontamento (Stop - Amarrado ao ID do Aluno)
+// ==========================================
+app.put('/api/apontamentos/finalizar', async (req, res) => {
+    try {
+        const { processo_id, operador_id } = req.body;
+        const result = await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP 
+            WHERE processo_id = $1 
+              AND operador_id = $2 
+              AND data_hora_fim IS NULL 
+            RETURNING *
+        `, [processo_id, operador_id]);
+
+        if (result.rowCount === 0) {
+            return res.status(403).json({ error: 'Operação não encontrada, já finalizada ou ID do aluno incorreto.' });
+        }
+
+        res.json({ message: 'Operação finalizada com sucesso!', apontamento: result.rows[0] });
+    } catch (err) {
+        console.error("Erro na Rota 5:", err.message);
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    }
 });
 
 // ==========================================
-// ROTA 5: Relatório de Desempenho (Visitantes/Dashboards)
+// ROTA 6: Relatório de Desempenho (Dashboards/Visitantes)
 // ==========================================
 app.get('/api/relatorios/desempenho', async (req, res) => {
     try {
@@ -134,30 +154,14 @@ app.get('/api/relatorios/desempenho', async (req, res) => {
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erro ao gerar relatório de desempenho');
+        console.error("Erro na Rota 6:", err.message);
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 });
 
-app.put('/api/apontamentos/finalizar', async (req, res) => {
-    try {
-        const { processo_id } = req.body;
-        
-        // Atualiza o registro em aberto inserindo o horário atual
-        const result = await pool.query(`
-            UPDATE apontamentos 
-            SET data_hora_fim = CURRENT_TIMESTAMP 
-            WHERE processo_id = $1 AND data_hora_fim IS NULL 
-            RETURNING *
-        `, [processo_id]);
-
-        if (result.rowCount === 0) {
-            return res.status(404).json({ error: 'Nenhuma operação em andamento encontrada para este processo.' });
-        }
-
-        res.json({ message: 'Operação finalizada com sucesso!', apontamento: result.rows[0] });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Erro ao finalizar apontamento');
-    }
+// ==========================================
+// Inicialização do Servidor
+// ==========================================
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
 });

@@ -8,53 +8,56 @@ function ProcessosPeca() {
   const navigate = useNavigate();
   const [processos, setProcessos] = useState([]);
   
-  // Controles do Modal do Operador
+  // Controles do Modal
   const [modalAberto, setModalAberto] = useState(false);
   const [processoSelecionado, setProcessoSelecionado] = useState(null);
   const [operadorId, setOperadorId] = useState('');
+  const [tipoAcao, setTipoAcao] = useState(''); // 'iniciar' ou 'finalizar'
 
-  // Busca os processos da peça ao carregar a página
   useEffect(() => {
     axios.get(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}/processos`)
       .then(response => setProcessos(response.data))
       .catch(error => console.error("Erro:", error));
   }, [id]);
 
-  // Função para abrir o modal de início
-  const abrirModal = (proc) => {
+  const abrirModal = (proc, acao) => {
     setProcessoSelecionado(proc);
+    setTipoAcao(acao);
     setModalAberto(true);
   };
 
-  // Rota de Início
-  const iniciarApontamento = async () => {
-    if (!operadorId) return alert("Digite o ID do Operador!");
+  const confirmarAcao = async () => {
+    if (!operadorId) return alert("Digite o ID do Aluno!");
     
-    try {
-      await axios.post('https://gestao-ferramentaria.onrender.com/api/apontamentos/iniciar', {
-        processo_id: processoSelecionado.id,
-        operador_id: operadorId
-      });
-      alert('Operação iniciada com sucesso!');
-      setModalAberto(false);
-      setOperadorId('');
-    } catch (error) {
-      alert('Erro ao iniciar. O ID deste operador existe no banco de dados?');
+    if (tipoAcao === 'iniciar') {
+      try {
+        await axios.post('https://gestao-ferramentaria.onrender.com/api/apontamentos/iniciar', {
+          processo_id: processoSelecionado.id,
+          operador_id: operadorId
+        });
+        alert('Operação iniciada com sucesso!');
+        fecharModal();
+      } catch (error) {
+        alert('Erro ao iniciar. O ID deste aluno existe no banco de dados?');
+      }
+    } else {
+      try {
+        await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
+          processo_id: processoSelecionado.id,
+          operador_id: operadorId
+        });
+        alert('Operação finalizada e tempo computado!');
+        fecharModal();
+      } catch (error) {
+        alert('Erro: ID incorreto ou não há apontamento aberto por você nesta operação.');
+      }
     }
   };
 
-  // Rota de Finalização
-  const finalizarApontamento = async (processoId) => {
-    if (window.confirm("Deseja realmente finalizar esta operação?")) {
-      try {
-        await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
-          processo_id: processoId
-        });
-        alert('Operação finalizada e tempo computado!');
-      } catch (error) {
-        alert('Erro ao finalizar. Verifique se a operação realmente foi iniciada e ainda não foi finalizada.');
-      }
-    }
+  const fecharModal = () => {
+    setModalAberto(false);
+    setOperadorId('');
+    setTipoAcao('');
   };
 
   return (
@@ -63,10 +66,7 @@ function ProcessosPeca() {
       {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 12px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button 
-            onClick={() => navigate(-1)} 
-            style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}
-          >
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}>
             <ChevronLeft size={28} />
           </button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Roteiro de Fabricação</h1>
@@ -90,7 +90,6 @@ function ProcessosPeca() {
           {processos.map((proc) => (
             <div key={proc.id} style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
               
-              {/* Esquerda: Ordem e Textos */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ backgroundColor: '#FFF4ED', color: '#C2410C', minWidth: '48px', height: '48px', borderRadius: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                   <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.5px' }}>OP</span>
@@ -110,19 +109,16 @@ function ProcessosPeca() {
                 </div>
               </div>
 
-              {/* Direita: Botões de Ação */}
+              {/* Botões de Ação */}
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button 
-                  onClick={() => abrirModal(proc)} 
-                  title="Iniciar Operação"
+                  onClick={() => abrirModal(proc, 'iniciar')} 
                   style={{ backgroundColor: '#007A33', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0, 122, 51, 0.25)' }}
                 >
                   <Play size={20} fill="currentColor" />
                 </button>
-                
                 <button 
-                  onClick={() => finalizarApontamento(proc.id)} 
-                  title="Finalizar Operação"
+                  onClick={() => abrirModal(proc, 'finalizar')} 
                   style={{ backgroundColor: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.25)' }}
                 >
                   <Square size={18} fill="currentColor" />
@@ -134,28 +130,29 @@ function ProcessosPeca() {
         </div>
       </div>
 
-      {/* Modal de Apontamento */}
+      {/* Modal Dinâmico */}
       {modalAberto && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', width: '90%', maxWidth: '340px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>Apontamento</h3>
-              <button onClick={() => setModalAberto(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 0 }}><X size={24} /></button>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>
+                {tipoAcao === 'iniciar' ? 'Iniciar Operação' : 'Finalizar Operação'}
+              </h3>
+              <button onClick={fecharModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 0 }}><X size={24} /></button>
             </div>
             
             <div style={{ backgroundColor: '#F3F4F6', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
-              <span style={{ fontSize: '12px', color: '#6B7280', fontWeight: '600', textTransform: 'uppercase' }}>Operação Atual</span>
-              <p style={{ margin: '4px 0 12px 0', fontSize: '15px', color: '#111827', fontWeight: '600' }}>{processoSelecionado?.nome_operacao}</p>
-              
+              <p style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#111827', fontWeight: '600' }}>{processoSelecionado?.nome_operacao}</p>
               <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500' }}>Tempo Alvo:</span>
                 <span style={{ fontSize: '14px', color: '#007A33', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Clock size={16} /> {processoSelecionado?.tempo_planejado_min || 0} minutos
+                  <Clock size={16} /> {processoSelecionado?.tempo_planejado_min || 0} min
                 </span>
               </div>
             </div>
             
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>ID do Aluno</label>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Seu ID (Crachá)</label>
             <input 
               type="number" 
               value={operadorId} 
@@ -164,9 +161,14 @@ function ProcessosPeca() {
               style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', marginBottom: '24px', backgroundColor: '#FAFBFC' }} 
             />
             
-            <button onClick={iniciarApontamento} style={{ width: '100%', padding: '16px', backgroundColor: '#007A33', color: 'white', border: 'none', borderRadius: '14px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(0, 122, 51, 0.2)' }}>
-              <Play size={18} fill="currentColor" /> Confirmar Início
+            <button 
+              onClick={confirmarAcao} 
+              style={{ width: '100%', padding: '16px', backgroundColor: tipoAcao === 'iniciar' ? '#007A33' : '#DC2626', color: 'white', border: 'none', borderRadius: '14px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+            >
+              {tipoAcao === 'iniciar' ? <Play size={18} fill="currentColor" /> : <Square size={18} fill="currentColor" />}
+              {tipoAcao === 'iniciar' ? 'Confirmar Início' : 'Encerrar Tarefa'}
             </button>
+            
           </div>
         </div>
       )}
