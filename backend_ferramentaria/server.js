@@ -453,7 +453,24 @@ app.put('/api/apontamentos/finalizar-100', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTA: Lançamento Manual (Retroativo com Data e Hora exatas)
+// ==========================================
+app.post('/api/apontamentos/manual', async (req, res) => {
+    const { processo_id, operador_id, data_hora_inicio, data_hora_fim } = req.body;
+    
+    try {
+        await pool.query(`
+            INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio, data_hora_fim)
+            VALUES ($1, $2, $3, $4)
+        `, [processo_id, operador_id, data_hora_inicio, data_hora_fim]);
 
+        res.json({ message: 'Apontamento retroativo salvo com sucesso!' });
+    } catch (error) {
+        console.error("Erro no apontamento manual:", error);
+        res.status(500).send('Erro interno ao salvar apontamento manual.');
+    }
+});
 
 // ==========================================
 // Inicialização do Servidor

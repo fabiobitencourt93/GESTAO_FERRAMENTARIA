@@ -125,6 +125,15 @@ function Ajustes() {
           </div>
         </div>
 
+      <button 
+          onClick={() => navigate('/retroativo')}
+          style={{ width: '100%', padding: '16px', backgroundColor: '#FEF3C7', color: '#B45309', border: '1px solid #FDE68A', borderRadius: '12px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}
+        >
+          <Clock size={24} />
+          Lançamento Retroativo de Horas
+        </button>
+
+
       </div>
 
       {/* Menu Inferior */}
@@ -135,6 +144,9 @@ function Ajustes() {
       </div>
     </div>
   );
+
+  
+
 }
 
 export default Ajustes;

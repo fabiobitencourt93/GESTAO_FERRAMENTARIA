@@ -8,6 +8,7 @@ import Notificacoes from './Notificacoes';
 import GerenciarAlunos from './GerenciarAlunos';
 import CorrecaoApontamentos from './CorrecaoApontamentos';
 import GerenciarEngenharia from './GerenciarEngenharia';
+import ApontamentoRetroativo from './ApontamentoRetroativo';
 
 // 1. ESTA LINHA PRECISA EXISTIR:
 import ProcessosPeca from './ProcessosPeca'; 
@@ -26,6 +27,7 @@ function App() {
         <Route path="/alunos" element={<GerenciarAlunos />} />
         <Route path="/correcao" element={<CorrecaoApontamentos />} />
         <Route path="/engenharia" element={<GerenciarEngenharia />} />
+        <Route path="/retroativo" element={<ApontamentoRetroativo />} />
       </Routes>
     </Router>
   );

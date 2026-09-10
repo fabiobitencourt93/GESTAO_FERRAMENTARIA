@@ -1,215 +1,197 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutGrid, BarChart2, Settings, Home, ChevronLeft, Bell, User, Activity, Wrench } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Activity, Clock, Timer, Home} from 'lucide-react';
 
-function Producao() {
+function ProcessosPeca() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [dadosBrutos, setDadosBrutos] = useState([]);
-  const [alunosAoVivo, setAlunosAoVivo] = useState([]);
-  const [filtroGrafico, setFiltroGrafico] = useState('Geral'); 
+  const [processos, setProcessos] = useState([]);
+  
+  const [modalAberto, setModalAberto] = useState(false);
+  const [processoSelecionado, setProcessoSelecionado] = useState(null);
+  const [operadorId, setOperadorId] = useState('');
+  const [tipoAcao, setTipoAcao] = useState(''); 
+  const [agora, setAgora] = useState(new Date());
+
+  const encerrarCom100PorCento = async (processoId) => {
+    const opId = localStorage.getItem('operadorId'); 
+    if (!opId) return alert('Erro: Nenhum aluno identificado no sistema.');
+    const confirmar = window.confirm('Deseja parar o relógio e dar esta operação como 100% CONCLUÍDA?');
+    if (!confirmar) return;
+
+    try {
+      await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar-100', {
+        processo_id: processoId,
+        operador_id: opId
+      });
+      alert('Operação finalizada com sucesso!');
+      carregarProcessos(); 
+    } catch (error) {
+      alert('Erro ao finalizar a operação.');
+    }
+  };
+
+  const carregarProcessos = () => {
+    axios.get(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}/processos`)
+      .then(response => setProcessos(response.data))
+      .catch(error => console.error("Erro:", error));
+  };
 
   useEffect(() => {
-    axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/desempenho')
-      .then(response => setDadosBrutos(response.data))
-      .catch(error => console.error("Erro ao carregar relatório:", error));
+    carregarProcessos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
-    const carregarAoVivo = () => {
-      axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/ao-vivo')
-        .then(response => setAlunosAoVivo(response.data))
-        .catch(error => console.error("Erro ao carregar status ao vivo:", error));
-    };
-
-    carregarAoVivo();
-    const intervalo = setInterval(carregarAoVivo, 10000);
+  useEffect(() => {
+    const intervalo = setInterval(() => setAgora(new Date()), 1000);
     return () => clearInterval(intervalo);
   }, []);
 
-  const projetosUnicos = [...new Set(dadosBrutos.map(d => d.projeto))];
+  const abrirModal = (proc, acao) => {
+    setProcessoSelecionado(proc);
+    setTipoAcao(acao);
+    setModalAberto(true);
+  };
 
-  // Processa os dados do gráfico e calcula a % de Progresso
-  const dadosGrafico = useMemo(() => {
-    const calcularProgresso = (realizado, planejado) => {
-      if (planejado === 0) return 0;
-      return Math.round((realizado / planejado) * 100);
-    };
-
-    if (filtroGrafico === 'Geral') {
-      const agrupado = {};
-      dadosBrutos.forEach(item => {
-        const nomeProjeto = item.projeto || 'Desconhecido';
-        if (!agrupado[nomeProjeto]) {
-          agrupado[nomeProjeto] = { nome: nomeProjeto, total_planejado: 0, total_realizado: 0, progresso: 0 };
-        }
-        agrupado[nomeProjeto].total_planejado += Number(item.total_planejado || 0) / 60;
-        agrupado[nomeProjeto].total_realizado += Number(item.total_realizado || 0) / 60;
-      });
-      
-      return Object.values(agrupado).map(item => ({
-        ...item,
-        progresso: calcularProgresso(item.total_realizado, item.total_planejado)
-      }));
-
-    } else {
-      const agrupado = {};
-      dadosBrutos
-        .filter(item => item.projeto === filtroGrafico)
-        .forEach(item => {
-          const nomePeca = item.peca ? item.peca : 'Peça sem nome';
-          if (!agrupado[nomePeca]) {
-            agrupado[nomePeca] = { nome: nomePeca, total_planejado: 0, total_realizado: 0, progresso: 0 };
-          }
-          agrupado[nomePeca].total_planejado += Number(item.total_planejado || 0) / 60;
-          agrupado[nomePeca].total_realizado += Number(item.total_realizado || 0) / 60;
+  const confirmarAcao = async () => {
+    if (!operadorId) return alert("Digite o ID do Aluno!");
+    
+    if (tipoAcao === 'iniciar') {
+      try {
+        await axios.post('https://gestao-ferramentaria.onrender.com/api/apontamentos/iniciar', {
+          processo_id: processoSelecionado.id, operador_id: operadorId
         });
-        
-      return Object.values(agrupado).map(item => ({
-        ...item,
-        progresso: calcularProgresso(item.total_realizado, item.total_planejado)
-      }));
-    }
-  }, [dadosBrutos, filtroGrafico]);
+        fecharModal();
+        carregarProcessos(); 
+      } catch (error) {
+        alert('Erro ao iniciar. O ID deste aluno existe?');
+      }
+    } 
+    else if (tipoAcao === 'finalizar') {
+      try {
+        await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
+          processo_id: processoSelecionado.id, operador_id: operadorId
+        });
+        fecharModal();
+        carregarProcessos(); 
+      } catch (error) {
+        alert('Erro: ID incorreto ou apontamento não está aberto.');
+      }
+    } 
+  };
+
+  const fecharModal = () => {
+    setModalAberto(false);
+    setOperadorId('');
+    setTipoAcao('');
+  };
+
+  const formatarTempo = (dataISO) => {
+    if (!dataISO) return '';
+    const inicio = new Date(dataISO);
+    const diferencaSegundos = Math.floor((agora.getTime() - inicio.getTime()) / 1000);
+    if (diferencaSegundos < 0) return '00:00:00';
+    const h = String(Math.floor(diferencaSegundos / 3600)).padStart(2, '0');
+    const m = String(Math.floor((diferencaSegundos % 3600) / 60)).padStart(2, '0');
+    const s = String(diferencaSegundos % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
 
   return (
-    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '100px' }}>
+    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', -apple-system, sans-serif", paddingBottom: '80px' }}>
+      <style>{`@keyframes pulse-fast { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }`}</style>
       
-      {/* Top Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 12px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ChevronLeft size={28} /></button>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Desempenho de Produção</h1>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}><ChevronLeft size={28} /></button>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Roteiro de Fabricação</h1>
         </div>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Home size={24} /></button>
-          <Bell size={24} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}><Home size={24} /></button>
+          <Bell size={24} color="#111827" />
         </div>
       </div>
 
-      {/* Container Principal com espaçamento automático (gap) */}
-      <div style={{ padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        
-        {/* ========================================== */}
-        {/* BLOCO 1: GRÁFICO ANALÍTICO */}
-        {/* ========================================== */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-            <h3 style={{ margin: 0, color: '#111827', fontSize: '16px' }}>Planejado vs Realizado (Horas)</h3>
-            
-            <select 
-              value={filtroGrafico} 
-              onChange={(e) => setFiltroGrafico(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', backgroundColor: '#F9FAFB', outline: 'none', cursor: 'pointer', fontSize: '14px', color: '#374151', minWidth: '220px' }}
-            >
-              <option value="Geral">Visão Geral (Ferramentas Completas)</option>
-              {projetosUnicos.map(proj => (
-                <option key={proj} value={proj}>Ver peças: {proj}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer>
-              <BarChart data={dadosGrafico} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="nome" tick={{fontSize: 12}} axisLine={false} tickLine={false} />
-                <YAxis tick={{fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(value) => Number(value).toFixed(1)} />
-                <Tooltip cursor={{fill: '#F3F4F6'}} borderRadius={12} formatter={(value, name) => [`${Number(value).toFixed(1)} h`, name]} />
-                <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                <Bar dataKey="total_planejado" name="Tempo Planejado" fill="#94A3B8" radius={[4, 4, 0, 0]} barSize={40} />
-                <Bar dataKey="total_realizado" name="Tempo Realizado" fill="#007A33" radius={[4, 4, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#111827', margin: '0 0 4px 0' }}>
+            {processos.length > 0 && processos[0].nome_peca ? `${processos[0].nome_peca} (Pos: ${processos[0].posicao_peca})` : `Peça ID: ${id}`}
+          </h2>
+          <p style={{ fontSize: '14px', color: '#6B7280', margin: 0 }}>{processos.length} operações na sequência</p>
         </div>
 
-        {/* ========================================== */}
-        {/* BLOCO 2: BARRAS DE PROGRESSO */}
-        {/* ========================================== */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <h3 style={{ margin: '0 0 20px 0', color: '#111827', fontSize: '16px' }}>
-            Progresso de Execução ({filtroGrafico === 'Geral' ? 'Ferramentas' : 'Peças'})
-          </h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {dadosGrafico.map(item => (
-              <div key={item.nome}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
-                  <span style={{ fontWeight: '600', color: '#374151' }}>{item.nome}</span>
-                  <span style={{ color: item.progresso >= 100 ? '#16A34A' : '#0284C7', fontWeight: '700' }}>
-                    {item.progresso}% {item.progresso >= 100 && '(Concluído/Ultrapassado)'}
-                  </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {processos.map((proc) => {
+            const emAndamento = !!proc.data_hora_inicio;
+            
+            return (
+              <div key={proc.id} style={{ 
+                backgroundColor: emAndamento ? '#F0FDF4' : '#FFFFFF', 
+                border: emAndamento ? '2px solid #22C55E' : '2px solid transparent',
+                borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.03)', transition: 'all 0.3s ease'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ backgroundColor: emAndamento ? '#DCFCE7' : '#FFF4ED', color: emAndamento ? '#166534' : '#C2410C', minWidth: '48px', height: '48px', borderRadius: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', fontWeight: '700' }}>OP</span>
+                    <span style={{ fontSize: '16px', fontWeight: '800' }}>{proc.ordem_execucao}</span>
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827' }}>{proc.nome_operacao}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px' }}><Activity size={14} /> {proc.maquina_sugerida}</p>
+                    </div>
+                    {emAndamento && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#15803D', fontWeight: '700', fontSize: '13px', marginTop: '8px' }}>
+                        <Timer size={16} style={{ animation: 'pulse-fast 1.5s infinite' }} /> Rodando: {formatarTempo(proc.data_hora_inicio)}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                
-                <div style={{ width: '100%', height: '10px', backgroundColor: '#F3F4F6', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ 
-                    width: `${Math.min(item.progresso, 100)}%`, 
-                    height: '100%', 
-                    backgroundColor: item.progresso >= 100 ? '#16A34A' : '#0284C7',
-                    transition: 'width 0.5s ease'
-                  }}></div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => abrirModal(proc, 'iniciar')} style={{ backgroundColor: '#007A33', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: emAndamento ? 0.5 : 1 }} disabled={emAndamento}><Play size={20} fill="currentColor" /></button>
+                  <button onClick={() => abrirModal(proc, 'finalizar')} style={{ backgroundColor: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: !emAndamento ? 0.5 : 1 }} disabled={!emAndamento}><Square size={18} fill="currentColor" /></button>
+                  <button onClick={() => encerrarCom100PorCento(proc.id)} style={{ backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)' }}>100%</button>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-
-        {/* ========================================== */}
-        {/* BLOCO 3: EQUIPE AO VIVO */}
-        {/* ========================================== */}
-        <div>
-          <h3 style={{ margin: '0 0 16px 0', color: '#111827', fontSize: '18px', fontWeight: '700' }}>Status da Equipe (Ao Vivo)</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-            {alunosAoVivo.map((aluno) => {
-              const emAtividade = !!aluno.nome_operacao;
-
-              return (
-                <div key={aluno.operador_id} style={{ 
-                  backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '16px', 
-                  borderTop: emAtividade ? '4px solid #22C55E' : '4px solid #E5E7EB',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)' 
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <div style={{ backgroundColor: emAtividade ? '#DCFCE7' : '#F3F4F6', padding: '6px', borderRadius: '50%' }}>
-                      <User size={16} color={emAtividade ? '#166534' : '#6B7280'} />
-                    </div>
-                    <span style={{ fontWeight: '700', fontSize: '15px', color: '#111827' }}>
-                      {aluno.operador_nome}
-                    </span>
-                  </div>
-                  
-                  {emAtividade ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <span style={{ fontSize: '13px', color: '#15803D', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Activity size={14} /> {aluno.nome_operacao}
-                      </span>
-                      <span style={{ fontSize: '12px', color: '#6B7280' }}>Peça: {aluno.nome_peca}</span>
-                      <span style={{ fontSize: '12px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Wrench size={12} /> {aluno.maquina_sugerida}
-                      </span>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '13px', color: '#9CA3AF', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px', height: '100%', paddingBottom: '8px' }}>
-                      Disponível / Livre
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
       </div>
 
-      {/* Menu Inferior */}
+      {modalAberto && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', width: '90%', maxWidth: '340px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>{tipoAcao === 'iniciar' ? 'Iniciar Operação' : 'Parar Operação'}</h3>
+              <button onClick={fecharModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 0 }}><X size={24} /></button>
+            </div>
+            <div style={{ backgroundColor: '#F3F4F6', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#111827', fontWeight: '600' }}>{processoSelecionado?.nome_operacao}</p>
+              <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500' }}>Tempo Alvo:</span>
+                <span style={{ fontSize: '14px', color: '#007A33', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={16} /> {processoSelecionado?.tempo_planejado_min || 0} min</span>
+              </div>
+            </div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Seu ID (Crachá)</label>
+            <input type="number" value={operadorId} onChange={(e) => setOperadorId(e.target.value)} placeholder="Ex: 20265" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', marginBottom: '24px', backgroundColor: '#FAFBFC' }} />
+            <button onClick={confirmarAcao} style={{ width: '100%', padding: '16px', backgroundColor: tipoAcao === 'iniciar' ? '#007A33' : '#DC2626', color: 'white', border: 'none', borderRadius: '14px', fontWeight: '700', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+              {tipoAcao === 'iniciar' ? <Play size={18} fill="currentColor" /> : <Square size={18} fill="currentColor" />}
+              {tipoAcao === 'iniciar' ? 'Confirmar Início' : 'Encerrar Tarefa'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
         <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>PRODUÇÃO</span></div>
+        <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span></div>
         <div onClick={() => navigate('/ajustes')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>AJUSTES</span></div>
       </div>
     </div>
   );
 }
 
-export default Producao;
+export default ProcessosPeca;
