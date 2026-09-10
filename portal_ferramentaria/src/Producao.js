@@ -32,35 +32,46 @@ function Producao() {
 
   // Processa os dados do gráfico dependendo do filtro escolhido
  // Processa os dados do gráfico dependendo do filtro escolhido
+  // Processa os dados do gráfico e calcula a % de Progresso
   const dadosGrafico = useMemo(() => {
+    const calcularProgresso = (realizado, planejado) => {
+      if (planejado === 0) return 0;
+      return Math.round((realizado / planejado) * 100);
+    };
+
     if (filtroGrafico === 'Geral') {
-      // VISÃO GERAL: Agrupa tudo pela Ferramenta (Projeto)
       const agrupado = {};
       dadosBrutos.forEach(item => {
         const nomeProjeto = item.projeto || 'Desconhecido';
         if (!agrupado[nomeProjeto]) {
-          agrupado[nomeProjeto] = { nome: nomeProjeto, total_planejado: 0, total_realizado: 0 };
+          agrupado[nomeProjeto] = { nome: nomeProjeto, total_planejado: 0, total_realizado: 0, progresso: 0 };
         }
-        agrupado[nomeProjeto].total_planejado += Number(item.total_planejado || 0)/60;
-        agrupado[nomeProjeto].total_realizado += Number(item.total_realizado || 0)/60;
+        agrupado[nomeProjeto].total_planejado += Number(item.total_planejado || 0) / 60;
+        agrupado[nomeProjeto].total_realizado += Number(item.total_realizado || 0) / 60;
       });
-      return Object.values(agrupado);
+      
+      return Object.values(agrupado).map(item => ({
+        ...item,
+        progresso: calcularProgresso(item.total_realizado, item.total_planejado)
+      }));
+
     } else {
-      // VISÃO DETALHADA: Filtra pela ferramenta e agrupa pelas PEÇAS
       const agrupado = {};
       dadosBrutos
         .filter(item => item.projeto === filtroGrafico)
         .forEach(item => {
-          // Se o nome da peça vier vazio do banco, exibe um alerta no gráfico
-          const nomePeca = item.peca ? item.peca : 'Peça sem nome (Verifique o Banco)';
-          
+          const nomePeca = item.peca ? item.peca : 'Peça sem nome';
           if (!agrupado[nomePeca]) {
-            agrupado[nomePeca] = { nome: nomePeca, total_planejado: 0, total_realizado: 0 };
+            agrupado[nomePeca] = { nome: nomePeca, total_planejado: 0, total_realizado: 0, progresso: 0 };
           }
-          agrupado[nomePeca].total_planejado += Number(item.total_planejado || 0)/60;
-          agrupado[nomePeca].total_realizado += Number(item.total_realizado || 0)/60;
+          agrupado[nomePeca].total_planejado += Number(item.total_planejado || 0) / 60;
+          agrupado[nomePeca].total_realizado += Number(item.total_realizado || 0) / 60;
         });
-      return Object.values(agrupado);
+        
+      return Object.values(agrupado).map(item => ({
+        ...item,
+        progresso: calcularProgresso(item.total_realizado, item.total_planejado)
+      }));
     }
   }, [dadosBrutos, filtroGrafico]);
 
@@ -125,6 +136,36 @@ function Producao() {
                 <Bar dataKey="total_realizado" name="Tempo Realizado" fill="#007A33" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
+
+            {/* Barras de Progresso de Conclusão */}
+          <div style={{ marginTop: '32px', borderTop: '1px solid #E5E7EB', paddingTop: '24px' }}>
+            <h3 style={{ margin: '0 0 16px 0', color: '#111827', fontSize: '15px' }}>
+              Progresso de Execução ({filtroGrafico === 'Geral' ? 'Ferramentas' : 'Peças'})
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {dadosGrafico.map(item => (
+                <div key={item.nome}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
+                    <span style={{ fontWeight: '600', color: '#374151' }}>{item.nome}</span>
+                    <span style={{ color: item.progresso >= 100 ? '#16A34A' : '#0284C7', fontWeight: '700' }}>
+                      {item.progresso}% {item.progresso >= 100 && '(Concluído/Ultrapassado)'}
+                    </span>
+                  </div>
+                  {/* Fundo da barra */}
+                  <div style={{ width: '100%', height: '8px', backgroundColor: '#F3F4F6', borderRadius: '4px', overflow: 'hidden' }}>
+                    {/* Preenchimento dinâmico */}
+                    <div style={{ 
+                      width: `${Math.min(item.progresso, 100)}%`, 
+                      height: '100%', 
+                      backgroundColor: item.progresso >= 100 ? '#16A34A' : '#0284C7',
+                      transition: 'width 0.5s ease'
+                    }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
           </div>
         </div>
 

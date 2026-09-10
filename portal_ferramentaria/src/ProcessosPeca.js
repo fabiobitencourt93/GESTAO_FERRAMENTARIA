@@ -14,6 +14,34 @@ function ProcessosPeca() {
   const [tipoAcao, setTipoAcao] = useState(''); 
   const [agora, setAgora] = useState(new Date());
 
+  // Função para dar a operação como 100% concluída
+  const encerrarCom100PorCento = async (processoId) => {
+    // Busca o ID do aluno que está operando no momento
+    const operadorId = localStorage.getItem('operadorId'); 
+    
+    if (!operadorId) {
+      return alert('Erro: Nenhum aluno identificado no sistema.');
+    }
+
+    const confirmar = window.confirm('Deseja parar o relógio e dar esta operação como 100% CONCLUÍDA?');
+    if (!confirmar) return;
+
+    try {
+      await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar-100', {
+        processo_id: processoId,
+        operador_id: operadorId
+      });
+      alert('Operação finalizada com sucesso! Parabéns.');
+      
+      // Atualiza a tela automaticamente (Substitua "carregarProcessos" pelo nome da função que você já usa para ler os dados do banco)
+      carregarProcessos(); 
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao finalizar a operação. Verifique a conexão.');
+    }
+  };
+
+
   // Função para buscar os dados (separada para podermos recarregar a lista depois do play/stop)
   const carregarProcessos = () => {
     axios.get(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}/processos`)
@@ -124,6 +152,23 @@ function ProcessosPeca() {
           {processos.map((proc) => {
             const emAndamento = !!proc.data_hora_inicio;
             
+              <button 
+                onClick={() => encerrarCom100PorCento(processo.id)}
+                style={{ 
+                ackgroundColor: '#16A34A', 
+                color: '#FFF', 
+                border: 'none', 
+                borderRadius: '8px', 
+                padding: '8px 16px', 
+                fontWeight: '700', 
+                fontSize: '14px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
+        }}
+>
+  Finalizar 100%
+</button>
+
             return (
               <div key={proc.id} style={{ 
                 backgroundColor: emAndamento ? '#F0FDF4' : '#FFFFFF', 

@@ -427,6 +427,35 @@ app.delete('/api/processos/:id', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Encerrar Apontamento e Marcar 100% Concluído
+// ==========================================
+app.put('/api/apontamentos/finalizar-100', async (req, res) => {
+    const { processo_id, operador_id } = req.body;
+    try {
+        // 1. Para o cronômetro do aluno
+        await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP 
+            WHERE processo_id = $1 AND operador_id = $2 AND data_hora_fim IS NULL
+        `, [processo_id, operador_id]);
+
+        // 2. Marca a operação como 100% no roteiro
+        await pool.query(`
+            UPDATE processos 
+            SET status = 'Concluído' 
+            WHERE id = $1
+        `, [processo_id]);
+
+        res.json({ message: 'Operação marcada como 100%!' });
+    } catch (error) {
+        console.error("Erro ao concluir 100%:", error);
+        res.status(500).send('Erro interno ao concluir.');
+    }
+});
+
+
+
+// ==========================================
 // Inicialização do Servidor
 // ==========================================
 app.listen(port, () => {
