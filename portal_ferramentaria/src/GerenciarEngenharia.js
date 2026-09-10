@@ -64,13 +64,17 @@ function GerenciarEngenharia() {
         {/* Seletor de Projeto */}
         <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', marginBottom: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
           <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '8px' }}>Selecione o Projeto/Estampo</label>
-          <select 
+        <select 
             value={projetoSelecionado} 
             onChange={(e) => setProjetoSelecionado(e.target.value)}
             style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px' }}
           >
             <option value="">-- Escolha um Projeto --</option>
-            {projetos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            {projetos.map(p => (
+              <option key={p.id || Math.random()} value={p.id}>
+                {p.nome || p.nome_projeto || p.titulo || p.descricao || `Projeto ID: ${p.id}`}
+              </option>
+            ))}
           </select>
         </div>
 
