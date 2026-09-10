@@ -105,22 +105,23 @@ function Producao() {
               <BarChart data={dadosGrafico} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="nome" tick={{fontSize: 12}} axisLine={false} tickLine={false} />
+                
                 <YAxis 
                   tick={{fontSize: 12}} 
                   axisLine={false} 
                   tickLine={false} 
-                  tickFormatter={(value) => Number(value).toFixed(1)} // Formata o eixo lateral (ex: 10.5)
+                  tickFormatter={(value) => Number(value).toFixed(1)} 
                 />
                 
                 <Tooltip 
                   cursor={{fill: '#F3F4F6'}} 
                   borderRadius={12} 
-                  formatter={(value, name) => [`${Number(value).toFixed(1)} min`, name]} // Formata a caixa ao passar o mouse
+                  formatter={(value, name) => [`${Number(value).toFixed(2)} min`, name]} 
                 />
-                <Tooltip cursor={{fill: '#F3F4F6'}} borderRadius={12} />
+                
                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
                 <Bar dataKey="total_planejado" name="Tempo Planejado" fill="#94A3B8" radius={[4, 4, 0, 0]} barSize={40} />
-                <Bar dataKey="total_realizado" name="Tempo Realizado" fill="#007A33" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="total_realizado" name="Tempo Realizado" fill="#a1017f" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
