@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Home, Bell, Plus, Edit, Save, Clock, Wrench } from 'lucide-react';
+import { ChevronLeft, Home, Bell, Plus, Edit, Save, Clock, Wrench, Trash2, X } from 'lucide-react';
 
 function GerenciarEngenharia() {
   const navigate = useNavigate();
@@ -10,12 +10,10 @@ function GerenciarEngenharia() {
   const [projetoSelecionado, setProjetoSelecionado] = useState('');
   const [pecas, setPecas] = useState([]);
   
-  // Controles de interface
   const [pecaExpandida, setPecaExpandida] = useState(null);
   const [editandoProcesso, setEditandoProcesso] = useState(null);
   const [formProcesso, setFormProcesso] = useState({});
   
-  // Novos controles de Cadastro
   const [exibirFormPeca, setExibirFormPeca] = useState(false);
   const [novaPeca, setNovaPeca] = useState({ pos: '', nome: '' });
   
@@ -40,14 +38,14 @@ function GerenciarEngenharia() {
       .catch(err => console.error(err));
   };
 
-  // Enviar Nova Peça ao Banco
+  // ==========================================
+  // FUNÇÕES DE CRIAÇÃO E EDIÇÃO
+  // ==========================================
   const salvarNovaPeca = async () => {
     if (!novaPeca.pos || !novaPeca.nome) return alert("Preencha a Posição e o Nome da Peça.");
     try {
       await axios.post('https://gestao-ferramentaria.onrender.com/api/pecas', {
-        estampo_id: projetoSelecionado,
-        pos: novaPeca.pos,
-        nome: novaPeca.nome
+        estampo_id: projetoSelecionado, pos: novaPeca.pos, nome: novaPeca.nome
       });
       setExibirFormPeca(false);
       setNovaPeca({ pos: '', nome: '' });
@@ -57,17 +55,12 @@ function GerenciarEngenharia() {
     }
   };
 
-  // Enviar Novo Processo ao Banco
   const salvarNovoProcesso = async (pecaId) => {
-    if (!novoProcesso.ordem_execucao || !novoProcesso.nome_operacao) return alert("Preencha ao menos a Sequência e o Nome da Operação.");
+    if (!novoProcesso.ordem_execucao || !novoProcesso.nome_operacao) return alert("Preencha ao menos a Sequência e o Nome.");
     try {
       const tempoEmMinutos = parseFloat(novoProcesso.tempo_planejado_horas || 0) * 60;
       await axios.post('https://gestao-ferramentaria.onrender.com/api/processos', {
-        peca_id: pecaId,
-        ordem_execucao: novoProcesso.ordem_execucao,
-        nome_operacao: novoProcesso.nome_operacao,
-        tempo_planejado_min: tempoEmMinutos,
-        maquina_sugerida: novoProcesso.maquina_sugerida
+        peca_id: pecaId, ordem_execucao: novoProcesso.ordem_execucao, nome_operacao: novoProcesso.nome_operacao, tempo_planejado_min: tempoEmMinutos, maquina_sugerida: novoProcesso.maquina_sugerida
       });
       setAdicionandoProcessoNaPeca(null);
       setNovoProcesso({ ordem_execucao: '', nome_operacao: '', tempo_planejado_horas: '', maquina_sugerida: '' });
@@ -89,6 +82,40 @@ function GerenciarEngenharia() {
     }
   };
 
+  // ==========================================
+  // FUNÇÕES DE EXCLUSÃO
+  // ==========================================
+  const excluirPeca = async (id, nome) => {
+    if (!window.confirm(`ATENÇÃO: Deseja realmente excluir a peça "${nome}"?`)) return;
+    try {
+      await axios.delete(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}`);
+      carregarPecasEProcessos();
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        alert("Erro ao excluir a peça.");
+      }
+    }
+  };
+
+  const excluirProcesso = async (id, nome) => {
+    if (!window.confirm(`Deseja excluir a operação "${nome}"?`)) return;
+    try {
+      await axios.delete(`https://gestao-ferramentaria.onrender.com/api/processos/${id}`);
+      carregarPecasEProcessos();
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.error) {
+        alert(err.response.data.error);
+      } else {
+        alert("Erro ao excluir o processo.");
+      }
+    }
+  };
+
+  // ==========================================
+  // RENDERIZAÇÃO DA TELA
+  // ==========================================
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '40px' }}>
       
@@ -133,10 +160,14 @@ function GerenciarEngenharia() {
 
             {/* Painel para criar nova peça */}
             {exibirFormPeca && (
-              <div style={{ backgroundColor: '#E0F2FE', padding: '16px', borderRadius: '12px', display: 'flex', gap: '12px', border: '1px solid #BAE6FD', flexWrap: 'wrap' }}>
+              <div style={{ backgroundColor: '#E0F2FE', padding: '16px', borderRadius: '12px', display: 'flex', gap: '12px', border: '1px solid #BAE6FD', flexWrap: 'wrap', alignItems: 'center' }}>
                 <input type="number" placeholder="POS (ex: 01)" value={novaPeca.pos} onChange={e => setNovaPeca({...novaPeca, pos: e.target.value})} style={{ width: '100px', padding: '10px', borderRadius: '6px', border: '1px solid #7DD3FC', outline: 'none' }} />
                 <input type="text" placeholder="Nome da Peça (ex: Matriz)" value={novaPeca.nome} onChange={e => setNovaPeca({...novaPeca, nome: e.target.value})} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #7DD3FC', outline: 'none' }} />
-                <button onClick={salvarNovaPeca} style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '6px', padding: '0 20px', cursor: 'pointer', fontWeight: '700' }}>Salvar</button>
+                
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => { setExibirFormPeca(false); setNovaPeca({pos:'', nome:''}); }} style={{ backgroundColor: '#9CA3AF', color: '#FFF', border: 'none', borderRadius: '6px', padding: '10px 16px', cursor: 'pointer', fontWeight: '600' }}>Cancelar</button>
+                  <button onClick={salvarNovaPeca} style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '6px', padding: '10px 20px', cursor: 'pointer', fontWeight: '700' }}>Salvar</button>
+                </div>
               </div>
             )}
 
@@ -151,7 +182,17 @@ function GerenciarEngenharia() {
                     <span style={{ fontSize: '12px', fontWeight: '700', color: '#0284C7', backgroundColor: '#E0F2FE', padding: '4px 8px', borderRadius: '4px', marginRight: '8px' }}>POS {peca.pos}</span>
                     <span style={{ fontWeight: '600', color: '#111827' }}>{peca.nome}</span>
                   </div>
-                  <span style={{ fontSize: '13px', color: '#6B7280' }}>{peca.processos.length} operações</span>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span style={{ fontSize: '13px', color: '#6B7280' }}>{peca.processos.length} operações</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); excluirPeca(peca.id, peca.nome); }}
+                      style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                      title="Excluir Peça"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
 
                 {pecaExpandida === peca.id && (
@@ -160,6 +201,8 @@ function GerenciarEngenharia() {
                       
                       {peca.processos.map(proc => (
                         <div key={proc.id} style={{ backgroundColor: '#F3F4F6', padding: '12px', borderRadius: '8px' }}>
+                          
+                          {/* MODO EDIÇÃO DO PROCESSO */}
                           {editandoProcesso === proc.id ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               <div style={{ display: 'flex', gap: '8px' }}>
@@ -169,10 +212,17 @@ function GerenciarEngenharia() {
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <input type="number" step="0.1" placeholder="Tempo (h)" value={formProcesso.tempo_planejado_horas} onChange={e => setFormProcesso({...formProcesso, tempo_planejado_horas: e.target.value})} style={{ width: '100px', padding: '8px', borderRadius: '6px', border: '1px solid #D1D5DB' }} />
                                 <input type="text" placeholder="Ex: ROMI D800" value={formProcesso.maquina_sugerida} onChange={e => setFormProcesso({...formProcesso, maquina_sugerida: e.target.value})} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #D1D5DB' }} />
+                                
+                                {/* Botão Cancelar Edição */}
+                                <button onClick={() => setEditandoProcesso(null)} style={{ backgroundColor: '#9CA3AF', color: '#FFF', border: 'none', borderRadius: '6px', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Cancelar"><X size={18} /></button>
+                                
+                                {/* Botão Salvar Edição */}
                                 <button onClick={salvarEdicaoProcesso} style={{ backgroundColor: '#007A33', color: '#FFF', border: 'none', borderRadius: '6px', padding: '0 16px', cursor: 'pointer' }}><Save size={18} /></button>
                               </div>
                             </div>
                           ) : (
+                            
+                            /* MODO VISUALIZAÇÃO DO PROCESSO */
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
@@ -184,7 +234,11 @@ function GerenciarEngenharia() {
                                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Wrench size={12} /> {proc.maquina_sugerida}</span>
                                 </div>
                               </div>
-                              <button onClick={() => { setEditandoProcesso(proc.id); setFormProcesso({...proc, tempo_planejado_horas: proc.tempo_planejado_min ? (proc.tempo_planejado_min / 60).toFixed(1) : 0}); }} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer' }}><Edit size={18} /></button>
+                              
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button onClick={() => { setEditandoProcesso(proc.id); setFormProcesso({...proc, tempo_planejado_horas: proc.tempo_planejado_min ? (proc.tempo_planejado_min / 60).toFixed(1) : 0}); }} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', padding: '4px' }}><Edit size={18} /></button>
+                                <button onClick={() => excluirProcesso(proc.id, proc.nome_operacao)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px' }}><Trash2 size={18} /></button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -208,8 +262,8 @@ function GerenciarEngenharia() {
                           <div style={{ display: 'flex', gap: '8px' }}>
                             <input type="number" step="0.1" placeholder="Tempo (h)" value={novoProcesso.tempo_planejado_horas} onChange={e => setNovoProcesso({...novoProcesso, tempo_planejado_horas: e.target.value})} style={{ width: '100px', padding: '8px', borderRadius: '6px', border: '1px solid #86EFAC', outline: 'none' }} />
                             <input type="text" placeholder="Máquina sugerida" value={novoProcesso.maquina_sugerida} onChange={e => setNovoProcesso({...novoProcesso, maquina_sugerida: e.target.value})} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #86EFAC', outline: 'none' }} />
+                            <button onClick={() => setAdicionandoProcessoNaPeca(null)} style={{ backgroundColor: '#9CA3AF', color: '#FFF', border: 'none', borderRadius: '6px', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Cancelar"><X size={18} /></button>
                             <button onClick={() => salvarNovoProcesso(peca.id)} style={{ backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '6px', padding: '0 16px', cursor: 'pointer', fontWeight: '700' }}>Salvar</button>
-                            <button onClick={() => setAdicionandoProcessoNaPeca(null)} style={{ backgroundColor: '#9CA3AF', color: '#FFF', border: 'none', borderRadius: '6px', padding: '0 12px', cursor: 'pointer' }}>X</button>
                           </div>
                         </div>
                       )}

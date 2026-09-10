@@ -393,7 +393,38 @@ app.post('/api/processos', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTA: Excluir Peça
+// ==========================================
+app.delete('/api/pecas/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM pecas WHERE id = $1', [id]);
+        res.json({ message: 'Peça removida com sucesso' });
+    } catch (err) {
+        // Erro 23503: Violação de chave estrangeira (a peça já tem processos atrelados)
+        if (err.code === '23503') {
+            return res.status(400).json({ error: 'Não é possível excluir esta peça pois ela já possui processos ou apontamentos.' });
+        }
+        res.status(500).send('Erro interno ao excluir peça');
+    }
+});
 
+// ==========================================
+// ROTA: Excluir Processo (Operação)
+// ==========================================
+app.delete('/api/processos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM processos WHERE id = $1', [id]);
+        res.json({ message: 'Processo removido com sucesso' });
+    } catch (err) {
+        if (err.code === '23503') {
+            return res.status(400).json({ error: 'Não é possível excluir este processo pois ele já possui apontamentos de produção abertos.' });
+        }
+        res.status(500).send('Erro interno ao excluir processo');
+    }
+});
 
 // ==========================================
 // Inicialização do Servidor
