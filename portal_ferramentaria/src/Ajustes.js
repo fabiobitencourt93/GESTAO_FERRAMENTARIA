@@ -11,7 +11,7 @@ function Ajustes() {
   const [erro, setErro] = useState(false);
 
   // === DEFINA A SENHA DO PROFESSOR/ADMIN AQUI ===
-  const SENHA_CORRETA = '260817?'; 
+  const SENHA_CORRETA = '260817'; 
 
   const verificarSenha = (e) => {
     e.preventDefault(); // Evita recarregar a página ao dar Enter
