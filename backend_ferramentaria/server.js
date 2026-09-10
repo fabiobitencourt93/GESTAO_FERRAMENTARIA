@@ -294,12 +294,19 @@ app.delete('/api/operadores/:id', async (req, res) => {
 // Lista todos os projetos para o menu dropdown
 app.get('/api/projetos', async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, nome FROM projetos ORDER BY nome');
+        // O * garante que o banco vai devolver todas as colunas disponíveis
+        const result = await pool.query('SELECT * FROM projetos');
         res.json(result.rows);
     } catch (err) {
+        console.error("Erro ao buscar projetos:", err.message);
         res.status(500).send('Erro ao buscar projetos');
     }
 });
+
+// AQUI VEM O SEU app.listen...
+// app.listen(PORT, () => {
+//   console.log(`Servidor rodando na porta ${PORT}`);
+// });
 
 // Busca todas as peças e empacota os processos dentro delas
 app.get('/api/projetos/:id/engenharia', async (req, res) => {
