@@ -8,10 +8,9 @@ function Producao() {
   const navigate = useNavigate();
   const [dadosBrutos, setDadosBrutos] = useState([]);
   const [alunosAoVivo, setAlunosAoVivo] = useState([]);
-  const [filtroGrafico, setFiltroGrafico] = useState('Geral'); // 'Geral' ou o nome do projeto específico
+  const [filtroGrafico, setFiltroGrafico] = useState('Geral'); 
 
   useEffect(() => {
-    // Busca os dados detalhados (Projeto + Peças)
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/desempenho')
       .then(response => setDadosBrutos(response.data))
       .catch(error => console.error("Erro ao carregar relatório:", error));
@@ -27,16 +26,16 @@ function Producao() {
     return () => clearInterval(intervalo);
   }, []);
 
-  // Extrai uma lista única com os nomes de todos os projetos para montar o Menu Select
   const projetosUnicos = [...new Set(dadosBrutos.map(d => d.projeto))];
 
-  // Processa os dados do gráfico dependendo do filtro escolhido
- // Processa os dados do gráfico dependendo do filtro escolhido
-  // Processa os dados do gráfico e calcula a % de Progresso
+  // Processamento e Trava de Segurança Matemática
   const dadosGrafico = useMemo(() => {
     const calcularProgresso = (realizado, planejado) => {
-      if (planejado === 0) return 0;
-      return Math.round((realizado / planejado) * 100);
+      const plan = Number(planejado) || 0;
+      const real = Number(realizado) || 0;
+      // Impede a divisão por zero que quebra o layout
+      if (plan <= 0) return 0; 
+      return Math.round((real / plan) * 100);
     };
 
     if (filtroGrafico === 'Geral') {
@@ -76,27 +75,28 @@ function Producao() {
   }, [dadosBrutos, filtroGrafico]);
 
   return (
-    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '100px' }}>
+    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '120px' }}>
       
       {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><ChevronLeft size={28} /></button>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ChevronLeft size={28} /></button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Desempenho de Produção</h1>
         </div>
         <div style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Home size={24} /></button>
-          <button onClick={() => navigate('/notificacoes')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Bell size={24} /></button>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Home size={24} /></button>
+          <Bell size={24} />
         </div>
       </div>
 
-      <div style={{ padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ padding: '0 24px' }}>
         
-        {/* Gráfico Analítico com Filtro */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        {/* ========================================== */}
+        {/* BLOCO 1: GRÁFICO (Com margem inferior forçada) */}
+        {/* ========================================== */}
+        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', marginBottom: '32px' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-            {/* Título alterado para Horas */}
             <h3 style={{ margin: 0, color: '#111827', fontSize: '16px' }}>Planejado vs Realizado (Horas)</h3>
             
             <select 
@@ -116,62 +116,52 @@ function Producao() {
               <BarChart data={dadosGrafico} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="nome" tick={{fontSize: 12}} axisLine={false} tickLine={false} />
-                
-                <YAxis 
-                  tick={{fontSize: 12}} 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tickFormatter={(value) => Number(value).toFixed(1)} 
-                />
-                
-                <Tooltip 
-                  cursor={{fill: '#F3F4F6'}} 
-                  borderRadius={12} 
-                  /* Caixinha preta agora mostra o sufixo "h" */
-                  formatter={(value, name) => [`${Number(value).toFixed(1)} h`, name]} 
-                />
-                
+                <YAxis tick={{fontSize: 12}} axisLine={false} tickLine={false} tickFormatter={(value) => Number(value).toFixed(1)} />
+                <Tooltip cursor={{fill: '#F3F4F6'}} borderRadius={12} formatter={(value, name) => [`${Number(value).toFixed(1)} h`, name]} />
                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
                 <Bar dataKey="total_planejado" name="Tempo Planejado" fill="#94A3B8" radius={[4, 4, 0, 0]} barSize={40} />
                 <Bar dataKey="total_realizado" name="Tempo Realizado" fill="#007A33" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
-
-            {/* Barras de Progresso de Conclusão */}
-          <div style={{ marginTop: '32px', borderTop: '1px solid #E5E7EB', paddingTop: '24px' }}>
-            <h3 style={{ margin: '0 0 16px 0', color: '#111827', fontSize: '15px' }}>
-              Progresso de Execução ({filtroGrafico === 'Geral' ? 'Ferramentas' : 'Peças'})
-            </h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {dadosGrafico.map(item => (
-                <div key={item.nome}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
-                    <span style={{ fontWeight: '600', color: '#374151' }}>{item.nome}</span>
-                    <span style={{ color: item.progresso >= 100 ? '#16A34A' : '#0284C7', fontWeight: '700' }}>
-                      {item.progresso}% {item.progresso >= 100 && '(Concluído/Ultrapassado)'}
-                    </span>
-                  </div>
-                  {/* Fundo da barra */}
-                  <div style={{ width: '100%', height: '8px', backgroundColor: '#F3F4F6', borderRadius: '4px', overflow: 'hidden' }}>
-                    {/* Preenchimento dinâmico */}
-                    <div style={{ 
-                      width: `${Math.min(item.progresso, 100)}%`, 
-                      height: '100%', 
-                      backgroundColor: item.progresso >= 100 ? '#16A34A' : '#0284C7',
-                      transition: 'width 0.5s ease'
-                    }}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
           </div>
         </div>
 
-        {/* Quadro de Operadores Ao Vivo */}
+        {/* ========================================== */}
+        {/* BLOCO 2: PROGRESSO (Caixa separada) */}
+        {/* ========================================== */}
+        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', marginBottom: '32px' }}>
+          <h3 style={{ margin: '0 0 20px 0', color: '#111827', fontSize: '16px' }}>
+            Progresso de Execução ({filtroGrafico === 'Geral' ? 'Ferramentas' : 'Peças'})
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {dadosGrafico.map(item => (
+              <div key={item.nome}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
+                  <span style={{ fontWeight: '600', color: '#374151' }}>{item.nome}</span>
+                  <span style={{ color: item.progresso >= 100 ? '#16A34A' : '#0284C7', fontWeight: '700' }}>
+                    {item.progresso}% {item.progresso >= 100 && '(Concluído/Ultrapassado)'}
+                  </span>
+                </div>
+                
+                <div style={{ width: '100%', height: '10px', backgroundColor: '#F3F4F6', borderRadius: '5px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${Math.min(item.progresso, 100)}%`, 
+                    height: '100%', 
+                    backgroundColor: item.progresso >= 100 ? '#16A34A' : '#0284C7',
+                    transition: 'width 0.5s ease'
+                  }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ========================================== */}
+        {/* BLOCO 3: EQUIPE AO VIVO */}
+        {/* ========================================== */}
         <div>
-          <h3 style={{ margin: '0 0 16px 0', color: '#111827', fontSize: '18px' }}>Status da Equipe (Ao Vivo)</h3>
+          <h3 style={{ margin: '0 0 16px 0', color: '#111827', fontSize: '18px', fontWeight: '700' }}>Status da Equipe (Ao Vivo)</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
             {alunosAoVivo.map((aluno) => {
               const emAtividade = !!aluno.nome_operacao;
