@@ -16,9 +16,12 @@ function GerenciarEngenharia() {
   const [formProcesso, setFormProcesso] = useState({});
 
   useEffect(() => {
-    // Carrega todos os projetos/estampos disponíveis
+    // Carrega todos os projetos e imprime no F12 para descobrirmos os nomes exatos
     axios.get('https://gestao-ferramentaria.onrender.com/api/projetos')
-      .then(res => setProjetos(res.data))
+      .then(res => {
+        console.log("🔍 DADOS QUE VIERAM DO BANCO:", res.data);
+        setProjetos(res.data);
+      })
       .catch(err => console.error(err));
   }, []);
 
