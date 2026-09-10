@@ -74,8 +74,8 @@ function GerenciarEngenharia() {
           >
             <option value="">-- Escolha um Projeto --</option>
             {projetos.map(p => (
-              <option key={p.id || Math.random()} value={p.id}>
-                {p.nome || p.nome_projeto || p.titulo || p.descricao || `Projeto ID: ${p.id}`}
+              <option key={p.id_projeto} value={p.id_projeto}>
+                {p.titulo}
               </option>
             ))}
           </select>
