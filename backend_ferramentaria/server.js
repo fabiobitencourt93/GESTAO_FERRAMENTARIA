@@ -360,6 +360,42 @@ app.put('/api/processos/:id', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Criar Nova Peça (Vinculada ao Projeto/Estampo)
+// ==========================================
+app.post('/api/pecas', async (req, res) => {
+    try {
+        const { estampo_id, nome, pos } = req.body;
+        await pool.query(
+            'INSERT INTO pecas (estampo_id, nome, pos) VALUES ($1, $2, $3)',
+            [estampo_id, nome, pos]
+        );
+        res.json({ message: 'Peça cadastrada com sucesso' });
+    } catch (err) {
+        console.error("Erro ao criar peça:", err.message);
+        res.status(500).send('Erro interno ao criar peça');
+    }
+});
+
+// ==========================================
+// ROTA: Criar Novo Processo (Vinculado à Peça)
+// ==========================================
+app.post('/api/processos', async (req, res) => {
+    try {
+        const { peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida } = req.body;
+        await pool.query(
+            'INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida) VALUES ($1, $2, $3, $4, $5)',
+            [peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida]
+        );
+        res.json({ message: 'Processo cadastrado com sucesso' });
+    } catch (err) {
+        console.error("Erro ao criar processo:", err.message);
+        res.status(500).send('Erro interno ao criar processo');
+    }
+});
+
+
+
+// ==========================================
 // Inicialização do Servidor
 // ==========================================
 app.listen(port, () => {
