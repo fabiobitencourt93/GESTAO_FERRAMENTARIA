@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 // Importando ícones com o mesmo traço fino e moderno das imagens
-import { Bell, Wrench, LayoutGrid, BarChart2, Settings, Factory, ArrowRight } from 'lucide-react';
+import { Bell, Wrench, LayoutGrid, BarChart2, Settings, ArrowRight } from 'lucide-react';
 
 function Projetos() {
   const [projetos, setProjetos] = useState([]);

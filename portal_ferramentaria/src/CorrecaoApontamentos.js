@@ -5,10 +5,8 @@ import { ChevronLeft, Home, Bell, AlertCircle } from 'lucide-react';
 
 function CorrecaoApontamentos() {
   const navigate = useNavigate();
-  // Começa com uma lista vazia
   const [pendentes, setPendentes] = useState([]);
 
-  // Busca os dados reais do banco ao abrir a página
   const carregarPendentes = () => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/apontamentos/abertos')
       .then(response => setPendentes(response.data))
@@ -19,7 +17,24 @@ function CorrecaoApontamentos() {
     carregarPendentes();
   }, []);
 
-  // Formata a data e hora para ficar bonita na tela (Ex: 09/09/2026 às 16:30)
+  // Nova função que se comunica com o banco para fechar a tarefa
+  const encerrarApontamento = async (processoId, operadorId) => {
+    const confirmar = window.confirm('Deseja forçar o encerramento deste apontamento agora?');
+    if (!confirmar) return;
+
+    try {
+      await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
+        processo_id: processoId,
+        operador_id: operadorId
+      });
+      alert('Apontamento encerrado com sucesso!');
+      carregarPendentes(); // Atualiza a tela automaticamente, fazendo o card sumir
+    } catch (error) {
+      console.error("Erro ao encerrar:", error);
+      alert('Erro ao encerrar. Verifique a conexão com o servidor.');
+    }
+  };
+
   const formatarData = (dataISO) => {
     const data = new Date(dataISO);
     return data.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
@@ -59,10 +74,15 @@ function CorrecaoApontamentos() {
                     Em: {formatarData(item.inicio)}
                   </p>
                 </div>
-                {/* O botão "Encerrar" por enquanto é apenas visual. Faremos a rota de encerramento em seguida, se desejar */}
-                <button style={{ backgroundColor: '#CA8A04', color: '#FFF', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: '600', cursor: 'pointer' }}>
+                
+                {/* Botão funcional com evento onClick */}
+                <button 
+                  onClick={() => encerrarApontamento(item.processo_id, item.id_aluno)}
+                  style={{ backgroundColor: '#CA8A04', color: '#FFF', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: '600', cursor: 'pointer' }}
+                >
                   Encerrar
                 </button>
+
               </div>
             ))}
           </div>
