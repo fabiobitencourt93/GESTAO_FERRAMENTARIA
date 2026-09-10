@@ -41,8 +41,8 @@ function Producao() {
         if (!agrupado[nomeProjeto]) {
           agrupado[nomeProjeto] = { nome: nomeProjeto, total_planejado: 0, total_realizado: 0 };
         }
-        agrupado[nomeProjeto].total_planejado += Number(item.total_planejado || 0);
-        agrupado[nomeProjeto].total_realizado += Number(item.total_realizado || 0);
+        agrupado[nomeProjeto].total_planejado += Number(item.total_planejado || 0)/60;
+        agrupado[nomeProjeto].total_realizado += Number(item.total_realizado || 0)/60;
       });
       return Object.values(agrupado);
     } else {
@@ -57,8 +57,8 @@ function Producao() {
           if (!agrupado[nomePeca]) {
             agrupado[nomePeca] = { nome: nomePeca, total_planejado: 0, total_realizado: 0 };
           }
-          agrupado[nomePeca].total_planejado += Number(item.total_planejado || 0);
-          agrupado[nomePeca].total_realizado += Number(item.total_realizado || 0);
+          agrupado[nomePeca].total_planejado += Number(item.total_planejado || 0)/60;
+          agrupado[nomePeca].total_realizado += Number(item.total_realizado || 0)/60;
         });
       return Object.values(agrupado);
     }
