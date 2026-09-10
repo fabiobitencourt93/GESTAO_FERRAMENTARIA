@@ -8,7 +8,10 @@ function Producao() {
   const navigate = useNavigate();
   const [dadosBrutos, setDadosBrutos] = useState([]);
   const [alunosAoVivo, setAlunosAoVivo] = useState([]);
+  
+  // Controles independentes para o Gráfico e para a Lista de Progresso
   const [filtroGrafico, setFiltroGrafico] = useState('Geral'); 
+  const [filtroProgresso, setFiltroProgresso] = useState('TodasAsPecas'); 
 
   useEffect(() => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/desempenho')
@@ -28,51 +31,50 @@ function Producao() {
 
   const projetosUnicos = [...new Set(dadosBrutos.map(d => d.projeto))];
 
-  // Processamento e Trava de Segurança Matemática
-  const dadosGrafico = useMemo(() => {
+  // Função central que processa a matemática dependendo do filtro escolhido
+  const processarAgrupamento = (filtro) => {
     const calcularProgresso = (realizado, planejado) => {
       const plan = Number(planejado) || 0;
       const real = Number(realizado) || 0;
-      // Impede a divisão por zero que quebra o layout
       if (plan <= 0) return 0; 
       return Math.round((real / plan) * 100);
     };
 
-    if (filtroGrafico === 'Geral') {
+    if (filtro === 'Geral') {
       const agrupado = {};
       dadosBrutos.forEach(item => {
-        const nomeProjeto = item.projeto || 'Desconhecido';
-        if (!agrupado[nomeProjeto]) {
-          agrupado[nomeProjeto] = { nome: nomeProjeto, total_planejado: 0, total_realizado: 0, progresso: 0 };
-        }
-        agrupado[nomeProjeto].total_planejado += Number(item.total_planejado || 0) / 60;
-        agrupado[nomeProjeto].total_realizado += Number(item.total_realizado || 0) / 60;
+        const nome = item.projeto || 'Desconhecido';
+        if (!agrupado[nome]) agrupado[nome] = { nome, total_planejado: 0, total_realizado: 0, progresso: 0 };
+        agrupado[nome].total_planejado += Number(item.total_planejado || 0) / 60;
+        agrupado[nome].total_realizado += Number(item.total_realizado || 0) / 60;
       });
+      return Object.values(agrupado).map(i => ({ ...i, progresso: calcularProgresso(i.total_realizado, i.total_planejado) }));
       
-      return Object.values(agrupado).map(item => ({
-        ...item,
-        progresso: calcularProgresso(item.total_realizado, item.total_planejado)
-      }));
+    } else if (filtro === 'TodasAsPecas') {
+      const agrupado = {};
+      dadosBrutos.forEach(item => {
+        // Junta o nome do projeto e da peça para não confundir peças com nomes iguais em projetos diferentes
+        const nome = item.peca ? `${item.projeto} - ${item.peca}` : 'Peça sem nome';
+        if (!agrupado[nome]) agrupado[nome] = { nome, total_planejado: 0, total_realizado: 0, progresso: 0 };
+        agrupado[nome].total_planejado += Number(item.total_planejado || 0) / 60;
+        agrupado[nome].total_realizado += Number(item.total_realizado || 0) / 60;
+      });
+      return Object.values(agrupado).map(i => ({ ...i, progresso: calcularProgresso(i.total_realizado, i.total_planejado) }));
 
     } else {
       const agrupado = {};
-      dadosBrutos
-        .filter(item => item.projeto === filtroGrafico)
-        .forEach(item => {
-          const nomePeca = item.peca ? item.peca : 'Peça sem nome';
-          if (!agrupado[nomePeca]) {
-            agrupado[nomePeca] = { nome: nomePeca, total_planejado: 0, total_realizado: 0, progresso: 0 };
-          }
-          agrupado[nomePeca].total_planejado += Number(item.total_planejado || 0) / 60;
-          agrupado[nomePeca].total_realizado += Number(item.total_realizado || 0) / 60;
-        });
-        
-      return Object.values(agrupado).map(item => ({
-        ...item,
-        progresso: calcularProgresso(item.total_realizado, item.total_planejado)
-      }));
+      dadosBrutos.filter(item => item.projeto === filtro).forEach(item => {
+        const nome = item.peca || 'Peça sem nome';
+        if (!agrupado[nome]) agrupado[nome] = { nome, total_planejado: 0, total_realizado: 0, progresso: 0 };
+        agrupado[nome].total_planejado += Number(item.total_planejado || 0) / 60;
+        agrupado[nome].total_realizado += Number(item.total_realizado || 0) / 60;
+      });
+      return Object.values(agrupado).map(i => ({ ...i, progresso: calcularProgresso(i.total_realizado, i.total_planejado) }));
     }
-  }, [dadosBrutos, filtroGrafico]);
+  };
+
+  const dadosGrafico = useMemo(() => processarAgrupamento(filtroGrafico), [dadosBrutos, filtroGrafico]);
+  const dadosProgresso = useMemo(() => processarAgrupamento(filtroProgresso), [dadosBrutos, filtroProgresso]);
 
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '120px' }}>
@@ -91,23 +93,18 @@ function Producao() {
 
       <div style={{ padding: '0 24px' }}>
         
-        {/* ========================================== */}
-        {/* BLOCO 1: GRÁFICO (Com margem inferior forçada) */}
-        {/* ========================================== */}
+        {/* BLOCO 1: GRÁFICO */}
         <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', marginBottom: '32px' }}>
-          
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
             <h3 style={{ margin: 0, color: '#111827', fontSize: '16px' }}>Planejado vs Realizado (Horas)</h3>
-            
             <select 
               value={filtroGrafico} 
               onChange={(e) => setFiltroGrafico(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', backgroundColor: '#F9FAFB', outline: 'none', cursor: 'pointer', fontSize: '14px', color: '#374151', minWidth: '220px' }}
             >
               <option value="Geral">Visão Geral (Ferramentas Completas)</option>
-              {projetosUnicos.map(proj => (
-                <option key={proj} value={proj}>Ver peças: {proj}</option>
-              ))}
+              <option value="TodasAsPecas">Visão Detalhada (Todas as Peças)</option>
+              {projetosUnicos.map(proj => <option key={proj} value={proj}>Ver peças: {proj}</option>)}
             </select>
           </div>
 
@@ -126,75 +123,62 @@ function Producao() {
           </div>
         </div>
 
-        {/* ========================================== */}
-        {/* BLOCO 2: PROGRESSO (Caixa separada) */}
-        {/* ========================================== */}
+        {/* BLOCO 2: PROGRESSO */}
         <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', marginBottom: '32px' }}>
-          <h3 style={{ margin: '0 0 20px 0', color: '#111827', fontSize: '16px' }}>
-            Progresso de Execução ({filtroGrafico === 'Geral' ? 'Ferramentas' : 'Peças'})
-          </h3>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {dadosGrafico.map(item => (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <h3 style={{ margin: 0, color: '#111827', fontSize: '16px' }}>Progresso de Execução</h3>
+            <select 
+              value={filtroProgresso} 
+              onChange={(e) => setFiltroProgresso(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #D1D5DB', backgroundColor: '#F9FAFB', outline: 'none', cursor: 'pointer', fontSize: '14px', color: '#374151', minWidth: '220px' }}
+            >
+              <option value="TodasAsPecas">Todas as Peças (Lista Completa)</option>
+              <option value="Geral">Ferramentas Completas (Agrupado)</option>
+              {projetosUnicos.map(proj => <option key={proj} value={proj}>Ver peças: {proj}</option>)}
+            </select>
+          </div>
+          
+          {/* Caixa com Scroll para suportar dezenas de peças sem quebrar a tela */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '350px', overflowY: 'auto', paddingRight: '8px' }}>
+            {dadosProgresso.map(item => (
               <div key={item.nome}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
                   <span style={{ fontWeight: '600', color: '#374151' }}>{item.nome}</span>
                   <span style={{ color: item.progresso >= 100 ? '#16A34A' : '#0284C7', fontWeight: '700' }}>
-                    {item.progresso}% {item.progresso >= 100 && '(Concluído/Ultrapassado)'}
+                    {item.progresso}% {item.progresso >= 100 && '(Concluído)'}
                   </span>
                 </div>
-                
                 <div style={{ width: '100%', height: '10px', backgroundColor: '#F3F4F6', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ 
-                    width: `${Math.min(item.progresso, 100)}%`, 
-                    height: '100%', 
-                    backgroundColor: item.progresso >= 100 ? '#16A34A' : '#0284C7',
-                    transition: 'width 0.5s ease'
-                  }}></div>
+                  <div style={{ width: `${Math.min(item.progresso, 100)}%`, height: '100%', backgroundColor: item.progresso >= 100 ? '#16A34A' : '#0284C7', transition: 'width 0.5s ease' }}></div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ========================================== */}
         {/* BLOCO 3: EQUIPE AO VIVO */}
-        {/* ========================================== */}
         <div>
           <h3 style={{ margin: '0 0 16px 0', color: '#111827', fontSize: '18px', fontWeight: '700' }}>Status da Equipe (Ao Vivo)</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
             {alunosAoVivo.map((aluno) => {
               const emAtividade = !!aluno.nome_operacao;
-
               return (
-                <div key={aluno.operador_id} style={{ 
-                  backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '16px', 
-                  borderTop: emAtividade ? '4px solid #22C55E' : '4px solid #E5E7EB',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)' 
-                }}>
+                <div key={aluno.operador_id} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '16px', borderTop: emAtividade ? '4px solid #22C55E' : '4px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                     <div style={{ backgroundColor: emAtividade ? '#DCFCE7' : '#F3F4F6', padding: '6px', borderRadius: '50%' }}>
                       <User size={16} color={emAtividade ? '#166534' : '#6B7280'} />
                     </div>
-                    <span style={{ fontWeight: '700', fontSize: '15px', color: '#111827' }}>
-                      {aluno.operador_nome}
-                    </span>
+                    <span style={{ fontWeight: '700', fontSize: '15px', color: '#111827' }}>{aluno.operador_nome}</span>
                   </div>
-                  
                   {emAtividade ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <span style={{ fontSize: '13px', color: '#15803D', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Activity size={14} /> {aluno.nome_operacao}
-                      </span>
+                      <span style={{ fontSize: '13px', color: '#15803D', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}><Activity size={14} /> {aluno.nome_operacao}</span>
                       <span style={{ fontSize: '12px', color: '#6B7280' }}>Peça: {aluno.nome_peca}</span>
-                      <span style={{ fontSize: '12px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Wrench size={12} /> {aluno.maquina_sugerida}
-                      </span>
+                      <span style={{ fontSize: '12px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px' }}><Wrench size={12} /> {aluno.maquina_sugerida}</span>
                     </div>
                   ) : (
-                    <div style={{ fontSize: '13px', color: '#9CA3AF', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px', height: '100%', paddingBottom: '8px' }}>
-                      Disponível / Livre
-                    </div>
+                    <div style={{ fontSize: '13px', color: '#9CA3AF', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px', height: '100%', paddingBottom: '8px' }}>Disponível / Livre</div>
                   )}
                 </div>
               );
