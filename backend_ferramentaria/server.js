@@ -234,6 +234,58 @@ app.get('/api/apontamentos/abertos', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTA 9: Listar Operadores (Alunos)
+// ==========================================
+app.get('/api/operadores', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM operadores ORDER BY nome ASC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro ao listar alunos:", err.message);
+        res.status(500).send('Erro ao buscar alunos');
+    }
+});
+
+// ==========================================
+// ROTA 10: Cadastrar Novo Operador (Aluno)
+// ==========================================
+app.post('/api/operadores', async (req, res) => {
+    try {
+        const { id, nome } = req.body;
+        const result = await pool.query(
+            'INSERT INTO operadores (id, nome) VALUES ($1, $2) RETURNING *',
+            [id, nome]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        // Código 23505 é o erro padrão do PostgreSQL para "ID Duplicado"
+        if (err.code === '23505') {
+            return res.status(400).json({ error: 'Este ID de crachá já está cadastrado no sistema.' });
+        }
+        console.error("Erro ao cadastrar aluno:", err.message);
+        res.status(500).send('Erro interno ao cadastrar aluno');
+    }
+});
+
+// ==========================================
+// ROTA 11: Excluir Operador (Aluno)
+// ==========================================
+app.delete('/api/operadores/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM operadores WHERE id = $1', [id]);
+        res.json({ message: 'Aluno removido com sucesso' });
+    } catch (err) {
+        // Se o aluno tiver apontamentos amarrados a ele, o banco não deixará excluir por segurança (chave estrangeira)
+        if (err.code === '23503') {
+            return res.status(400).json({ error: 'Não é possível excluir este aluno pois ele possui horas de produção registradas.' });
+        }
+        console.error("Erro ao excluir aluno:", err.message);
+        res.status(500).send('Erro interno ao excluir aluno');
+    }
+});
+
 
 // ==========================================
 // Inicialização do Servidor
