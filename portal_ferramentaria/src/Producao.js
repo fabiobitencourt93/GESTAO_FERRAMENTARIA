@@ -85,9 +85,9 @@ function Producao() {
         <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-            <h3 style={{ margin: 0, color: '#111827', fontSize: '16px' }}>Planejado vs Realizado (Minutos)</h3>
+            {/* Título alterado para Horas */}
+            <h3 style={{ margin: 0, color: '#111827', fontSize: '16px' }}>Planejado vs Realizado (Horas)</h3>
             
-            {/* Seletor de Filtro */}
             <select 
               value={filtroGrafico} 
               onChange={(e) => setFiltroGrafico(e.target.value)}
@@ -116,12 +116,13 @@ function Producao() {
                 <Tooltip 
                   cursor={{fill: '#F3F4F6'}} 
                   borderRadius={12} 
-                  formatter={(value, name) => [`${Number(value).toFixed(2)} min`, name]} 
+                  /* Caixinha preta agora mostra o sufixo "h" */
+                  formatter={(value, name) => [`${Number(value).toFixed(1)} h`, name]} 
                 />
                 
                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
                 <Bar dataKey="total_planejado" name="Tempo Planejado" fill="#94A3B8" radius={[4, 4, 0, 0]} barSize={40} />
-                <Bar dataKey="total_realizado" name="Tempo Realizado" fill="#a1017f" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="total_realizado" name="Tempo Realizado" fill="#007A33" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
