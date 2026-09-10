@@ -8,7 +8,6 @@ function Ajustes() {
   const [autenticado, setAutenticado] = useState(false);
   const [senhaDigitada, setSenhaDigitada] = useState('');
 
-  // Ao carregar a tela, verifica se o professor já digitou a senha nesta sessão
   useEffect(() => {
     const sessaoAtiva = sessionStorage.getItem('professorAutenticado');
     if (sessaoAtiva === 'true') {
@@ -34,7 +33,6 @@ function Ajustes() {
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '100px' }}>
       
-      {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', backgroundColor: '#FFF', borderBottom: '1px solid #E5E7EB' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ChevronLeft size={28} /></button>
@@ -51,7 +49,6 @@ function Ajustes() {
       <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
         
         {!autenticado ? (
-          /* TELA DE BLOQUEIO */
           <div style={{ backgroundColor: '#FFFFFF', padding: '32px 24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', textAlign: 'center', marginTop: '20px' }}>
             <div style={{ backgroundColor: '#FEE2E2', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 16px auto' }}>
               <Lock size={32} color="#DC2626" />
@@ -76,7 +73,6 @@ function Ajustes() {
             </button>
           </div>
         ) : (
-          /* MENU DO PROFESSOR (Desbloqueado) */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
             <button 
@@ -108,7 +104,7 @@ function Ajustes() {
               <div style={{ backgroundColor: '#F3F4F6', padding: '12px', borderRadius: '12px' }}><SettingsIcon size={24} color="#4B5563" /></div>
               <div>
                 <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>Engenharia e Roteiros</h3>
-                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar peças, editar processos, sequência e tempos.</p>
+                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar peças, editar processos, sequência e tempos alvo.</p>
               </div>
             </button>
 
@@ -127,7 +123,6 @@ function Ajustes() {
         )}
       </div>
 
-      {/* Menu Inferior */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
         <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
         <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span></div>
