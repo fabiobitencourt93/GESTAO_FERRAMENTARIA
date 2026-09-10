@@ -208,6 +208,32 @@ app.get('/api/relatorios/ao-vivo', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTA 8: Buscar Apontamentos Abertos (Esquecidos)
+// ==========================================
+app.get('/api/apontamentos/abertos', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                a.processo_id,
+                o.id AS id_aluno,
+                o.nome AS aluno,
+                pr.nome_operacao AS operacao,
+                a.data_hora_inicio AS inicio
+            FROM apontamentos a
+            JOIN operadores o ON a.operador_id = o.id
+            JOIN processos pr ON a.processo_id = pr.id
+            WHERE a.data_hora_fim IS NULL
+            ORDER BY a.data_hora_inicio ASC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro na Rota de Apontamentos Abertos:", err.message);
+        res.status(500).send('Erro ao buscar dados');
+    }
+});
+
 
 // ==========================================
 // Inicialização do Servidor

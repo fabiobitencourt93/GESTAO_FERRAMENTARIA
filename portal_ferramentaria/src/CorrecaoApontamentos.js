@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { ChevronLeft, Home, Bell, AlertCircle } from 'lucide-react';
 
 function CorrecaoApontamentos() {
   const navigate = useNavigate();
-  const [pendentes] = useState([
-    { id: 1, aluno: 'João', id_aluno: 20267, operacao: 'Fresamento', inicio: 'Ontem, 16:30' }
-  ]);
+  // Começa com uma lista vazia
+  const [pendentes, setPendentes] = useState([]);
+
+  // Busca os dados reais do banco ao abrir a página
+  const carregarPendentes = () => {
+    axios.get('https://gestao-ferramentaria.onrender.com/api/apontamentos/abertos')
+      .then(response => setPendentes(response.data))
+      .catch(error => console.error("Erro ao buscar apontamentos:", error));
+  };
+
+  useEffect(() => {
+    carregarPendentes();
+  }, []);
+
+  // Formata a data e hora para ficar bonita na tela (Ex: 09/09/2026 às 16:30)
+  const formatarData = (dataISO) => {
+    const data = new Date(dataISO);
+    return data.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  };
 
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
@@ -22,21 +39,34 @@ function CorrecaoApontamentos() {
       </div>
 
       <div style={{ padding: '0 24px' }}>
-        <h3 style={{ fontSize: '16px', color: '#4B5563', marginBottom: '16px' }}>Apontamentos Esquecidos Abertos</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {pendentes.map(item => (
-            <div key={item.id} style={{ backgroundColor: '#FEF9C3', border: '1px solid #FDE047', padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <AlertCircle size={16} color="#CA8A04" />
-                  <span style={{ fontWeight: '700', color: '#854D0E', fontSize: '14px' }}>{item.operacao}</span>
+        <h3 style={{ fontSize: '16px', color: '#4B5563', marginBottom: '16px' }}>
+          Apontamentos Esquecidos Abertos ({pendentes.length})
+        </h3>
+        
+        {pendentes.length === 0 ? (
+          <p style={{ color: '#6B7280', fontSize: '14px' }}>Não há operações esquecidas no momento. Tudo certo!</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {pendentes.map(item => (
+              <div key={item.processo_id + item.id_aluno} style={{ backgroundColor: '#FEF9C3', border: '1px solid #FDE047', padding: '16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <AlertCircle size={16} color="#CA8A04" />
+                    <span style={{ fontWeight: '700', color: '#854D0E', fontSize: '14px' }}>{item.operacao}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#A16207' }}>
+                    Iniciado por {item.aluno} (ID {item.id_aluno})<br/> 
+                    Em: {formatarData(item.inicio)}
+                  </p>
                 </div>
-                <p style={{ margin: 0, fontSize: '13px', color: '#A16207' }}>Iniciado por {item.aluno} (ID {item.id_aluno}) - {item.inicio}</p>
+                {/* O botão "Encerrar" por enquanto é apenas visual. Faremos a rota de encerramento em seguida, se desejar */}
+                <button style={{ backgroundColor: '#CA8A04', color: '#FFF', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: '600', cursor: 'pointer' }}>
+                  Encerrar
+                </button>
               </div>
-              <button style={{ backgroundColor: '#CA8A04', color: '#FFF', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: '600', cursor: 'pointer' }}>Encerrar</button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -21,10 +21,15 @@ function Projetos() {
       {/* Top Bar (Cabeçalho do App) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 12px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ backgroundColor: '#F3B48F', padding: '8px', borderRadius: '10px', color: 'white', display: 'flex' }}>
-            <Factory size={20} />
-          </div>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>GestãoFab</h1>
+          
+          {/* AQUI ENTRA A SUA LOGO */}
+          <img 
+            src="/cecdr.png" 
+            alt="Logo GestãoFab" 
+            style={{ height: '56px', width: 'auto', borderRadius: '8px' }} 
+          />
+
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Gestão CECDR - 2026</h1>
         </div>
         <Bell size={24} color="#111827" />
       </div>
@@ -56,7 +61,7 @@ function Projetos() {
               {/* Esquerda: Ícone + Textos */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 {/* Bloco do Ícone (Fundo verde claro, ícone verde escuro) */}
-                <div style={{ backgroundColor: '#E6F4EA', color: '#007A33', width: '48px', height: '48px', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <div style={{ backgroundColor: '#c5eaff', color: '#00289f', width: '48px', height: '48px', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Wrench size={24} />
                 </div>
                 
@@ -70,7 +75,7 @@ function Projetos() {
               <button 
                 onClick={() => navigate(`/estampo/${item.estampo_id}`)}
                 style={{ 
-                  backgroundColor: '#007A33', 
+                  backgroundColor: '#005fb7', 
                   color: '#FFFFFF', 
                   border: 'none', 
                   borderRadius: '12px', 
