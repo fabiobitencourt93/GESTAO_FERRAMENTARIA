@@ -163,6 +163,7 @@ app.get('/api/relatorios/desempenho', async (req, res) => {
             )
             SELECT 
                 p.nome AS projeto,
+                pe.nome AS peca,
                 SUM(pr.tempo_planejado_min) AS total_planejado,
                 SUM(COALESCE(tr.total_realizado_min, 0)) AS total_realizado
             FROM processos pr
@@ -170,14 +171,14 @@ app.get('/api/relatorios/desempenho', async (req, res) => {
             JOIN estampos e ON pe.estampo_id = e.id
             JOIN projetos p ON e.projeto_id = p.id
             LEFT JOIN tempo_real tr ON pr.id = tr.processo_id
-            GROUP BY p.nome
-            ORDER BY p.nome;
+            GROUP BY p.nome, pe.nome
+            ORDER BY p.nome, pe.nome;
         `;
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
         console.error("Erro na Rota 6:", err.message);
-        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+        res.status(500).send('Erro ao buscar relatório');
     }
 });
 
