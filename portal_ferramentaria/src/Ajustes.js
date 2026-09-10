@@ -116,11 +116,12 @@ function Ajustes() {
           </div>
         </div>
 
-        <div onClick={() => navigate('/maquinas')} style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <div style={{ backgroundColor: '#F3F4F6', color: '#4B5563', padding: '12px', borderRadius: '12px' }}><Wrench size={24} /></div>
+        {/* BOTÃO 3: ENGENHARIA E ROTEIROS */}
+        <div onClick={() => navigate('/engenharia')} style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+          <div style={{ backgroundColor: '#F3F4F6', color: '#4B5563', padding: '12px', borderRadius: '12px' }}><Settings size={24} /></div>
           <div>
-            <h3 style={{ margin: 0, fontSize: '16px', color: '#111827' }}>Parque Fabril e Máquinas</h3>
-            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6B7280' }}>Gerenciar centro de usinagem ROMI D800 (Comando FANUC 0i-MF), tornos e retíficas.</p>
+            <h3 style={{ margin: 0, fontSize: '16px', color: '#111827' }}>Engenharia e Roteiros</h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6B7280' }}>Cadastrar peças, editar processos, sequência e tempos alvo.</p>
           </div>
         </div>
 

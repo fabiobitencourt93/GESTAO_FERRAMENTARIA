@@ -7,7 +7,7 @@ import Ajustes from './Ajustes';
 import Notificacoes from './Notificacoes';
 import GerenciarAlunos from './GerenciarAlunos';
 import CorrecaoApontamentos from './CorrecaoApontamentos';
-import ParqueFabril from './ParqueFabril';
+import GerenciarEngenharia from './GerenciarEngenharia';
 
 // 1. ESTA LINHA PRECISA EXISTIR:
 import ProcessosPeca from './ProcessosPeca'; 
@@ -25,7 +25,7 @@ function App() {
         <Route path="/notificacoes" element={<Notificacoes />} />
         <Route path="/alunos" element={<GerenciarAlunos />} />
         <Route path="/correcao" element={<CorrecaoApontamentos />} />
-        <Route path="/maquinas" element={<ParqueFabril />} />
+        <Route path="/engenharia" element={<GerenciarEngenharia />} />
       </Routes>
     </Router>
   );

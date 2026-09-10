@@ -287,6 +287,70 @@ app.delete('/api/operadores/:id', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTAS DE ENGENHARIA (CRUD Peças e Processos)
+// ==========================================
+
+// Lista todos os projetos para o menu dropdown
+app.get('/api/projetos', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT id, nome FROM projetos ORDER BY nome');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send('Erro ao buscar projetos');
+    }
+});
+
+// Busca todas as peças e empacota os processos dentro delas
+app.get('/api/projetos/:id/engenharia', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // 1. Busca as peças do projeto
+        const pecas = await pool.query(`
+            SELECT pe.id, pe.nome, pe.pos 
+            FROM pecas pe
+            JOIN estampos e ON pe.estampo_id = e.id
+            WHERE e.projeto_id = $1
+            ORDER BY pe.pos ASC
+        `, [id]);
+
+        // 2. Busca os processos dessas peças e anexa ao JSON
+        for (let peca of pecas.rows) {
+            const processos = await pool.query(`
+                SELECT id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida
+                FROM processos
+                WHERE peca_id = $1
+                ORDER BY ordem_execucao ASC
+            `, [peca.id]);
+            
+            peca.processos = processos.rows;
+        }
+
+        res.json(pecas.rows);
+    } catch (err) {
+        console.error("Erro na Engenharia:", err);
+        res.status(500).send('Erro ao buscar engenharia');
+    }
+});
+
+// Salva a edição de um processo específico
+app.put('/api/processos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida } = req.body;
+        
+        await pool.query(`
+            UPDATE processos 
+            SET ordem_execucao = $1, nome_operacao = $2, tempo_planejado_min = $3, maquina_sugerida = $4
+            WHERE id = $5
+        `, [ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida, id]);
+        
+        res.json({ message: 'Processo atualizado' });
+    } catch (err) {
+        res.status(500).send('Erro ao atualizar processo');
+    }
+});
 
 // ==========================================
 // Inicialização do Servidor
