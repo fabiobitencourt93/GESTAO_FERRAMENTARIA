@@ -14,12 +14,10 @@ function ProcessosPeca() {
   const [tipoAcao, setTipoAcao] = useState(''); 
   const [agora, setAgora] = useState(new Date());
 
-  // Função para dar a operação como 100% concluída
   const encerrarCom100PorCento = async (processoId) => {
-    // Busca o ID do aluno que está operando no momento
-    const operadorId = localStorage.getItem('operadorId'); 
+    const opId = localStorage.getItem('operadorId'); 
     
-    if (!operadorId) {
+    if (!opId) {
       return alert('Erro: Nenhum aluno identificado no sistema.');
     }
 
@@ -29,11 +27,10 @@ function ProcessosPeca() {
     try {
       await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar-100', {
         processo_id: processoId,
-        operador_id: operadorId
+        operador_id: opId
       });
       alert('Operação finalizada com sucesso! Parabéns.');
       
-      // Atualiza a tela automaticamente (Substitua "carregarProcessos" pelo nome da função que você já usa para ler os dados do banco)
       carregarProcessos(); 
     } catch (error) {
       console.error(error);
@@ -41,21 +38,17 @@ function ProcessosPeca() {
     }
   };
 
-
-  // Função para buscar os dados (separada para podermos recarregar a lista depois do play/stop)
   const carregarProcessos = () => {
     axios.get(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}/processos`)
       .then(response => setProcessos(response.data))
       .catch(error => console.error("Erro:", error));
   };
 
-  // Carrega ao entrar na página
   useEffect(() => {
     carregarProcessos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // Relógio que atualiza a cada 1 segundo para o cronômetro
   useEffect(() => {
     const intervalo = setInterval(() => setAgora(new Date()), 1000);
     return () => clearInterval(intervalo);
@@ -77,7 +70,7 @@ function ProcessosPeca() {
           operador_id: operadorId
         });
         fecharModal();
-        carregarProcessos(); // Recarrega a tela para ficar verde
+        carregarProcessos(); 
       } catch (error) {
         alert('Erro ao iniciar. O ID deste aluno existe no banco de dados?');
       }
@@ -88,7 +81,7 @@ function ProcessosPeca() {
           operador_id: operadorId
         });
         fecharModal();
-        carregarProcessos(); // Recarrega a tela para voltar ao normal
+        carregarProcessos(); 
       } catch (error) {
         alert('Erro: ID incorreto ou não há apontamento aberto por você nesta operação.');
       }
@@ -101,7 +94,6 @@ function ProcessosPeca() {
     setTipoAcao('');
   };
 
-  // Função matemática para formatar HH:MM:SS
   const formatarTempo = (dataISO) => {
     if (!dataISO) return '';
     const inicio = new Date(dataISO);
@@ -117,10 +109,8 @@ function ProcessosPeca() {
 
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', -apple-system, sans-serif", paddingBottom: '80px' }}>
-      {/* Injeta a animação de piscar na página */}
       <style>{`@keyframes pulse-fast { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }`}</style>
       
-      {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 12px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}>
@@ -129,7 +119,6 @@ function ProcessosPeca() {
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Roteiro de Fabricação</h1>
         </div>
         
-        {/* Agrupamento de ícones à direita */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', padding: 0, display: 'flex', cursor: 'pointer', color: '#111827' }}>
             <Home size={24} />
@@ -138,7 +127,6 @@ function ProcessosPeca() {
         </div>
       </div>
 
-      {/* Conteúdo Principal */}
       <div style={{ padding: '24px' }}>
         <div style={{ marginBottom: '24px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#111827', margin: '0 0 4px 0' }}>
@@ -147,28 +135,10 @@ function ProcessosPeca() {
           <p style={{ fontSize: '14px', color: '#6B7280', margin: 0 }}>{processos.length} operações na sequência</p>
         </div>
 
-        {/* Lista de Processos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {processos.map((proc) => {
             const emAndamento = !!proc.data_hora_inicio;
             
-              <button 
-                onClick={() => encerrarCom100PorCento(processo.id)}
-                style={{ 
-                ackgroundColor: '#16A34A', 
-                color: '#FFF', 
-                border: 'none', 
-                borderRadius: '8px', 
-                padding: '8px 16px', 
-                fontWeight: '700', 
-                fontSize: '14px',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
-        }}
->
-  Finalizar 100%
-</button>
-
             return (
               <div key={proc.id} style={{ 
                 backgroundColor: emAndamento ? '#F0FDF4' : '#FFFFFF', 
@@ -191,7 +161,6 @@ function ProcessosPeca() {
                       </p>
                     </div>
                     
-                    {/* CRONÔMETRO AO VIVO (Só aparece se estiver em andamento) */}
                     {emAndamento && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#15803D', fontWeight: '700', fontSize: '13px', marginTop: '8px' }}>
                         <Timer size={16} style={{ animation: 'pulse-fast 1.5s infinite' }} /> 
@@ -201,13 +170,31 @@ function ProcessosPeca() {
                   </div>
                 </div>
 
-                {/* Botões de Ação */}
+                {/* Botões de Ação Agrupados */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => abrirModal(proc, 'iniciar')} style={{ backgroundColor: '#007A33', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: emAndamento ? 0.5 : 1 }} disabled={emAndamento}>
                     <Play size={20} fill="currentColor" />
                   </button>
+                  
                   <button onClick={() => abrirModal(proc, 'finalizar')} style={{ backgroundColor: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: !emAndamento ? 0.5 : 1 }} disabled={!emAndamento}>
                     <Square size={18} fill="currentColor" />
+                  </button>
+
+                  <button 
+                    onClick={() => encerrarCom100PorCento(proc.id)}
+                    style={{ 
+                      backgroundColor: '#16A34A', 
+                      color: '#FFF', 
+                      border: 'none', 
+                      borderRadius: '14px', 
+                      padding: '0 12px', 
+                      fontWeight: '700', 
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
+                    }}
+                  >
+                    100%
                   </button>
                 </div>
               </div>
@@ -216,7 +203,7 @@ function ProcessosPeca() {
         </div>
       </div>
 
-      {/* Modal Dinâmico */}
+      {/* Modal e Menu Inferior mantidos iguais */}
       {modalAberto && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', width: '90%', maxWidth: '340px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
@@ -250,36 +237,19 @@ function ProcessosPeca() {
         </div>
       )}
 
-      {/* Menu Inferior */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
-        
-        {/* Botão Painel (Home) */}
-        <div 
-          onClick={() => navigate('/')} 
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}
-        >
+        <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
           <LayoutGrid size={24} />
           <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.5px' }}>PAINEL</span>
         </div>
-
-        {/* Botão Produção */}
-        <div 
-          onClick={() => navigate('/producao')} 
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}
-        >
+        <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
           <BarChart2 size={24} />
           <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.5px' }}>PRODUÇÃO</span>
         </div>
-
-        {/* Botão Ajustes */}
-        <div 
-          onClick={() => navigate('/ajustes')} 
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}
-        >
+        <div onClick={() => navigate('/ajustes')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
           <Settings size={24} />
           <span style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.5px' }}>AJUSTES</span>
         </div>
-
       </div>
     </div>
   );
