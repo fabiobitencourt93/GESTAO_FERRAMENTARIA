@@ -31,27 +31,36 @@ function Producao() {
   const projetosUnicos = [...new Set(dadosBrutos.map(d => d.projeto))];
 
   // Processa os dados do gráfico dependendo do filtro escolhido
+ // Processa os dados do gráfico dependendo do filtro escolhido
   const dadosGrafico = useMemo(() => {
     if (filtroGrafico === 'Geral') {
-      // VISÃO GERAL: Soma os tempos de todas as peças e agrupa pela Ferramenta (Projeto) Completa
+      // VISÃO GERAL: Agrupa tudo pela Ferramenta (Projeto)
       const agrupado = {};
       dadosBrutos.forEach(item => {
-        if (!agrupado[item.projeto]) {
-          agrupado[item.projeto] = { nome: item.projeto, total_planejado: 0, total_realizado: 0 };
+        const nomeProjeto = item.projeto || 'Desconhecido';
+        if (!agrupado[nomeProjeto]) {
+          agrupado[nomeProjeto] = { nome: nomeProjeto, total_planejado: 0, total_realizado: 0 };
         }
-        agrupado[item.projeto].total_planejado += Number(item.total_planejado || 0);
-        agrupado[item.projeto].total_realizado += Number(item.total_realizado || 0);
+        agrupado[nomeProjeto].total_planejado += Number(item.total_planejado || 0);
+        agrupado[nomeProjeto].total_realizado += Number(item.total_realizado || 0);
       });
       return Object.values(agrupado);
     } else {
-      // VISÃO DETALHADA: Filtra pelo projeto selecionado e mostra uma barra para cada Peça
-      return dadosBrutos
+      // VISÃO DETALHADA: Filtra pela ferramenta e agrupa pelas PEÇAS
+      const agrupado = {};
+      dadosBrutos
         .filter(item => item.projeto === filtroGrafico)
-        .map(item => ({
-          nome: item.peca,
-          total_planejado: Number(item.total_planejado || 0),
-          total_realizado: Number(item.total_realizado || 0)
-        }));
+        .forEach(item => {
+          // Se o nome da peça vier vazio do banco, exibe um alerta no gráfico
+          const nomePeca = item.peca ? item.peca : 'Peça sem nome (Verifique o Banco)';
+          
+          if (!agrupado[nomePeca]) {
+            agrupado[nomePeca] = { nome: nomePeca, total_planejado: 0, total_realizado: 0 };
+          }
+          agrupado[nomePeca].total_planejado += Number(item.total_planejado || 0);
+          agrupado[nomePeca].total_realizado += Number(item.total_realizado || 0);
+        });
+      return Object.values(agrupado);
     }
   }, [dadosBrutos, filtroGrafico]);
 

@@ -148,7 +148,7 @@ app.put('/api/apontamentos/finalizar', async (req, res) => {
 });
 
 // ==========================================
-// ROTA 6: Relatório de Desempenho (Dashboards/Visitantes)
+// ROTA 6: Relatório de Desempenho
 // ==========================================
 app.get('/api/relatorios/desempenho', async (req, res) => {
     try {
