@@ -16,7 +16,7 @@ function Ajustes() {
   }, []);
 
   const verificarSenha = () => {
-    if (senhaDigitada === '1234') { 
+    if (senhaDigitada === '260817') { 
       setAutenticado(true);
       sessionStorage.setItem('professorAutenticado', 'true');
     } else {
