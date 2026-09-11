@@ -20,6 +20,13 @@ const pool = new Pool({
 });
 
 // ==========================================
+// ROTA DE HEALTH CHECK (Para o cron-job.org)
+// ==========================================
+app.get('/api/ping', (req, res) => {
+    res.json({ status: 'Servidor MES acordado e rodando!' });
+});
+
+// ==========================================
 // ROTA 1: Lista Geral de Projetos e Estampos
 // ==========================================
 app.get('/api/projetos', async (req, res) => {
