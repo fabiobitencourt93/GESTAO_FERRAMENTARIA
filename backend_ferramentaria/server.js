@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const cron = require('node-cron');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -471,6 +473,29 @@ app.post('/api/apontamentos/manual', async (req, res) => {
         res.status(500).send('Erro interno ao salvar apontamento manual.');
     }
 });
+
+// ==========================================
+// TAREFA AUTOMÁTICA: Fechamento de Turno (16h00)
+// ==========================================
+// Os asteriscos significam: '0' (Minuto zero), '16' (Hora 16), e os outros (*) significam todos os dias e meses.
+cron.schedule('0 16 * * *', async () => {
+    console.log('⏰ Executando fechamento automático de turno (16h00)...');
+    try {
+        // Atualiza todos os apontamentos que estão em aberto (NULL)
+        const result = await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP 
+            WHERE data_hora_fim IS NULL
+        `);
+        console.log(`✅ Fechamento automático concluído. ${result.rowCount} operações abertas foram encerradas.`);
+    } catch (error) {
+        console.error('❌ Erro no fechamento automático:', error);
+    }
+}, {
+    scheduled: true,
+    timezone: "America/Sao_Paulo" // Garante que será às 16h no fuso horário de Sorocaba/SP
+});
+
 
 // ==========================================
 // Inicialização do Servidor
