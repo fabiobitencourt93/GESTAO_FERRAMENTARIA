@@ -53,16 +53,22 @@ function Projetos() {
         </button>
       </div>
       
-      {/* Lista de Projetos */}
+      {/* Lista de Projetos Corrigida */}
       <div>
-        {projetos.map((projeto, index) => (
-          <div key={index} style={{ backgroundColor: '#FFF', padding: '16px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #E5E7EB' }}>
+        {projetos.map((item, index) => (
+          // Usamos item.estampo_id como chave principal
+          <div key={item.estampo_id || index} style={{ backgroundColor: '#FFF', padding: '16px', borderRadius: '8px', marginBottom: '12px', border: '1px solid #E5E7EB' }}>
             
-            <p style={{ color: 'red', fontWeight: 'bold' }}>Raio-X do Banco de Dados:</p>
-            {/* O comando JSON.stringify transforma o objeto invisível em texto visível na tela */}
-            <pre style={{ backgroundColor: '#F3F4F6', padding: '10px', borderRadius: '8px' }}>
-              {JSON.stringify(projeto, null, 2)}
-            </pre>
+            {/* Aqui chamamos item.projeto (nome do projeto) em vez de item.nome */}
+            <h3 style={{ margin: 0, fontSize: '16px', color: '#111827' }}>
+              {item.projeto}
+            </h3>
+            
+            {/* E aqui exibimos o ID e o nome do Estampo */}
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
+              <strong>Estampo:</strong> {item.estampo} <br/>
+              <strong>ID no Banco:</strong> {item.estampo_id}
+            </p>
 
           </div>
         ))}
