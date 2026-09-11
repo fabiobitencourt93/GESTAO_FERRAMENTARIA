@@ -503,6 +503,29 @@ cron.schedule('0 16 * * *', async () => {
     timezone: "America/Sao_Paulo" // Garante que será às 16h no fuso horário de Sorocaba/SP
 });
 
+// ROTA POST: Criar um novo projeto
+app.post('/api/projetos', async (req, res) => {
+    try {
+        // req.body é o "pacote" de dados que o React envia para o Node
+        const { nome } = req.body; 
+        
+        if (!nome) {
+            return res.status(400).json({ error: 'O nome do projeto é obrigatório.' });
+        }
+
+        // O comando INSERT INTO grava no banco. O 'RETURNING *' faz o PostgreSQL 
+        // devolver a linha recém-criada (com o ID gerado automaticamente) para o Node.
+        const result = await pool.query(
+            'INSERT INTO projetos (nome) VALUES ($1) RETURNING *', 
+            [nome]
+        );
+        
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Erro ao cadastrar projeto:", err.message);
+        res.status(500).send('Erro interno ao salvar projeto');
+    }
+});
 
 // ==========================================
 // Inicialização do Servidor
