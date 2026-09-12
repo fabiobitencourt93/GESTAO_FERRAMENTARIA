@@ -1,132 +1,171 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Users, Clock, Settings as SettingsIcon, LayoutGrid, BarChart2, Settings, Lock, Unlock } from 'lucide-react';
+import axios from 'axios';
+import { ChevronLeft, Home, Bell, LayoutGrid, BarChart2, Settings, AlertOctagon, User, Tool, Calendar, ClipboardList } from 'lucide-react';
 
 function Ajustes() {
   const navigate = useNavigate();
-  
-  const [autenticado, setAutenticado] = useState(false);
-  const [senhaDigitada, setSenhaDigitada] = useState('');
+  const [telaAtual, setTelaAtual] = useState('menu'); // Controla se mostra o Menu ou as Ocorrências
+  const [ocorrencias, setOcorrencias] = useState([]);
+  const [carregando, setCarregando] = useState(false);
 
-  useEffect(() => {
-    const sessaoAtiva = sessionStorage.getItem('professorAutenticado');
-    if (sessaoAtiva === 'true') {
-      setAutenticado(true);
-    }
-  }, []);
-
-  const verificarSenha = () => {
-    if (senhaDigitada === '260817') { 
-      setAutenticado(true);
-      sessionStorage.setItem('professorAutenticado', 'true');
-    } else {
-      alert('Senha incorreta!');
-      setSenhaDigitada('');
-    }
+  const carregarOcorrencias = () => {
+    setCarregando(true);
+    axios.get('https://gestao-ferramentaria.onrender.com/api/ocorrencias')
+      .then(response => {
+        setOcorrencias(response.data);
+        setCarregando(false);
+      })
+      .catch(error => {
+        console.error("Erro ao carregar ocorrências:", error);
+        setCarregando(false);
+      });
   };
 
-  const sairEBloquear = () => {
-    setAutenticado(false);
-    sessionStorage.removeItem('professorAutenticado');
+  // Quando o usuário clicar para abrir o histórico, buscamos os dados
+  const abrirHistorico = () => {
+    carregarOcorrencias();
+    setTelaAtual('historico');
   };
 
   return (
-    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '100px' }}>
+    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '120px' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', backgroundColor: '#FFF', borderBottom: '1px solid #E5E7EB' }}>
+      {/* Barra Superior */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ChevronLeft size={28} /></button>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Ajustes do Sistema</h1>
+          {telaAtual === 'historico' ? (
+            <button onClick={() => setTelaAtual('menu')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <ChevronLeft size={28} color="#111827" />
+            </button>
+          ) : (
+            <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <ChevronLeft size={28} color="#111827" />
+            </button>
+          )}
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>
+            {telaAtual === 'historico' ? 'Histórico de Ocorrências' : 'Ajustes do Sistema'}
+          </h1>
         </div>
-        
-        {autenticado && (
-          <button onClick={sairEBloquear} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: '#DC2626', fontWeight: '600' }}>
-            <Lock size={18} /> Bloquear
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <Home size={24} color="#111827" />
           </button>
-        )}
+          <button onClick={() => navigate('/notificacoes')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <Bell size={24} color="#111827" />
+          </button>
+        </div>
       </div>
 
-      <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ padding: '0 24px' }}>
         
-        {!autenticado ? (
-          <div style={{ backgroundColor: '#FFFFFF', padding: '32px 24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', textAlign: 'center', marginTop: '20px' }}>
-            <div style={{ backgroundColor: '#FEE2E2', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 16px auto' }}>
-              <Lock size={32} color="#DC2626" />
-            </div>
-            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: '0 0 8px 0' }}>Área Restrita</h2>
-            <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '24px' }}>Digite o PIN para acessar os ajustes do sistema.</p>
-            
-            <input 
-              type="password" 
-              placeholder="Digite o PIN" 
-              value={senhaDigitada}
-              onChange={(e) => setSenhaDigitada(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && verificarSenha()}
-              style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #D1D5DB', fontSize: '18px', textAlign: 'center', marginBottom: '16px', boxSizing: 'border-box', outline: 'none' }}
-            />
-            
-            <button 
-              onClick={verificarSenha}
-              style={{ width: '100%', padding: '16px', backgroundColor: '#007A33', color: '#FFF', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-            >
-              <Unlock size={20} /> Desbloquear Acesso
-            </button>
-          </div>
-        ) : (
+        {/* TELA 1: MENU DE AJUSTES */}
+        {telaAtual === 'menu' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
-            <button 
-              onClick={() => navigate('/alunos')}
-              style={{ width: '100%', padding: '20px', backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', textAlign: 'left' }}
-            >
-              <div style={{ backgroundColor: '#E0F2FE', padding: '12px', borderRadius: '12px' }}><Users size={24} color="#0284C7" /></div>
-              <div>
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>Gerenciar Alunos (Crachás)</h3>
-                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar, editar ou remover IDs de operadores.</p>
+            <div onClick={abrirHistorico} style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', borderLeft: '4px solid #EF4444' }}>
+              <div style={{ backgroundColor: '#FEF2F2', padding: '12px', borderRadius: '12px' }}>
+                <AlertOctagon size={28} color="#DC2626" />
               </div>
-            </button>
+              <div>
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#111827' }}>Relatório de Ocorrências</h3>
+                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Visualize quebras, paradas e relatos dos alunos.</p>
+              </div>
+            </div>
 
-            <button 
-              onClick={() => navigate('/correcao')}
-              style={{ width: '100%', padding: '20px', backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', textAlign: 'left' }}
-            >
-              <div style={{ backgroundColor: '#FEF9C3', padding: '12px', borderRadius: '12px' }}><Clock size={24} color="#CA8A04" /></div>
-              <div>
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>Correção de Apontamentos</h3>
-                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Ajustar manualmente horários que ficaram em aberto.</p>
+            {/* Você pode adicionar outros botões de configuração aqui no futuro (Ex: Cadastro de Alunos, Máquinas, etc) */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: '16px', opacity: 0.6 }}>
+              <div style={{ backgroundColor: '#F3F4F6', padding: '12px', borderRadius: '12px' }}>
+                <Settings size={28} color="#4B5563" />
               </div>
-            </button>
-
-            <button 
-              onClick={() => navigate('/engenharia')}
-              style={{ width: '100%', padding: '20px', backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', textAlign: 'left' }}
-            >
-              <div style={{ backgroundColor: '#F3F4F6', padding: '12px', borderRadius: '12px' }}><SettingsIcon size={24} color="#4B5563" /></div>
               <div>
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>Engenharia e Roteiros</h3>
-                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar peças, editar processos, sequência e tempos alvo.</p>
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#111827' }}>Configurações Gerais</h3>
+                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Em breve...</p>
               </div>
-            </button>
-
-            <button 
-              onClick={() => navigate('/retroativo')}
-              style={{ width: '100%', padding: '20px', backgroundColor: '#FFF', border: '1px solid #E5E7EB', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', textAlign: 'left' }}
-            >
-              <div style={{ backgroundColor: '#FFEDD5', padding: '12px', borderRadius: '12px' }}><Clock size={24} color="#EA580C" /></div>
-              <div>
-                <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>Lançamento Retroativo de Horas</h3>
-                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Inserção de tempo para operadores que esqueceram.</p>
-              </div>
-            </button>
+            </div>
 
           </div>
         )}
+
+        {/* TELA 2: LISTA DE OCORRÊNCIAS */}
+        {telaAtual === 'historico' && (
+          <div>
+            {carregando ? (
+              <p style={{ color: '#6B7280', textAlign: 'center', marginTop: '40px' }}>Buscando registros no banco de dados...</p>
+            ) : ocorrencias.length === 0 ? (
+              <div style={{ backgroundColor: '#F0FDF4', padding: '24px', borderRadius: '16px', textAlign: 'center', color: '#166534', border: '1px solid #22C55E' }}>
+                <strong>Nenhuma ocorrência registrada!</strong>
+                <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>A produção ocorreu perfeitamente até o momento.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {ocorrencias.map((item) => (
+                  <div key={item.id} style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #FEE2E2' }}>
+                    
+                    {/* Cabeçalho do Card (Ocorrência em si) */}
+                    <div style={{ backgroundColor: '#FEF2F2', padding: '12px', borderRadius: '8px', marginBottom: '16px', color: '#991B1B' }}>
+                      <strong style={{ display: 'block', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Relato do Operador:</strong>
+                      <span style={{ fontSize: '15px', fontWeight: '500' }}>"{item.ocorrencia}"</span>
+                    </div>
+
+                    {/* Detalhes Técnicos */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ClipboardList size={16} color="#6B7280" />
+                        <div>
+                          <span style={{ display: 'block', fontSize: '11px', color: '#9CA3AF' }}>Projeto</span>
+                          <span style={{ fontSize: '13px', color: '#374151', fontWeight: '600' }}>{item.projeto || 'N/A'}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Tool size={16} color="#6B7280" />
+                        <div>
+                          <span style={{ display: 'block', fontSize: '11px', color: '#9CA3AF' }}>Peça / Operação</span>
+                          <span style={{ fontSize: '13px', color: '#374151', fontWeight: '600' }}>{item.peca || 'N/A'} - {item.operacao || 'N/A'}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <User size={16} color="#6B7280" />
+                        <div>
+                          <span style={{ display: 'block', fontSize: '11px', color: '#9CA3AF' }}>Operador (Aluno)</span>
+                          <span style={{ fontSize: '13px', color: '#374151', fontWeight: '600' }}>{item.operador || 'Desconhecido'}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Calendar size={16} color="#6B7280" />
+                        <div>
+                          <span style={{ display: 'block', fontSize: '11px', color: '#9CA3AF' }}>Data do Registro</span>
+                          <span style={{ fontSize: '13px', color: '#374151', fontWeight: '600' }}>{item.data_registro}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
 
+      {/* Menu Inferior */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
-        <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
-        <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span></div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>AJUSTES</span></div>
+        <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
+          <LayoutGrid size={24} />
+          <span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span>
+        </div>
+        <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
+          <BarChart2 size={24} />
+          <span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}>
+          <Settings size={24} />
+          <span style={{ fontSize: '10px', fontWeight: '700' }}>AJUSTES</span>
+        </div>
       </div>
     </div>
   );

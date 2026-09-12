@@ -654,6 +654,38 @@ app.get('/api/alertas', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Histórico de Ocorrências Detalhado
+// ==========================================
+app.get('/api/ocorrencias', async (req, res) => {
+    try {
+        // Ajuste os nomes das tabelas (como 'operadores' ou 'alunos') caso sejam diferentes no seu banco
+        const query = `
+            SELECT 
+                a.id,
+                a.ocorrencia,
+                TO_CHAR(a.data_hora_fim, 'DD/MM/YYYY HH24:MI') AS data_registro,
+                o.nome AS operador,
+                pr.nome AS operacao,
+                pec.nome AS peca,
+                proj.nome AS projeto
+            FROM apontamentos a
+            LEFT JOIN operadores o ON a.operador_id = o.id
+            LEFT JOIN processos pr ON a.processo_id = pr.id
+            LEFT JOIN pecas pec ON pr.peca_id = pec.id
+            LEFT JOIN estampos est ON pec.estampo_id = est.id
+            LEFT JOIN projetos proj ON est.projeto_id = proj.id
+            WHERE a.ocorrencia IS NOT NULL AND TRIM(a.ocorrencia) <> ''
+            ORDER BY a.data_hora_fim DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro ao buscar ocorrências:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
 // Inicialização do Servidor
 // ==========================================
 app.listen(port, () => {
