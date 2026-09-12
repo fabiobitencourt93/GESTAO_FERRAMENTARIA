@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Home, Bell, Plus, LayoutGrid, BarChart2, Settings } from 'lucide-react';
+import { ChevronLeft, Home, Plus, LayoutGrid, BarChart2, Settings, AlertTriangle } from 'lucide-react';
 
 function Projetos() {
   const navigate = useNavigate();
   const [projetos, setProjetos] = useState([]);
   const [novoProjeto, setNovoProjeto] = useState('');
+  
+  const [mensagemErro, setMensagemErro] = useState(null);
+  const [mensagemSucesso, setMensagemSucesso] = useState(null);
 
   const carregarProjetos = () => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/projetos')
       .then(resposta => setProjetos(resposta.data))
-      .catch(erro => console.error(erro));
+      .catch(erro => {
+        console.error(erro);
+        setMensagemErro("Falha ao carregar a lista. Verifique se o back-end está online.");
+      });
   };
 
   useEffect(() => {
@@ -19,7 +25,13 @@ function Projetos() {
   }, []);
 
   const handleCadastrar = async () => {
-    if (!novoProjeto) return alert("Digite o nome do projeto!");
+    setMensagemErro(null); 
+    setMensagemSucesso(null); 
+
+    if (!novoProjeto) {
+      setMensagemErro("Por favor, digite o nome do projeto na caixa de texto.");
+      return;
+    }
 
     try {
       await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', {
@@ -27,13 +39,12 @@ function Projetos() {
       });
       
       setNovoProjeto(''); 
+      setMensagemSucesso("Projeto cadastrado com sucesso!");
       carregarProjetos(); 
-      alert("Projeto cadastrado com sucesso!");
       
     } catch (error) {
-      // NOVA LÓGICA DE DEBUG: Vamos pegar o erro exato que o servidor Node cuspiu
       const erroReal = error.response?.data || error.message;
-      alert(`O Banco de Dados recusou. Motivo: ${JSON.stringify(erroReal)}`);
+      setMensagemErro(JSON.stringify(erroReal));
     }
   };
 
@@ -43,17 +54,37 @@ function Projetos() {
       {/* Barra Superior */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><ChevronLeft size={28} /></button>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <ChevronLeft size={28} color="#111827" />
+          </button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Projetos e Estampos</h1>
         </div>
         <div style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Home size={24} /></button>
-          <button onClick={() => navigate('/notificacoes')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Bell size={24} /></button>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+            <Home size={24} color="#111827" />
+          </button>
         </div>
       </div>
 
       <div style={{ padding: '0 24px' }}>
         
+        {/* Painel de Avisos */}
+        {mensagemErro && (
+          <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #EF4444', padding: '16px', borderRadius: '12px', marginBottom: '20px', color: '#991B1B', display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <AlertTriangle size={24} color="#DC2626" />
+            <div>
+              <strong style={{ display: 'block', fontSize: '14px' }}>O Banco de Dados recusou:</strong>
+              <span style={{ fontSize: '13px' }}>{mensagemErro}</span>
+            </div>
+          </div>
+        )}
+
+        {mensagemSucesso && (
+          <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #22C55E', padding: '16px', borderRadius: '12px', marginBottom: '20px', color: '#166534', fontWeight: '600' }}>
+            {mensagemSucesso}
+          </div>
+        )}
+
         {/* Bloco de Cadastro */}
         <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', marginBottom: '24px', display: 'flex', gap: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
           <input 
@@ -61,7 +92,7 @@ function Projetos() {
             placeholder="Nome do novo projeto..." 
             value={novoProjeto}
             onChange={(e) => setNovoProjeto(e.target.value)}
-            style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px', fontFamily: "'Inter', sans-serif" }}
+            style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px' }}
           />
           <button 
             onClick={handleCadastrar}
@@ -71,15 +102,12 @@ function Projetos() {
           </button>
         </div>
         
-        {/* Lista de Projetos */}
+        {/* Lista de Projetos (Redirecionamento Corrigido) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {projetos.map((item, index) => (
             <div 
               key={item.estampo_id || index} 
-              
-              // AQUI ESTÁ A MUDANÇA: Redireciona para a tela de apontamentos passando o ID
-              onClick={() => navigate(`/apontamentos/${item.estampo_id}`)} 
-              
+              onClick={() => navigate(`/estampo/${item.estampo_id}`)} 
               style={{ 
                 backgroundColor: '#FFFFFF', 
                 padding: '20px', 
