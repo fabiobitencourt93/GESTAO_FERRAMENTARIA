@@ -70,6 +70,22 @@ app.put('/api/projetos/:id/concluir', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Reabrir Projeto (Voltar para Andamento)
+// ==========================================
+app.put('/api/projetos/:id/reabrir', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query(
+            "UPDATE projetos SET status = 'Em Andamento', data_conclusao = NULL WHERE id = $1", 
+            [id]
+        );
+        res.json({ message: "Projeto reaberto com sucesso" });
+    } catch (err) {
+        res.status(500).json({ erroBanco: err.message });
+    }
+});
+
+// ==========================================
 // ROTA 2: Lista as Peças de um Estampo Específico
 // ==========================================
 app.get('/api/estampos/:id/pecas', async (req, res) => {

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Home, Bell, Plus, LayoutGrid, BarChart2, Settings, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
+import { ChevronLeft, Home, Bell, Plus, LayoutGrid, BarChart2, Settings, AlertTriangle, CheckCircle2, Trash2, Undo2 } from 'lucide-react';
+
+
 
 function Projetos() {
   const navigate = useNavigate();
@@ -67,6 +69,18 @@ function Projetos() {
       carregarProjetos();
     } catch (error) {
       alert("Erro ao concluir projeto.");
+    }
+  };
+
+  const handleReabrir = async (id, e) => {
+    e.stopPropagation(); 
+    if (!window.confirm("Deseja reabrir este projeto? O status voltará para 'Em Andamento'.")) return;
+
+    try {
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/reabrir`);
+      carregarProjetos();
+    } catch (error) {
+      alert("Erro ao reabrir projeto.");
     }
   };
 
@@ -181,7 +195,11 @@ function Projetos() {
                 </div>
                 
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  {item.status !== 'Concluído' && (
+                  {item.status === 'Concluído' ? (
+                    <button onClick={(e) => handleReabrir(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EAB308' }} title="Reabrir Projeto">
+                      <Undo2 size={24} />
+                    </button>
+                  ) : (
                     <button onClick={(e) => handleConcluir(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16A34A' }} title="Concluir Projeto">
                       <CheckCircle2 size={24} />
                     </button>
