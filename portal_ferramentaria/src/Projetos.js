@@ -77,7 +77,7 @@ function Projetos() {
             <div 
               key={item.estampo_id || index} 
               // Redireciona para a tela de engenharia ao clicar
-              onClick={() => navigate('/engenharia')} 
+              onClick={() => navigate('/processos')} 
               style={{ 
                 backgroundColor: '#FFFFFF', 
                 padding: '20px', 
