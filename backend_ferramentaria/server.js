@@ -538,6 +538,38 @@ app.post('/api/projetos', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Concluir Projeto (Atualizar Status)
+// ==========================================
+app.put('/api/projetos/:id/concluir', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query(
+            "UPDATE projetos SET status = 'Concluído', data_fim = CURRENT_DATE WHERE id = $1", 
+            [id]
+        );
+        res.json({ message: "Projeto concluído com sucesso" });
+    } catch (err) {
+        res.status(500).json({ erroBanco: err.message });
+    }
+});
+
+// ==========================================
+// ROTA: Apagar Projeto (Deletar)
+// ==========================================
+app.delete('/api/projetos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Apaga a ferramenta primeiro (filho) para não dar erro de restrição, depois o projeto (pai)
+        await pool.query('DELETE FROM estampos WHERE projeto_id = $1', [id]);
+        await pool.query('DELETE FROM projetos WHERE id = $1', [id]);
+        
+        res.json({ message: "Projeto excluído com sucesso" });
+    } catch (err) {
+        res.status(500).json({ erroBanco: err.message });
+    }
+});
+
+// ==========================================
 // Inicialização do Servidor
 // ==========================================
 app.listen(port, () => {

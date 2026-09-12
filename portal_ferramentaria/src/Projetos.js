@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, CheckCircle, Trash2 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ChevronLeft, Home, Plus, LayoutGrid, BarChart2, Settings, AlertTriangle, Bell } from 'lucide-react';
@@ -58,6 +58,30 @@ function Projetos() {
     }
   };
 
+  const handleConcluir = async (id, e) => {
+    e.stopPropagation(); // Impede que o clique no botão abra a tela do projeto
+    if (!window.confirm("Deseja marcar este projeto como Concluído?")) return;
+
+    try {
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/concluir`);
+      carregarProjetos();
+    } catch (error) {
+      alert("Erro ao concluir projeto.");
+    }
+  };
+
+  const handleDeletar = async (id, e) => {
+    e.stopPropagation(); 
+    if (!window.confirm("Tem certeza que deseja APAGAR este projeto definitivamente?")) return;
+
+    try {
+      await axios.delete(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}`);
+      carregarProjetos();
+    } catch (error) {
+      alert("Erro ao deletar projeto.");
+    }
+  };
+
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '100px' }}>
       
@@ -70,7 +94,7 @@ function Projetos() {
           </button>
           
           {/* Logo CECDR - Ajuste o 'src' com o caminho/nome exato da sua imagem */}
-          <img src="public/cecdr.png" alt="CECDR" style={{ height: '45px', objectFit: 'contain' }} />
+          <img src="portal_ferramentaria\public\cecdr.png" alt="CECDR" style={{ height: '45px', objectFit: 'contain' }} />
           
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0, marginLeft: '8px' }}>Projetos - Contrutor de Estampos de Corte, Dobra e Repuxo</h1>
         </div>
@@ -172,19 +196,47 @@ function Projetos() {
         
         {/* Lista de Projetos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Lista de Projetos */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {projetos.map((item, index) => (
             <div 
               key={item.projeto_id || index} 
               onClick={() => item.estampo_id ? navigate(`/estampo/${item.estampo_id}`) : alert("Este projeto ainda não possui um estampo vinculado.")} 
               style={{ 
-                backgroundColor: '#FFFFFF', 
-                padding: '20px', 
-                borderRadius: '16px', 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                cursor: item.estampo_id ? 'pointer' : 'default',
-                transition: 'transform 0.2s',
-                border: '1px solid transparent'
+                backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.03)', cursor: item.estampo_id ? 'pointer' : 'default',
+                border: '1px solid transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
               }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', color: '#111827', fontWeight: '700' }}>{item.projeto}</h3>
+                  {/* Etiqueta Visual de Status */}
+                  <span style={{ fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '12px', backgroundColor: item.status === 'Concluído' ? '#DCFCE7' : '#FEF9C3', color: item.status === 'Concluído' ? '#166534' : '#854D0E' }}>
+                    {item.status || 'Em Andamento'}
+                  </span>
+                </div>
+                
+                <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
+                  <strong>ID do Projeto:</strong> {item.projeto_id} <br/>
+                  <strong>Nome do Estampo:</strong> {item.estampo || <span style={{ color: '#EF4444' }}>Nenhum estampo cadastrado</span>} <br/>
+                  <strong>ID do Estampo:</strong> {item.estampo_id || "-"}
+                </p>
+              </div>
+
+              {/* Botões de Ação */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button onClick={(e) => handleConcluir(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16A34A' }} title="Concluir Projeto">
+                  <CheckCircle2 size={24} />
+                </button>
+                <button onClick={(e) => handleDeletar(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }} title="Apagar Projeto">
+                  <Trash2 size={24} />
+                </button>
+              </div>
+
+            </div>
+          ))}
+        </div>
               onMouseOver={(e) => e.currentTarget.style.borderColor = item.estampo_id ? '#0284C7' : 'transparent'}
               onMouseOut={(e) => e.currentTarget.style.borderColor = 'transparent'}
             >
