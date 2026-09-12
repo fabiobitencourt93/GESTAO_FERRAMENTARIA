@@ -152,24 +152,31 @@ function Projetos() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {projetos.map((item, index) => (
             <div 
-              key={item.estampo_id || index} 
-              onClick={() => navigate(`/estampo/${item.estampo_id}`)} 
+              key={item.projeto_id || index} 
+              
+              // Trava o clique se não houver estampo cadastrado para evitar erro de rota
+              onClick={() => item.estampo_id ? navigate(`/estampo/${item.estampo_id}`) : alert("Este projeto ainda não possui um estampo vinculado. Crie um estampo primeiro!")} 
+              
               style={{ 
                 backgroundColor: '#FFFFFF', 
                 padding: '20px', 
                 borderRadius: '16px', 
                 boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                cursor: 'pointer',
+                cursor: item.estampo_id ? 'pointer' : 'default', // Remove a mãozinha se não for clicável
                 transition: 'transform 0.2s',
                 border: '1px solid transparent'
               }}
-              onMouseOver={(e) => e.currentTarget.style.borderColor = '#0284C7'}
+              onMouseOver={(e) => e.currentTarget.style.borderColor = item.estampo_id ? '#0284C7' : 'transparent'}
               onMouseOut={(e) => e.currentTarget.style.borderColor = 'transparent'}
             >
               <h3 style={{ margin: 0, fontSize: '16px', color: '#111827', fontWeight: '700' }}>{item.projeto}</h3>
               <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
-                <strong>Estampo:</strong> {item.estampo} <br/>
-                <strong>ID no Banco:</strong> {item.estampo_id}
+                <strong>ID do Projeto:</strong> {item.projeto_id} <br/>
+                
+                {/* O || indica um texto alternativo caso a variável venha vazia */}
+                <strong>Nome:</strong> {item.estampo || <span style={{ color: '#EF4444' }}>Nenhum estampo cadastrado</span>} <br/>
+                
+                <strong>ID do Banco de Dados:</strong> {item.estampo_id || "-"}
               </p>
             </div>
           ))}
