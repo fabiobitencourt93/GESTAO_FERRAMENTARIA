@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Save, Clock } from 'lucide-react';
+import { ChevronLeft, Save, Clock, Bell } from 'lucide-react';
 
 function ApontamentoRetroativo() {
   const navigate = useNavigate();

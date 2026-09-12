@@ -80,15 +80,29 @@ function Producao() {
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '120px' }}>
       
       {/* Top Bar */}
+      {/* Barra Superior */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
+        
+        {/* Lado Esquerdo: Seta Voltar e Título */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ChevronLeft size={28} /></button>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Desempenho de Produção</h1>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <ChevronLeft size={28} color="#111827" />
+          </button>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Título da Tela Aqui</h1>
         </div>
+
+        {/* Lado Direito: Casinha e Notificações */}
         <div style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Home size={24} /></button>
-          <Bell size={24} />
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <Home size={24} color="#111827" />
+          </button>
+          
+          {/* Botão de Sino Copiado do Projetos.js */}
+          <button onClick={() => navigate('/notificacoes')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <Bell size={24} color="#111827" />
+          </button>
         </div>
+
       </div>
 
       <div style={{ padding: '0 24px' }}>
