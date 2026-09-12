@@ -35,6 +35,7 @@ app.get('/api/projetos', async (req, res) => {
             SELECT 
                 p.id AS projeto_id,
                 p.nome AS projeto, 
+                p.status, /* AQUI ESTÁ A CORREÇÃO: Puxando o status do banco */
                 e.nome AS estampo, 
                 e.id AS estampo_id
             FROM projetos p
