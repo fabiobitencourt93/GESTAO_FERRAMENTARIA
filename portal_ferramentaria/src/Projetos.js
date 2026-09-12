@@ -164,29 +164,52 @@ function Projetos() {
             <div 
               key={item.projeto_id || index} 
               onClick={() => item.estampo_id ? navigate(`/estampo/${item.estampo_id}`) : alert("Este projeto ainda não possui um estampo vinculado.")} 
-              style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', cursor: item.estampo_id ? 'pointer' : 'default', border: '1px solid transparent', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', cursor: item.estampo_id ? 'pointer' : 'default', border: '1px solid transparent', display: 'flex', flexDirection: 'column', gap: '12px' }}
             >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h3 style={{ margin: 0, fontSize: '16px', color: '#111827', fontWeight: '700' }}>{item.projeto}</h3>
-                  <span style={{ fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '12px', backgroundColor: item.status === 'Concluído' ? '#DCFCE7' : '#FEF9C3', color: item.status === 'Concluído' ? '#166534' : '#854D0E' }}>
-                    {item.status || 'Em Andamento'}
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ margin: 0, fontSize: '16px', color: '#111827', fontWeight: '700' }}>{item.projeto}</h3>
+                    <span style={{ fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '12px', backgroundColor: item.status === 'Concluído' ? '#DCFCE7' : '#FEF9C3', color: item.status === 'Concluído' ? '#166534' : '#854D0E' }}>
+                      {item.status || 'Em Andamento'}
+                    </span>
+                  </div>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
+                    <strong>ID do Projeto:</strong> {item.projeto_id} | <strong>Estampo:</strong> {item.estampo || <span style={{ color: '#EF4444' }}>Pendente</span>} (ID: {item.estampo_id || "-"})
+                  </p>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  {item.status !== 'Concluído' && (
+                    <button onClick={(e) => handleConcluir(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16A34A' }} title="Concluir Projeto">
+                      <CheckCircle2 size={24} />
+                    </button>
+                  )}
+                  <button onClick={(e) => handleDeletar(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }} title="Apagar Projeto">
+                    <Trash2 size={24} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Bloco de Datas do MES */}
+              <div style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                <div>
+                  <strong style={{ display: 'block', color: '#6B7280', marginBottom: '4px' }}>Início Planejado</strong>
+                  <span style={{ color: '#111827', fontWeight: '500' }}>{item.data_inicio || "Não informado"}</span>
+                </div>
+                <div>
+                  <strong style={{ display: 'block', color: '#6B7280', marginBottom: '4px' }}>Previsão de Fim</strong>
+                  <span style={{ color: '#111827', fontWeight: '500' }}>{item.data_fim || "Não informado"}</span>
+                </div>
+                <div>
+                  <strong style={{ display: 'block', color: item.status === 'Concluído' ? '#16A34A' : '#6B7280', marginBottom: '4px' }}>Conclusão Real</strong>
+                  <span style={{ color: item.status === 'Concluído' ? '#166534' : '#9CA3AF', fontWeight: '600' }}>
+                    {item.data_conclusao ? item.data_conclusao : "Em andamento..."}
                   </span>
                 </div>
-                <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
-                  <strong>ID do Projeto:</strong> {item.projeto_id} <br/>
-                  <strong>Nome do Estampo:</strong> {item.estampo || <span style={{ color: '#EF4444' }}>Nenhum estampo cadastrado</span>} <br/>
-                  <strong>ID do Estampo:</strong> {item.estampo_id || "-"}
-                </p>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={(e) => handleConcluir(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16A34A' }} title="Concluir Projeto">
-                  <CheckCircle2 size={24} />
-                </button>
-                <button onClick={(e) => handleDeletar(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }} title="Apagar Projeto">
-                  <Trash2 size={24} />
-                </button>
-              </div>
+
             </div>
           ))}
         </div>

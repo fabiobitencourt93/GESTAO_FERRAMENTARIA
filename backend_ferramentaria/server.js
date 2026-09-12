@@ -35,7 +35,10 @@ app.get('/api/projetos', async (req, res) => {
             SELECT 
                 p.id AS projeto_id,
                 p.nome AS projeto, 
-                p.status, /* AQUI ESTÁ A CORREÇÃO: Puxando o status do banco */
+                p.status,
+                TO_CHAR(p.data_inicio, 'DD/MM/YYYY') AS data_inicio,
+                TO_CHAR(p.data_fim, 'DD/MM/YYYY') AS data_fim,
+                TO_CHAR(p.data_conclusao, 'DD/MM/YYYY') AS data_conclusao,
                 e.nome AS estampo, 
                 e.id AS estampo_id
             FROM projetos p
@@ -45,8 +48,24 @@ app.get('/api/projetos', async (req, res) => {
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
-        console.error("Erro na Rota 1:", err.message);
-        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// ROTA: Concluir Projeto (Atualizar Status e Data Real)
+// ==========================================
+app.put('/api/projetos/:id/concluir', async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Salva na 'data_conclusao' para manter a 'data_fim' intacta
+        await pool.query(
+            "UPDATE projetos SET status = 'Concluído', data_conclusao = CURRENT_DATE WHERE id = $1", 
+            [id]
+        );
+        res.json({ message: "Projeto concluído com sucesso" });
+    } catch (err) {
+        res.status(500).json({ erroBanco: err.message });
     }
 });
 
