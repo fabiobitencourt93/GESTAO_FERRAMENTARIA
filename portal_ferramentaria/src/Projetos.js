@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Home, Plus, LayoutGrid, BarChart2, Settings, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, Home, Plus, LayoutGrid, BarChart2, Settings, AlertTriangle, Bell } from 'lucide-react';
 
 function Projetos() {
   const navigate = useNavigate();
@@ -63,15 +63,28 @@ function Projetos() {
       
       {/* Barra Superior */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
+        
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}>
             <ChevronLeft size={28} color="#111827" />
           </button>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Projetos e Estampos</h1>
+          
+          {/* Logo CECDR - Ajuste o 'src' com o caminho/nome exato da sua imagem */}
+          <img src="public/cecdr.png" alt="CECDR" style={{ height: '45px', objectFit: 'contain' }} />
+          
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0, marginLeft: '8px' }}>Projetos - Contrutor de Estampos de Corte, Dobra e Repuxo</h1>
         </div>
-        <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-          <Home size={24} color="#111827" />
-        </button>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <Home size={24} color="#111827" />
+          </button>
+          
+          <button onClick={() => navigate('/notificacoes')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <Bell size={24} color="#111827" />
+          </button>
+        </div>
+
       </div>
 
       <div style={{ padding: '0 24px' }}>
@@ -120,8 +133,8 @@ function Projetos() {
                 <option value="Progressivo">Progressivo</option>
                 <option value="Corte">Corte Simples</option>
                 <option value="Dobra">Dobra</option>
-                <option value="Repuxo">Repuxo / Crashform</option>
-                <option value="Transfer">Transfer</option>
+                <option value="Repuxo">Repuxo</option>
+                <option value="Dispositivo">Dispositivo</option>
                 <option value="Outro">Outro</option>
               </select>
             </div>
