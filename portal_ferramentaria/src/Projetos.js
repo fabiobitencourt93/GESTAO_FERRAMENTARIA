@@ -74,27 +74,38 @@ function Projetos() {
         {/* Lista de Projetos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {projetos.map((item, index) => (
-            <div key={item.estampo_id || index} style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              
-              <h3 style={{ margin: 0, fontSize: '16px', color: '#111827', fontWeight: '700' }}>
-                {item.projeto}
-              </h3>
-              
+            <div 
+              key={item.estampo_id || index} 
+              // Redireciona para a tela de engenharia ao clicar
+              onClick={() => navigate('/engenharia')} 
+              style={{ 
+                backgroundColor: '#FFFFFF', 
+                padding: '20px', 
+                borderRadius: '16px', 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+                cursor: 'pointer', // Faz o mouse virar uma "mãozinha"
+                transition: 'transform 0.2s', // Efeito visual suave
+                border: '1px solid transparent'
+              }}
+              // Efeitos de Hover para parecer um botão real
+              onMouseOver={(e) => e.currentTarget.style.borderColor = '#0284C7'}
+              onMouseOut={(e) => e.currentTarget.style.borderColor = 'transparent'}
+            >
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#111827', fontWeight: '700' }}>{item.projeto}</h3>
               <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
                 <strong>Estampo:</strong> {item.estampo} <br/>
                 <strong>ID no Banco:</strong> {item.estampo_id}
               </p>
-
             </div>
           ))}
         </div>
       </div>
 
       {/* Menu Inferior */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #E5E7EB', zIndex: 9999 }}>
         <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
         <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span></div>
-        <div onClick={() => navigate('/ajustes')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>AJUSTES</span></div>
+        <div onClick={() => navigate('/ajustes')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>AJUSTES</span></div>
       </div>
 
     </div>
