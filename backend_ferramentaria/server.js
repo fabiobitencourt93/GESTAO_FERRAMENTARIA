@@ -70,6 +70,27 @@ app.put('/api/projetos/:id/concluir', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Registrar Ocorrência no Apontamento
+// ==========================================
+app.put('/api/apontamentos/:id/ocorrencia', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { ocorrencia } = req.body; // Texto que o aluno vai digitar
+
+        // Atualiza a linha do apontamento inserindo o texto da ocorrência
+        await pool.query(
+            "UPDATE apontamentos SET ocorrencia = $1 WHERE id = $2", 
+            [ocorrencia, id]
+        );
+        
+        res.json({ message: "Ocorrência registrada com sucesso!" });
+    } catch (err) {
+        console.error("Erro ao salvar ocorrência:", err.message);
+        res.status(500).json({ erroBanco: err.message });
+    }
+});
+
+// ==========================================
 // ROTA: Reabrir Projeto (Voltar para Andamento)
 // ==========================================
 app.put('/api/projetos/:id/reabrir', async (req, res) => {
@@ -168,19 +189,24 @@ app.post('/api/apontamentos/iniciar', async (req, res) => {
 });
 
 // ==========================================
-// ROTA 5: Finalizar Apontamento (Stop - Amarrado ao ID do Aluno)
+// ROTA 5: Finalizar Apontamento (Stop - Amarrado ao ID do Aluno com Ocorrência)
 // ==========================================
 app.put('/api/apontamentos/finalizar', async (req, res) => {
     try {
-        const { processo_id, operador_id } = req.body;
+        // 1. Recebemos a ocorrência enviada pela nova janela do React
+        const { processo_id, operador_id, ocorrencia } = req.body;
+        
         const result = await pool.query(`
             UPDATE apontamentos 
-            SET data_hora_fim = CURRENT_TIMESTAMP 
+            SET 
+                data_hora_fim = CURRENT_TIMESTAMP,
+                ocorrencia = $3 
             WHERE processo_id = $1 
               AND operador_id = $2 
               AND data_hora_fim IS NULL 
             RETURNING *
-        `, [processo_id, operador_id]);
+        `, [processo_id, operador_id, ocorrencia || null]); 
+        // Se a ocorrência vier vazia, o banco salva como nulo (null)
 
         if (result.rowCount === 0) {
             return res.status(403).json({ error: 'Operação não encontrada, já finalizada ou ID do aluno incorreto.' });
@@ -192,6 +218,9 @@ app.put('/api/apontamentos/finalizar', async (req, res) => {
         res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
     }
 });
+
+
+
 
 // ==========================================
 // ROTA 6: Relatório de Desempenho
