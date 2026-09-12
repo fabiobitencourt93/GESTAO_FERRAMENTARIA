@@ -1,40 +1,67 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Home, AlertTriangle, Info } from 'lucide-react';
+import axios from 'axios';
+import { ChevronLeft, Home, Info, CheckCircle } from 'lucide-react';
 
 function Notificacoes() {
   const navigate = useNavigate();
+  const [alertas, setAlertas] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    // Busca os alertas reais no Node.js
+    axios.get('https://gestao-ferramentaria.onrender.com/api/alertas')
+      .then(res => {
+        setAlertas(res.data);
+        setCarregando(false);
+      })
+      .catch(err => {
+        console.error("Erro ao buscar alertas:", err);
+        setCarregando(false);
+      });
+  }, []);
 
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><ChevronLeft size={28} /></button>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ChevronLeft size={28} /></button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Alertas Operacionais</h1>
         </div>
-        <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Home size={24} /></button>
+        <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Home size={24} /></button>
       </div>
 
       <div style={{ padding: '0 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
-        {/* Mock de Alerta de Tempo */}
-        <div style={{ backgroundColor: '#FEF2F2', borderLeft: '4px solid #DC2626', padding: '16px', borderRadius: '8px', display: 'flex', gap: '12px' }}>
-          <AlertTriangle color="#DC2626" size={24} style={{ flexShrink: 0 }} />
-          <div>
-            <h4 style={{ margin: 0, color: '#991B1B', fontSize: '15px' }}>Estouro de Tempo Planejado</h4>
-            <p style={{ margin: '4px 0 0 0', color: '#B91C1C', fontSize: '13px' }}>A operação de fresamento no Destacador Macho ultrapassou os 120 minutos estipulados.</p>
+        {carregando ? (
+          <p style={{ color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>Verificando o chão de fábrica...</p>
+        ) : alertas.length === 0 ? (
+          
+          {/* Mensagem de sucesso quando não há alarmes */}
+          <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #22C55E', padding: '24px', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', color: '#166534' }}>
+            <CheckCircle size={40} color="#22C55E" />
+            <div style={{ textAlign: 'center' }}>
+              <strong style={{ display: 'block', fontSize: '16px' }}>Tudo limpo!</strong>
+              <span style={{ fontSize: '14px' }}>Não há apontamentos esquecidos abertos no momento.</span>
+            </div>
           </div>
-        </div>
-
-        {/* Mock de Apontamento Esquecido */}
-        <div style={{ backgroundColor: '#EFF6FF', borderLeft: '4px solid #3B82F6', padding: '16px', borderRadius: '8px', display: 'flex', gap: '12px' }}>
-          <Info color="#3B82F6" size={24} style={{ flexShrink: 0 }} />
-          <div>
-            <h4 style={{ margin: 0, color: '#1E40AF', fontSize: '15px' }}>Apontamento Aberto</h4>
-            <p style={{ margin: '4px 0 0 0', color: '#1D4ED8', fontSize: '13px' }}>O Aluno ID 20265 possui uma operação em andamento desde ontem. Verificar necessidade de encerramento manual.</p>
-          </div>
-        </div>
+          
+        ) : (
+          
+          {/* Lista dinâmica de alertas reais */}
+          alertas.map((alerta, index) => (
+            <div key={index} style={{ backgroundColor: '#EFF6FF', borderLeft: '4px solid #3B82F6', padding: '16px', borderRadius: '8px', display: 'flex', gap: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+              <Info color="#3B82F6" size={24} style={{ flexShrink: 0 }} />
+              <div>
+                <h4 style={{ margin: 0, color: '#1E40AF', fontSize: '15px' }}>Apontamento Aberto</h4>
+                <p style={{ margin: '4px 0 0 0', color: '#1D4ED8', fontSize: '13px' }}>
+                  A operação <strong>{alerta.operacao || 'desconhecida'}</strong> está em andamento. Verificar necessidade de encerramento.
+                </p>
+              </div>
+            </div>
+          ))
+        )}
 
       </div>
     </div>

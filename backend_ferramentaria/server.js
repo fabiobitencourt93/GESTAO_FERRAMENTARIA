@@ -570,6 +570,25 @@ app.delete('/api/projetos/:id', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Buscar Alertas (Apontamentos Abertos)
+// ==========================================
+app.get('/api/alertas', async (req, res) => {
+    try {
+        // Ajuste 'apontamentos' e 'hora_fim' para os nomes exatos que você usa no seu banco
+        const query = `
+            SELECT id, operacao 
+            FROM apontamentos 
+            WHERE hora_fim IS NULL; 
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro ao buscar alertas:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
 // Inicialização do Servidor
 // ==========================================
 app.listen(port, () => {
