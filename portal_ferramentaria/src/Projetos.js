@@ -6,7 +6,11 @@ import { ChevronLeft, Home, Plus, LayoutGrid, BarChart2, Settings, AlertTriangle
 function Projetos() {
   const navigate = useNavigate();
   const [projetos, setProjetos] = useState([]);
+  
+  // Nossas variáveis de memória para o formulário
   const [novoProjeto, setNovoProjeto] = useState('');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
   
   const [mensagemErro, setMensagemErro] = useState(null);
   const [mensagemSucesso, setMensagemSucesso] = useState(null);
@@ -28,17 +32,29 @@ function Projetos() {
     setMensagemErro(null); 
     setMensagemSucesso(null); 
 
+    // Validações antes de enviar
     if (!novoProjeto) {
-      setMensagemErro("Por favor, digite o nome do projeto na caixa de texto.");
+      setMensagemErro("Por favor, digite o nome do projeto.");
+      return;
+    }
+    if (!dataInicio) {
+      setMensagemErro("A data de início é obrigatória para o banco de dados.");
       return;
     }
 
     try {
+      // Enviando o pacote completo para o Node.js
       await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', {
-        nome: novoProjeto
+        nome: novoProjeto,
+        data_inicio: dataInicio,
+        data_fim: dataFim
       });
       
+      // Limpando o formulário após o sucesso
       setNovoProjeto(''); 
+      setDataInicio('');
+      setDataFim('');
+      
       setMensagemSucesso("Projeto cadastrado com sucesso!");
       carregarProjetos(); 
       
@@ -73,7 +89,7 @@ function Projetos() {
           <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #EF4444', padding: '16px', borderRadius: '12px', marginBottom: '20px', color: '#991B1B', display: 'flex', gap: '12px', alignItems: 'center' }}>
             <AlertTriangle size={24} color="#DC2626" />
             <div>
-              <strong style={{ display: 'block', fontSize: '14px' }}>O Banco de Dados recusou:</strong>
+              <strong style={{ display: 'block', fontSize: '14px' }}>Atenção:</strong>
               <span style={{ fontSize: '13px' }}>{mensagemErro}</span>
             </div>
           </div>
@@ -85,24 +101,54 @@ function Projetos() {
           </div>
         )}
 
-        {/* Bloco de Cadastro */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', marginBottom: '24px', display: 'flex', gap: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <input 
-            type="text" 
-            placeholder="Nome do novo projeto..." 
-            value={novoProjeto}
-            onChange={(e) => setNovoProjeto(e.target.value)}
-            style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px' }}
-          />
+        {/* Bloco de Cadastro (Atualizado com Datas) */}
+        <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+            {/* Campo Nome */}
+            <div style={{ flex: '2', minWidth: '200px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Nome do Projeto</label>
+              <input 
+                type="text" 
+                placeholder="Ex: Estampo Progressivo 05..." 
+                value={novoProjeto}
+                onChange={(e) => setNovoProjeto(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px' }}
+              />
+            </div>
+
+            {/* Campo Data Início */}
+            <div style={{ flex: '1', minWidth: '140px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Data Início *</label>
+              <input 
+                type="date" 
+                value={dataInicio}
+                onChange={(e) => setDataInicio(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px', color: '#111827' }}
+              />
+            </div>
+
+            {/* Campo Data Fim */}
+            <div style={{ flex: '1', minWidth: '140px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Previsão Fim</label>
+              <input 
+                type="date" 
+                value={dataFim}
+                onChange={(e) => setDataFim(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px', color: '#111827' }}
+              />
+            </div>
+          </div>
+
           <button 
             onClick={handleCadastrar}
-            style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '8px', padding: '0 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' }}
+            style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '8px', padding: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', width: '100%' }}
           >
-            <Plus size={20} /> Cadastrar
+            <Plus size={20} /> Cadastrar Projeto
           </button>
         </div>
         
-        {/* Lista de Projetos (Redirecionamento Corrigido) */}
+        {/* Lista de Projetos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {projetos.map((item, index) => (
             <div 

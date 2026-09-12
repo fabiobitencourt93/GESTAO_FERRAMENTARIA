@@ -504,25 +504,29 @@ cron.schedule('0 16 * * *', async () => {
 });
 
 // ==========================================
-// ROTA: Cadastrar novo Projeto
+// ROTA: Cadastrar novo Projeto (com Datas)
 // ==========================================
 app.post('/api/projetos', async (req, res) => {
     try {
-        const { nome } = req.body; 
+        // Recebemos o nome e as datas que vieram da tela do React
+        const { nome, data_inicio, data_fim } = req.body; 
         
         if (!nome) {
             return res.status(400).json({ error: 'O nome do projeto é obrigatório.' });
         }
+        if (!data_inicio) {
+            return res.status(400).json({ error: 'A data de início é obrigatória.' });
+        }
 
+        // Se a data final não for preenchida, mandamos como 'null' (vazio) para o banco
         const result = await pool.query(
-            'INSERT INTO projetos (nome) VALUES ($1) RETURNING *', 
-            [nome]
+            'INSERT INTO projetos (nome, data_inicio, data_fim) VALUES ($1, $2, $3) RETURNING *', 
+            [nome, data_inicio, data_fim || null]
         );
         
         res.json(result.rows[0]);
     } catch (err) {
         console.error("Erro SQL:", err.message);
-        // AQUI ESTÁ A MUDANÇA: Envia a mensagem exata do PostgreSQL para a tela
         res.status(500).json({ erroBanco: err.message });
     }
 });
