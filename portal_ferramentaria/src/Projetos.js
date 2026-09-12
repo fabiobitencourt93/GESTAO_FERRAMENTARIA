@@ -7,10 +7,10 @@ function Projetos() {
   const navigate = useNavigate();
   const [projetos, setProjetos] = useState([]);
   
-  // Nossas variáveis de memória para o formulário
   const [novoProjeto, setNovoProjeto] = useState('');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
+  const [tipoEstampo, setTipoEstampo] = useState(''); // Nova variável de memória
   
   const [mensagemErro, setMensagemErro] = useState(null);
   const [mensagemSucesso, setMensagemSucesso] = useState(null);
@@ -32,28 +32,22 @@ function Projetos() {
     setMensagemErro(null); 
     setMensagemSucesso(null); 
 
-    // Validações antes de enviar
-    if (!novoProjeto) {
-      setMensagemErro("Por favor, digite o nome do projeto.");
-      return;
-    }
-    if (!dataInicio) {
-      setMensagemErro("A data de início é obrigatória para o banco de dados.");
-      return;
-    }
+    if (!novoProjeto) return setMensagemErro("Por favor, digite o nome do projeto.");
+    if (!tipoEstampo) return setMensagemErro("Selecione o tipo estrutural do estampo.");
+    if (!dataInicio) return setMensagemErro("A data de início é obrigatória.");
 
     try {
-      // Enviando o pacote completo para o Node.js
       await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', {
         nome: novoProjeto,
         data_inicio: dataInicio,
-        data_fim: dataFim
+        data_fim: dataFim,
+        tipo: tipoEstampo // Enviando o tipo selecionado para o Node.js
       });
       
-      // Limpando o formulário após o sucesso
       setNovoProjeto(''); 
       setDataInicio('');
       setDataFim('');
+      setTipoEstampo('');
       
       setMensagemSucesso("Projeto cadastrado com sucesso!");
       carregarProjetos(); 
@@ -75,11 +69,9 @@ function Projetos() {
           </button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Projetos e Estampos</h1>
         </div>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-            <Home size={24} color="#111827" />
-          </button>
-        </div>
+        <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+          <Home size={24} color="#111827" />
+        </button>
       </div>
 
       <div style={{ padding: '0 24px' }}>
@@ -101,11 +93,10 @@ function Projetos() {
           </div>
         )}
 
-        {/* Bloco de Cadastro (Atualizado com Datas) */}
+        {/* Bloco de Cadastro */}
         <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-            {/* Campo Nome */}
             <div style={{ flex: '2', minWidth: '200px' }}>
               <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Nome do Projeto</label>
               <input 
@@ -117,7 +108,26 @@ function Projetos() {
               />
             </div>
 
-            {/* Campo Data Início */}
+            {/* Novo Campo: Tipo de Estampo */}
+            <div style={{ flex: '1', minWidth: '150px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Tipo *</label>
+              <select 
+                value={tipoEstampo}
+                onChange={(e) => setTipoEstampo(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px', color: tipoEstampo ? '#111827' : '#9CA3AF', backgroundColor: '#FFF' }}
+              >
+                <option value="" disabled>Selecione...</option>
+                <option value="Progressivo">Progressivo</option>
+                <option value="Corte">Corte Simples</option>
+                <option value="Dobra">Dobra</option>
+                <option value="Repuxo">Repuxo / Crashform</option>
+                <option value="Transfer">Transfer</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ flex: '1', minWidth: '140px' }}>
               <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Data Início *</label>
               <input 
@@ -128,7 +138,6 @@ function Projetos() {
               />
             </div>
 
-            {/* Campo Data Fim */}
             <div style={{ flex: '1', minWidth: '140px' }}>
               <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Previsão Fim</label>
               <input 
@@ -142,7 +151,7 @@ function Projetos() {
 
           <button 
             onClick={handleCadastrar}
-            style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '8px', padding: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', width: '100%' }}
+            style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '8px', padding: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', width: '100%', marginTop: '8px' }}
           >
             <Plus size={20} /> Cadastrar Projeto
           </button>
@@ -153,16 +162,13 @@ function Projetos() {
           {projetos.map((item, index) => (
             <div 
               key={item.projeto_id || index} 
-              
-              // Trava o clique se não houver estampo cadastrado para evitar erro de rota
-              onClick={() => item.estampo_id ? navigate(`/estampo/${item.estampo_id}`) : alert("Este projeto ainda não possui um estampo vinculado. Crie um estampo primeiro!")} 
-              
+              onClick={() => item.estampo_id ? navigate(`/estampo/${item.estampo_id}`) : alert("Este projeto ainda não possui um estampo vinculado.")} 
               style={{ 
                 backgroundColor: '#FFFFFF', 
                 padding: '20px', 
                 borderRadius: '16px', 
                 boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                cursor: item.estampo_id ? 'pointer' : 'default', // Remove a mãozinha se não for clicável
+                cursor: item.estampo_id ? 'pointer' : 'default',
                 transition: 'transform 0.2s',
                 border: '1px solid transparent'
               }}
@@ -172,11 +178,8 @@ function Projetos() {
               <h3 style={{ margin: 0, fontSize: '16px', color: '#111827', fontWeight: '700' }}>{item.projeto}</h3>
               <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
                 <strong>ID do Projeto:</strong> {item.projeto_id} <br/>
-                
-                {/* O || indica um texto alternativo caso a variável venha vazia */}
-                <strong>Nome:</strong> {item.estampo || <span style={{ color: '#EF4444' }}>Nenhum estampo cadastrado</span>} <br/>
-                
-                <strong>ID o Banco de Dados:</strong> {item.estampo_id || "-"}
+                <strong>Nome do Estampo:</strong> {item.estampo || <span style={{ color: '#EF4444' }}>Nenhum estampo cadastrado</span>} <br/>
+                <strong>ID do Estampo:</strong> {item.estampo_id || "-"}
               </p>
             </div>
           ))}

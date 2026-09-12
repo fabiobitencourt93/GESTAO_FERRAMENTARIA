@@ -505,20 +505,17 @@ cron.schedule('0 16 * * *', async () => {
 });
 
 // ==========================================
-// ROTA: Cadastrar novo Projeto e Estampo Automático
+// ROTA: Cadastrar novo Projeto e Estampo 
 // ==========================================
 app.post('/api/projetos', async (req, res) => {
     try {
-        const { nome, data_inicio, data_fim } = req.body; 
+        // Agora recebemos a variável 'tipo' enviada pelo React
+        const { nome, data_inicio, data_fim, tipo } = req.body; 
         
-        if (!nome) {
-            return res.status(400).json({ error: 'O nome do projeto é obrigatório.' });
-        }
-        if (!data_inicio) {
-            return res.status(400).json({ error: 'A data de início é obrigatória.' });
-        }
+        if (!nome) return res.status(400).json({ error: 'O nome é obrigatório.' });
+        if (!data_inicio) return res.status(400).json({ error: 'A data de início é obrigatória.' });
+        if (!tipo) return res.status(400).json({ error: 'O tipo do estampo é obrigatório.' });
 
-        // 1. Insere o Projeto e guarda a linha gerada (RETURNING *)
         const resultProjeto = await pool.query(
             'INSERT INTO projetos (nome, data_inicio, data_fim) VALUES ($1, $2, $3) RETURNING *', 
             [nome, data_inicio, data_fim || null]
@@ -526,17 +523,13 @@ app.post('/api/projetos', async (req, res) => {
         
         const projetoCriado = resultProjeto.rows[0];
 
-        // 2. Insere o Estampo automaticamente usando o MESMO NOME e o ID do Projeto recém-criado
+        // Gravamos a variável 'tipo' diretamente no banco
         const resultEstampo = await pool.query(
-            'INSERT INTO estampos (nome, projeto_id) VALUES ($1, $2) RETURNING *',
-            [projetoCriado.nome, projetoCriado.id]
+            'INSERT INTO estampos (nome, projeto_id, tipo) VALUES ($1, $2, $3) RETURNING *',
+            [projetoCriado.nome, projetoCriado.id, tipo]
         );
 
-        // Devolve sucesso para o React
-        res.json({ 
-            projeto: projetoCriado, 
-            estampo: resultEstampo.rows[0] 
-        });
+        res.json({ projeto: projetoCriado, estampo: resultEstampo.rows[0] });
 
     } catch (err) {
         console.error("Erro SQL:", err.message);
