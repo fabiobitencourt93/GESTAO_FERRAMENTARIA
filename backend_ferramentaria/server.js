@@ -33,11 +33,12 @@ app.get('/api/projetos', async (req, res) => {
     try {
         const query = `
             SELECT 
+                p.id AS projeto_id,
                 p.nome AS projeto, 
                 e.nome AS estampo, 
                 e.id AS estampo_id
             FROM projetos p
-            JOIN estampos e ON p.id = e.projeto_id
+            LEFT JOIN estampos e ON p.id = e.projeto_id
             ORDER BY p.id;
         `;
         const result = await pool.query(query);
