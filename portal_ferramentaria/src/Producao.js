@@ -88,7 +88,7 @@ function Producao() {
           <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             <ChevronLeft size={28} color="#111827" />
           </button>
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Título da Tela Aqui</h1>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Indicadores de Produção</h1>
         </div>
 
         {/* Lado Direito: Casinha e Notificações */}

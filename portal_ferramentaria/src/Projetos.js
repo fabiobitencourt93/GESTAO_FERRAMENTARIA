@@ -93,7 +93,7 @@ function Projetos() {
           </button>
           {/* Logo CECDR */}
           <img src="/logo-cecdr.png" alt="CECDR" style={{ height: '32px', objectFit: 'contain' }} />
-          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0, marginLeft: '8px' }}>Projetos e Estampos</h1>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0, marginLeft: '8px' }}>Projetos - Construtor de Estampos de Corte, Dobra e Repuxo</h1>
         </div>
         <div style={{ display: 'flex', gap: '16px' }}>
           <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
