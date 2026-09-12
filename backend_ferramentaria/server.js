@@ -505,11 +505,10 @@ cron.schedule('0 16 * * *', async () => {
 });
 
 // ==========================================
-// ROTA: Cadastrar novo Projeto (com Datas)
+// ROTA: Cadastrar novo Projeto e Estampo Automático
 // ==========================================
 app.post('/api/projetos', async (req, res) => {
     try {
-        // Recebemos o nome e as datas que vieram da tela do React
         const { nome, data_inicio, data_fim } = req.body; 
         
         if (!nome) {
@@ -519,13 +518,26 @@ app.post('/api/projetos', async (req, res) => {
             return res.status(400).json({ error: 'A data de início é obrigatória.' });
         }
 
-        // Se a data final não for preenchida, mandamos como 'null' (vazio) para o banco
-        const result = await pool.query(
+        // 1. Insere o Projeto e guarda a linha gerada (RETURNING *)
+        const resultProjeto = await pool.query(
             'INSERT INTO projetos (nome, data_inicio, data_fim) VALUES ($1, $2, $3) RETURNING *', 
             [nome, data_inicio, data_fim || null]
         );
         
-        res.json(result.rows[0]);
+        const projetoCriado = resultProjeto.rows[0];
+
+        // 2. Insere o Estampo automaticamente usando o MESMO NOME e o ID do Projeto recém-criado
+        const resultEstampo = await pool.query(
+            'INSERT INTO estampos (nome, projeto_id) VALUES ($1, $2) RETURNING *',
+            [projetoCriado.nome, projetoCriado.id]
+        );
+
+        // Devolve sucesso para o React
+        res.json({ 
+            projeto: projetoCriado, 
+            estampo: resultEstampo.rows[0] 
+        });
+
     } catch (err) {
         console.error("Erro SQL:", err.message);
         res.status(500).json({ erroBanco: err.message });

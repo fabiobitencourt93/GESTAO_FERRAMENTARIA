@@ -176,7 +176,7 @@ function Projetos() {
                 {/* O || indica um texto alternativo caso a variável venha vazia */}
                 <strong>Nome:</strong> {item.estampo || <span style={{ color: '#EF4444' }}>Nenhum estampo cadastrado</span>} <br/>
                 
-                <strong>ID do Banco de Dados:</strong> {item.estampo_id || "-"}
+                <strong>ID o Banco de Dados:</strong> {item.estampo_id || "-"}
               </p>
             </div>
           ))}
