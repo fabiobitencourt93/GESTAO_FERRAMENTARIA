@@ -76,18 +76,19 @@ function Projetos() {
           {projetos.map((item, index) => (
             <div 
               key={item.estampo_id || index} 
-              // Redireciona para a tela de engenharia ao clicar
-              onClick={() => navigate('/processos')} 
+              
+              // AQUI ESTÁ A MUDANÇA: Redireciona para a tela de apontamentos passando o ID
+              onClick={() => navigate(`/apontamentos/${item.estampo_id}`)} 
+              
               style={{ 
                 backgroundColor: '#FFFFFF', 
                 padding: '20px', 
                 borderRadius: '16px', 
                 boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                cursor: 'pointer', // Faz o mouse virar uma "mãozinha"
-                transition: 'transform 0.2s', // Efeito visual suave
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
                 border: '1px solid transparent'
               }}
-              // Efeitos de Hover para parecer um botão real
               onMouseOver={(e) => e.currentTarget.style.borderColor = '#0284C7'}
               onMouseOut={(e) => e.currentTarget.style.borderColor = 'transparent'}
             >
