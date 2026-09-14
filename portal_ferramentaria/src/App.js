@@ -35,6 +35,8 @@ function App() {
     </Router>
   );
 
+}
+
 function App() {
   const [temaEscuro, setTemaEscuro] = useState(false);
 
@@ -51,11 +53,7 @@ function App() {
       
       {/* O resto do seu sistema entra aqui */}
     </div>
-  );
-}
+  );}
 
-
-
-}
 
 export default App;
