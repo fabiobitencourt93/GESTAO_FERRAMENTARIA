@@ -6,7 +6,7 @@ import { Moon, Sun } from 'lucide-react';
 // (Confirme se os nomes dos seus arquivos estão exatamente assim)
 import Ajustes from './Ajustes';
 import ApontamentoRetroativo from './ApontamentoRetroativo';
-import CorrecaoApontamento from './CorrecaoApontamento';
+import CorrecaoApontamento from './CorrecaoApontamentos';
 import Dashboard from './Dashboard';
 import GerenciarAlunos from './GerenciarAlunos';
 import GerenciarEngenharia from './GerenciarEngenharia';
