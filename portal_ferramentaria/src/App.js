@@ -11,7 +11,6 @@ import Dashboard from './Dashboard';
 import GerenciarAlunos from './GerenciarAlunos';
 import GerenciarEngenharia from './GerenciarEngenharia';
 import Notificacoes from './Notificacoes';
-import Ajustes from './Ajustes';
 import PecasEstampo from './PecasEstampo';
 import ProcessosPeca from './ProcessosPeca';
 import Producao from './Producao';
