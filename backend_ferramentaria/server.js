@@ -558,6 +558,25 @@ cron.schedule('0 16 * * *', async () => {
     timezone: "America/Sao_Paulo" 
 });
 
+
+// ==========================================
+// ROTA: Autenticação Segura da Administração
+// ==========================================
+app.post('/api/auth/login', (req, res) => {
+    const { senha } = req.body;
+    
+    // A senha real deve ser configurada nas Variáveis de Ambiente (Environment) do Render!
+    const senhaCorreta = process.env.ADMIN_PASSWORD || '260817';
+
+    if (senha === senhaCorreta) {
+        res.status(200).json({ message: 'Autenticado com sucesso' });
+    } else {
+        res.status(401).json({ error: 'Senha incorreta' });
+    }
+});
+
+
+
 // ==========================================
 // Inicialização do Servidor
 // ==========================================

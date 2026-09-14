@@ -36,3 +36,41 @@
     transform: rotate(360deg);
   }
 }
+
+/* App.css */
+
+/* Padrão: PC e Tablets (Telas Grandes) */
+.container-relatorio {
+  display: flex;
+  flex-direction: row; /* Lado a lado */
+}
+
+/* Regra Mágica para Celulares (Telas Menores que 768px) */
+@media (max-width: 768px) {
+  .container-relatorio {
+    flex-direction: column; /* Empilha um em cima do outro */
+  }
+  
+  h1 {
+    font-size: 16px; /* Diminui a fonte no celular */
+  }
+}
+
+
+/* index.css */
+:root {
+  --fundo-tela: #F8F9FA;
+  --fundo-card: #FFFFFF;
+  --texto-principal: #111827;
+  --texto-secundario: #6B7280;
+  --borda: #E5E7EB;
+}
+
+/* Quando o elemento pai tiver a classe 'dark' */
+[data-theme='dark'] {
+  --fundo-tela: #111827;     /* Fundo quase preto */
+  --fundo-card: #1F2937;     /* Cinza chumbo para os cards */
+  --texto-principal: #F9FAFB; /* Texto branco */
+  --texto-secundario: #9CA3AF; /* Texto cinza claro */
+  --borda: #374151;          /* Borda escura */
+}

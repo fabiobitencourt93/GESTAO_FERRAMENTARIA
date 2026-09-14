@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Lock, Users, Clock, Settings, History, AlertOctagon, LayoutGrid, BarChart2, User, Wrench, Calendar, ClipboardList, Key, TrendingUp, Filter, AlertTriangle, Plus, Trash2, FolderPlus } from 'lucide-react';
+import { ChevronLeft, Lock, Users, Clock, Settings, History, AlertOctagon, LayoutGrid, BarChart2, User, Wrench, Calendar, ClipboardList, Key, TrendingUp, Filter, AlertTriangle, Plus, Trash2, FolderPlus, Download } from 'lucide-react';
 
 function Ajustes() {
   const navigate = useNavigate();
@@ -9,6 +9,7 @@ function Ajustes() {
   const [autenticado, setAutenticado] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
+  const [carregandoLogin, setCarregandoLogin] = useState(false);
 
   // Estados de Navegação
   const [telaAtual, setTelaAtual] = useState('menu'); 
@@ -38,19 +39,45 @@ function Ajustes() {
   const [novoProjFim, setNovoProjFim] = useState('');
   const [carregandoProjetos, setCarregandoProjetos] = useState(false);
 
-  const verificarSenha = (e) => {
+  // --- NOVA VERIFICAÇÃO DE SENHA PELO NODE.JS ---
+  const verificarSenha = async (e) => {
     e.preventDefault();
-    if (senha === '260817') { 
+    setCarregandoLogin(true);
+    setErroSenha(false);
+    
+    try {
+      // O React não sabe a senha, ele manda para o backend validar
+      await axios.post('https://gestao-ferramentaria.onrender.com/api/auth/login', { senha });
       setAutenticado(true);
-      setErroSenha(false);
-    } else {
+      setSenha('');
+    } catch (error) {
       setErroSenha(true);
       setSenha('');
+    } finally {
+      setCarregandoLogin(false);
     }
   };
 
-  // --- FUNÇÕES DE NAVEGAÇÃO E DADOS ---
+  // --- FUNÇÃO PARA EXPORTAR CSV (EXCEL) ---
+  const exportarParaExcel = (dados, nomeArquivo) => {
+    if (!dados || dados.length === 0) {
+      alert("Não há dados para exportar.");
+      return;
+    }
+    const chaves = Object.keys(dados[0]);
+    const cabecalho = chaves.join(';');
+    const linhas = dados.map(item => chaves.map(chave => `"${item[chave] || ''}"`).join(';')).join('\n');
+    const csvCompleto = `${cabecalho}\n${linhas}`;
+    const blob = new Blob(["\uFEFF" + csvCompleto], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `${nomeArquivo}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
+  // --- FUNÇÕES DE NAVEGAÇÃO E DADOS ---
   const abrirHistorico = () => {
     setCarregandoOcorrencias(true);
     setTelaAtual('historico');
@@ -95,7 +122,6 @@ function Ajustes() {
   };
 
   // --- FUNÇÕES CRUD ---
-
   const cadastrarAluno = async (e) => {
     e.preventDefault();
     if (!novoAlunoId || !novoAlunoNome) return;
@@ -121,10 +147,7 @@ function Ajustes() {
     }
     try {
       await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', {
-        nome: novoProjNome,
-        tipo: novoProjTipo,
-        data_inicio: novoProjInicio,
-        data_fim: novoProjFim || null
+        nome: novoProjNome, tipo: novoProjTipo, data_inicio: novoProjInicio, data_fim: novoProjFim || null
       });
       setNovoProjNome(''); setNovoProjTipo(''); setNovoProjInicio(''); setNovoProjFim('');
       carregarProjetosDoBanco();
@@ -140,8 +163,7 @@ function Ajustes() {
   };
 
   const handleBloquear = () => {
-    localStorage.removeItem('operadorId');
-    navigate('/');
+    setAutenticado(false);
   };
 
   const processosComAtraso = [...dadosProcessos].filter(p => Number(p.realizado) > Number(p.planejado)).sort((a, b) => (Number(b.realizado) - Number(b.planejado)) - (Number(a.realizado) - Number(a.planejado)));
@@ -184,9 +206,14 @@ function Ajustes() {
             <div style={{ backgroundColor: '#F3F4F6', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 16px auto' }}><Key size={32} color="#4B5563" /></div>
             <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#111827' }}>Área da Administração</h2>
             <p style={{ margin: '0 0 24px 0', fontSize: '13px', color: '#6B7280' }}>Insira a senha para acessar os ajustes.</p>
-            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Digite a senha..." style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: erroSenha ? '1px solid #EF4444' : '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', marginBottom: '16px', textAlign: 'center', backgroundColor: '#FAFBFC' }} />
+            
+            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Digite a senha..." disabled={carregandoLogin} style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: erroSenha ? '1px solid #EF4444' : '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', marginBottom: '16px', textAlign: 'center', backgroundColor: '#FAFBFC', opacity: carregandoLogin ? 0.6 : 1 }} />
+            
             {erroSenha && <p style={{ color: '#DC2626', fontSize: '13px', margin: '0 0 16px 0', fontWeight: '500' }}>Senha incorreta. Tente novamente.</p>}
-            <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }}>Acessar</button>
+            
+            <button type="submit" disabled={carregandoLogin} style={{ width: '100%', padding: '14px', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '600', fontSize: '15px', cursor: carregandoLogin ? 'wait' : 'pointer', opacity: carregandoLogin ? 0.8 : 1 }}>
+              {carregandoLogin ? 'Verificando...' : 'Acessar'}
+            </button>
           </form>
         </div>
       ) : (
@@ -194,32 +221,26 @@ function Ajustes() {
           
           {telaAtual === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
-              
               <div onClick={abrirRelatorios} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F5F3FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><TrendingUp size={24} color="#8B5CF6" /></div>
-                <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Relatórios de Usinagem</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Analise atrasos e tempos de processos das ferramentas.</p></div>
+                <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Relatórios de Usinagem</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Analise atrasos, exporte dados e veja processos.</p></div>
               </div>
-
               <div onClick={abrirProjetos} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F0FDF4', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><FolderPlus size={24} color="#16A34A" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Cadastrar Projetos</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Crie novos projetos, estampos e defina prazos.</p></div>
               </div>
-
               <div onClick={abrirAlunos} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F0F9FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Users size={24} color="#0284C7" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Gerenciar Alunos (Crachás)</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar, editar ou remover IDs de operadores.</p></div>
               </div>
-
               <div onClick={abrirHistorico} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #FEE2E2', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FEF2F2', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><AlertOctagon size={24} color="#DC2626" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Relatório de Ocorrências</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Visualize quebras, paradas e relatos dos alunos.</p></div>
               </div>
-
               <div onClick={() => navigate('/correcoes')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FEF9C3', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Clock size={24} color="#CA8A04" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Correção de Apontamentos</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Ajustar manualmente horários que ficaram em aberto.</p></div>
               </div>
-
               <div onClick={() => navigate('/engenharia')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F3F4F6', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Settings size={24} color="#4B5563" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Engenharia e Roteiros</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar peças, editar processos, sequência e tempos alvo.</p></div>
@@ -227,21 +248,15 @@ function Ajustes() {
             </div>
           )}
 
-          {/* ============================================== */}
-          {/* TELA DE CADASTRO DE PROJETOS                 */}
-          {/* ============================================== */}
           {telaAtual === 'projetos' && (
             <div style={{ maxWidth: '900px', margin: '0 auto', marginTop: '10px' }}>
-              
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6', marginBottom: '24px' }}>
                 <form onSubmit={cadastrarProjeto}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-                    
                     <div style={{ gridColumn: 'span 2' }}>
                       <label style={estiloLabel}>Nome do Projeto</label>
                       <input type="text" placeholder="Ex: Estampo Progressivo 05..." value={novoProjNome} onChange={e => setNovoProjNome(e.target.value)} required style={estiloInput} />
                     </div>
-                    
                     <div style={{ gridColumn: 'span 2' }}>
                       <label style={estiloLabel}>Tipo *</label>
                       <select value={novoProjTipo} onChange={e => setNovoProjTipo(e.target.value)} required style={estiloInput}>
@@ -254,26 +269,20 @@ function Ajustes() {
                         <option value="Molde">Molde de Injeção</option>
                       </select>
                     </div>
-
                     <div>
                       <label style={estiloLabel}>Data Início *</label>
                       <input type="date" value={novoProjInicio} onChange={e => setNovoProjInicio(e.target.value)} required style={estiloInput} />
                     </div>
-                    
                     <div>
                       <label style={estiloLabel}>Previsão Fim</label>
                       <input type="date" value={novoProjFim} onChange={e => setNovoProjFim(e.target.value)} style={estiloInput} />
                     </div>
-
                   </div>
-                  
                   <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#0284C7', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
                     <Plus size={18} /> Cadastrar Projeto
                   </button>
                 </form>
               </div>
-
-              {/* Lista de Projetos Criados */}
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Projetos Ativos</h3>
                 {carregandoProjetos ? (
@@ -288,21 +297,15 @@ function Ajustes() {
                           <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: '#111827' }}>{proj.projeto}</h4>
                           <span style={{ fontSize: '12px', color: '#6B7280' }}>Início: {proj.data_inicio} | Status: {proj.status}</span>
                         </div>
-                        <button onClick={() => deletarProjeto(proj.projeto_id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '8px' }}>
-                          <Trash2 size={20} />
-                        </button>
+                        <button onClick={() => deletarProjeto(proj.projeto_id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '8px' }}><Trash2 size={20} /></button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-
             </div>
           )}
 
-          {/* ============================================== */}
-          {/* TELA DE CADASTRO DE ALUNOS                   */}
-          {/* ============================================== */}
           {telaAtual === 'alunos' && (
             <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6', marginBottom: '24px' }}>
@@ -313,7 +316,6 @@ function Ajustes() {
                   <button type="submit" style={{ backgroundColor: '#0284C7', color: 'white', padding: '0 24px', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><Plus size={18} /> Adicionar</button>
                 </form>
               </div>
-
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Alunos Cadastrados</h3>
                 {carregandoAlunos ? (
@@ -337,17 +339,20 @@ function Ajustes() {
             </div>
           )}
 
-          {/* ============================================== */}
-          {/* TELAS DE RELATÓRIOS E OCORRÊNCIAS            */}
-          {/* ============================================== */}
           {telaAtual === 'historico' && (
             <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                 <button onClick={() => exportarParaExcel(ocorrencias, 'Ocorrencias_Ferramentaria')} style={{ backgroundColor: '#10B981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Download size={16} /> Baixar Planilha
+                 </button>
+              </div>
+
               {carregandoOcorrencias ? (
                 <p style={{ color: '#6B7280', textAlign: 'center', marginTop: '40px' }}>Buscando registros no banco de dados...</p>
               ) : ocorrencias.length === 0 ? (
                 <div style={{ backgroundColor: '#F0FDF4', padding: '24px', borderRadius: '12px', textAlign: 'center', color: '#166534', border: '1px solid #22C55E' }}>
                   <strong>Nenhuma ocorrência registrada!</strong>
-                  <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>A produção ocorreu perfeitamente até o momento.</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -384,6 +389,13 @@ function Ajustes() {
 
           {telaAtual === 'relatorios' && (
             <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                 <button onClick={() => exportarParaExcel(dadosProcessos, 'Desempenho_Processos')} style={{ backgroundColor: '#10B981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Download size={16} /> Baixar Planilha
+                 </button>
+              </div>
+
               <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: '#FFFFFF', padding: '8px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <button onClick={() => setFiltroUsinagem('pecas')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: filtroUsinagem === 'pecas' ? '#111827' : 'transparent', color: filtroUsinagem === 'pecas' ? '#FFFFFF' : '#6B7280' }}><LayoutGrid size={16} /> Por Peça</button>
                 <button onClick={() => setFiltroUsinagem('processos')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: filtroUsinagem === 'processos' ? '#111827' : 'transparent', color: filtroUsinagem === 'processos' ? '#FFFFFF' : '#6B7280' }}><Filter size={16} /> Por Processo</button>

@@ -28,12 +28,32 @@ function App() {
         <Route path="/correcao" element={<CorrecaoApontamentos />} />
         <Route path="/engenharia" element={<GerenciarEngenharia />} />
         <Route path="/retroativo" element={<ApontamentoRetroativo />} />
+        
       </Routes>
     </Router>
   );
 
+function App() {
+  const [temaEscuro, setTemaEscuro] = useState(false);
 
-  
+  // Troca o atributo no HTML da página inteira
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', temaEscuro ? 'dark' : 'light');
+  }, [temaEscuro]);
+
+  return (
+    <div>
+      <button onClick={() => setTemaEscuro(!temaEscuro)}>
+        {temaEscuro ? '☀️ Modo Claro' : '🌙 Modo Escuro'}
+      </button>
+      
+      {/* O resto do seu sistema entra aqui */}
+    </div>
+  );
+}
+
+
+
 }
 
 export default App;
