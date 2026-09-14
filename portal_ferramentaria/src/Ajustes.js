@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Lock, Users, Clock, Settings, History, AlertOctagon, LayoutGrid, BarChart2, User, Wrench, Calendar, ClipboardList, Key } from 'lucide-react';
+import { ChevronLeft, Lock, Users, Clock, Settings, History, AlertOctagon, LayoutGrid, BarChart2, User, Wrench, Calendar, ClipboardList, Key, TrendingUp } from 'lucide-react';
 
 function Ajustes() {
   const navigate = useNavigate();
   
-  // Controles de Senha
   const [autenticado, setAutenticado] = useState(false);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
 
-  // Controles do Menu
   const [telaAtual, setTelaAtual] = useState('menu'); 
   const [ocorrencias, setOcorrencias] = useState([]);
-  const [carregando, setCarregando] = useState(false);
+  const [carregandoOcorrencias, setCarregandoOcorrencias] = useState(false);
+
+  const [dadosRelatorio, setDadosRelatorio] = useState([]);
+  const [carregandoRelatorio, setCarregandoRelatorio] = useState(false);
 
   const verificarSenha = (e) => {
     e.preventDefault();
@@ -27,22 +28,32 @@ function Ajustes() {
     }
   };
 
-  const carregarOcorrencias = () => {
-    setCarregando(true);
+  const abrirHistorico = () => {
+    setCarregandoOcorrencias(true);
+    setTelaAtual('historico');
     axios.get('https://gestao-ferramentaria.onrender.com/api/ocorrencias')
       .then(response => {
         setOcorrencias(response.data);
-        setCarregando(false);
+        setCarregandoOcorrencias(false);
       })
       .catch(error => {
         console.error("Erro ao carregar ocorrências:", error);
-        setCarregando(false);
+        setCarregandoOcorrencias(false);
       });
   };
 
-  const abrirHistorico = () => {
-    carregarOcorrencias();
-    setTelaAtual('historico');
+  const abrirRelatorios = () => {
+    setCarregandoRelatorio(true);
+    setTelaAtual('relatorios');
+    axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/desempenho')
+      .then(response => {
+        setDadosRelatorio(response.data);
+        setCarregandoRelatorio(false);
+      })
+      .catch(error => {
+        console.error("Erro ao carregar relatórios:", error);
+        setCarregandoRelatorio(false);
+      });
   };
 
   const handleBloquear = () => {
@@ -53,10 +64,9 @@ function Ajustes() {
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '120px' }}>
       
-      {/* Barra Superior */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {telaAtual === 'historico' && autenticado ? (
+          {telaAtual !== 'menu' && autenticado ? (
             <button onClick={() => setTelaAtual('menu')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
               <ChevronLeft size={24} color="#111827" strokeWidth={2.5} />
             </button>
@@ -66,7 +76,9 @@ function Ajustes() {
             </button>
           )}
           <h1 style={{ fontSize: '18px', fontWeight: '700', color: '#111827', margin: 0 }}>
-            {!autenticado ? 'Acesso Restrito' : telaAtual === 'historico' ? 'Histórico de Ocorrências' : 'Ajustes do Sistema'}
+            {!autenticado ? 'Acesso Restrito' : 
+              telaAtual === 'historico' ? 'Histórico de Ocorrências' : 
+              telaAtual === 'relatorios' ? 'Relatórios de Usinagem' : 'Ajustes do Sistema'}
           </h1>
         </div>
         
@@ -78,8 +90,6 @@ function Ajustes() {
       </div>
 
       {!autenticado ? (
-        
-        {/* TELA DE BLOQUEIO POR SENHA */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
           <form onSubmit={verificarSenha} style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', width: '100%', maxWidth: '360px', textAlign: 'center' }}>
             <div style={{ backgroundColor: '#F3F4F6', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 16px auto' }}>
@@ -103,15 +113,22 @@ function Ajustes() {
             </button>
           </form>
         </div>
-
       ) : (
-
-        {/* CONTEÚDO ORIGINAL DE AJUSTES (LIBERADO) */}
         <div style={{ padding: '0 24px' }}>
           
           {telaAtual === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
               
+              <div onClick={abrirRelatorios} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                <div style={{ backgroundColor: '#F5F3FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <TrendingUp size={24} color="#8B5CF6" />
+                </div>
+                <div>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Relatórios de Usinagem</h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Acompanhe o progresso de execução por peça e projeto.</p>
+                </div>
+              </div>
+
               <div onClick={abrirHistorico} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #FEE2E2', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FEF2F2', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <AlertOctagon size={24} color="#DC2626" />
@@ -167,7 +184,7 @@ function Ajustes() {
 
           {telaAtual === 'historico' && (
             <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
-              {carregando ? (
+              {carregandoOcorrencias ? (
                 <p style={{ color: '#6B7280', textAlign: 'center', marginTop: '40px' }}>Buscando registros no banco de dados...</p>
               ) : ocorrencias.length === 0 ? (
                 <div style={{ backgroundColor: '#F0FDF4', padding: '24px', borderRadius: '12px', textAlign: 'center', color: '#166534', border: '1px solid #22C55E' }}>
@@ -218,10 +235,71 @@ function Ajustes() {
               )}
             </div>
           )}
+
+          {telaAtual === 'relatorios' && (
+            <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
+              {carregandoRelatorio ? (
+                <p style={{ color: '#6B7280', textAlign: 'center', marginTop: '40px' }}>Processando relatórios de usinagem...</p>
+              ) : dadosRelatorio.length === 0 ? (
+                <div style={{ backgroundColor: '#F3F4F6', padding: '24px', borderRadius: '12px', textAlign: 'center', color: '#4B5563', border: '1px solid #E5E7EB' }}>
+                  <strong>Nenhum dado de usinagem encontrado.</strong>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {dadosRelatorio.map((item, index) => {
+                    const planejadoMinutos = Number(item.total_planejado) || 0;
+                    const realizadoMinutos = Number(item.total_realizado) || 0;
+                    
+                    const horasPlanejadas = (planejadoMinutos / 60).toFixed(1);
+                    const horasRealizadas = (realizadoMinutos / 60).toFixed(1);
+                    
+                    const progresso = planejadoMinutos > 0 ? Math.round((realizadoMinutos / planejadoMinutos) * 100) : 0;
+                    const concluido = progresso >= 100;
+
+                    return (
+                      <div key={index} style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                          <div>
+                            <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              Projeto: {item.projeto || 'Geral'}
+                            </span>
+                            <h4 style={{ margin: '4px 0 0 0', fontSize: '16px', color: '#111827' }}>
+                              {item.peca || 'Resumo do Projeto'}
+                            </h4>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{ fontSize: '18px', fontWeight: '800', color: concluido ? '#16A34A' : '#0284C7' }}>
+                              {progresso}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div style={{ width: '100%', height: '8px', backgroundColor: '#F3F4F6', borderRadius: '4px', overflow: 'hidden', marginBottom: '16px' }}>
+                          <div style={{ width: `${Math.min(progresso, 100)}%`, height: '100%', backgroundColor: concluido ? '#16A34A' : '#0284C7', transition: 'width 0.5s ease' }}></div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #F3F4F6' }}>
+                          <div>
+                            <span style={{ display: 'block', fontSize: '11px', color: '#6B7280' }}>Tempo Planejado</span>
+                            <span style={{ fontSize: '14px', color: '#374151', fontWeight: '600' }}>{horasPlanejadas} h</span>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{ display: 'block', fontSize: '11px', color: '#6B7280' }}>Tempo Executado (Real)</span>
+                            <span style={{ fontSize: '14px', color: '#374151', fontWeight: '600' }}>{horasRealizadas} h</span>
+                          </div>
+                        </div>
+
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Menu Inferior */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
         <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
           <LayoutGrid size={24} />
