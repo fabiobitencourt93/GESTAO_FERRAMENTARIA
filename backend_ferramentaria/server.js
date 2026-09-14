@@ -693,7 +693,7 @@ app.get('/api/relatorios/processos', async (req, res) => {
         const query = `
             SELECT 
                 proj.nome AS projeto,
-                pec.nome_peca AS peca,
+                pec.nome AS peca,
                 pr.nome_operacao AS processo,
                 pr.maquina_sugerida AS maquina,
                 pr.tempo_planejado_min AS planejado,
@@ -703,8 +703,8 @@ app.get('/api/relatorios/processos', async (req, res) => {
             JOIN estampos est ON pec.estampo_id = est.id
             JOIN projetos proj ON est.projeto_id = proj.id
             LEFT JOIN apontamentos a ON a.processo_id = pr.id
-            GROUP BY proj.nome, pec.nome_peca, pr.nome_operacao, pr.maquina_sugerida, pr.tempo_planejado_min, pr.ordem_execucao
-            ORDER BY proj.nome, pec.nome_peca, pr.ordem_execucao;
+            GROUP BY proj.nome, pec.nome, pr.nome_operacao, pr.maquina_sugerida, pr.tempo_planejado_min, pr.ordem_execucao
+            ORDER BY proj.nome, pec.nome, pr.ordem_execucao;
         `;
         const result = await pool.query(query);
         res.json(result.rows);
