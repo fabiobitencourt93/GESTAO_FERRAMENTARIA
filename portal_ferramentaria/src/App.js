@@ -9,6 +9,7 @@ import GerenciarAlunos from './GerenciarAlunos';
 import CorrecaoApontamentos from './CorrecaoApontamentos';
 import GerenciarEngenharia from './GerenciarEngenharia';
 import ApontamentoRetroativo from './ApontamentoRetroativo';
+import Dashboard from './Dashboard';
 
 // 1. ESTA LINHA PRECISA EXISTIR:
 import ProcessosPeca from './ProcessosPeca'; 
@@ -28,6 +29,7 @@ function App() {
         <Route path="/correcao" element={<CorrecaoApontamentos />} />
         <Route path="/engenharia" element={<GerenciarEngenharia />} />
         <Route path="/retroativo" element={<ApontamentoRetroativo />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         
       </Routes>
     </Router>
