@@ -686,6 +686,35 @@ app.get('/api/ocorrencias', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Relatório Detalhado de Processos e Atrasos
+// ==========================================
+app.get('/api/relatorios/processos', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                proj.nome AS projeto,
+                pec.nome AS peca,
+                pr.nome AS processo,
+                pr.maquina_sugerida AS maquina,
+                pr.tempo_planejado_min AS planejado,
+                COALESCE(SUM(EXTRACT(EPOCH FROM (a.data_hora_fim - a.data_hora_inicio))/60), 0) AS realizado
+            FROM processos pr
+            JOIN pecas pec ON pr.peca_id = pec.id
+            JOIN estampos est ON pec.estampo_id = est.id
+            JOIN projetos proj ON est.projeto_id = proj.id
+            LEFT JOIN apontamentos a ON a.processo_id = pr.id
+            GROUP BY proj.nome, pec.nome, pr.nome, pr.maquina_sugerida, pr.tempo_planejado_min, pr.ordem_execucao
+            ORDER BY proj.nome, pec.nome, pr.ordem_execucao;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro ao buscar processos:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
 // Inicialização do Servidor
 // ==========================================
 app.listen(port, () => {
