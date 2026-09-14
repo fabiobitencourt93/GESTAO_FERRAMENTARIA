@@ -14,11 +14,13 @@ function Ajustes() {
   const [ocorrencias, setOcorrencias] = useState([]);
   const [carregandoOcorrencias, setCarregandoOcorrencias] = useState(false);
 
-  // Estados dos Relatórios
   const [dadosPecas, setDadosPecas] = useState([]);
   const [dadosProcessos, setDadosProcessos] = useState([]);
   const [carregandoRelatorio, setCarregandoRelatorio] = useState(false);
-  const [filtroUsinagem, setFiltroUsinagem] = useState('pecas'); // pecas, processos, atrasos
+  const [filtroUsinagem, setFiltroUsinagem] = useState('pecas'); 
+  
+  // Novo estado para o agrupamento da aba "Por Processo"
+  const [agrupamento, setAgrupamento] = useState('maquina'); 
 
   const verificarSenha = (e) => {
     e.preventDefault();
@@ -48,14 +50,12 @@ function Ajustes() {
   const abrirRelatorios = () => {
     setCarregandoRelatorio(true);
     setTelaAtual('relatorios');
-    setFiltroUsinagem('pecas'); // Reseta o filtro
-
-    // Busca o resumo por peças
+    setFiltroUsinagem('pecas');
+    
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/desempenho')
       .then(response => setDadosPecas(response.data))
       .catch(error => console.error("Erro peças:", error));
 
-    // Busca o detalhado por processos
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/processos')
       .then(response => {
         setDadosProcessos(response.data);
@@ -72,10 +72,17 @@ function Ajustes() {
     navigate('/');
   };
 
-  // Filtra e ordena apenas os processos que estouraram o tempo
   const processosComAtraso = [...dadosProcessos]
     .filter(p => Number(p.realizado) > Number(p.planejado))
     .sort((a, b) => (Number(b.realizado) - Number(b.planejado)) - (Number(a.realizado) - Number(a.planejado)));
+
+  // Função para agrupar os dados dinamicamente
+  const dadosAgrupados = dadosProcessos.reduce((acc, item) => {
+    const chave = item[agrupamento] || 'Não definido';
+    if (!acc[chave]) acc[chave] = [];
+    acc[chave].push(item);
+    return acc;
+  }, {});
 
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '120px' }}>
@@ -134,7 +141,6 @@ function Ajustes() {
           
           {telaAtual === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
-              
               <div onClick={abrirRelatorios} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F5F3FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <TrendingUp size={24} color="#8B5CF6" />
@@ -144,7 +150,6 @@ function Ajustes() {
                   <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Analise atrasos e tempos de processos das ferramentas.</p>
                 </div>
               </div>
-
               <div onClick={abrirHistorico} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #FEE2E2', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FEF2F2', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <AlertOctagon size={24} color="#DC2626" />
@@ -154,7 +159,6 @@ function Ajustes() {
                   <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Visualize quebras, paradas e relatos dos alunos.</p>
                 </div>
               </div>
-
               <div onClick={() => navigate('/alunos')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F0F9FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Users size={24} color="#0284C7" />
@@ -164,7 +168,6 @@ function Ajustes() {
                   <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar, editar ou remover IDs de operadores.</p>
                 </div>
               </div>
-
               <div onClick={() => navigate('/correcoes')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FEF9C3', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Clock size={24} color="#CA8A04" />
@@ -174,7 +177,6 @@ function Ajustes() {
                   <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Ajustar manualmente horários que ficaram em aberto.</p>
                 </div>
               </div>
-
               <div onClick={() => navigate('/engenharia')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F3F4F6', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Settings size={24} color="#4B5563" />
@@ -184,7 +186,6 @@ function Ajustes() {
                   <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar peças, editar processos, sequência e tempos alvo.</p>
                 </div>
               </div>
-
               <div onClick={() => navigate('/retroativo')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FFF7ED', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <History size={24} color="#EA580C" />
@@ -194,7 +195,6 @@ function Ajustes() {
                   <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Inserção de tempo para operadores que esqueceram.</p>
                 </div>
               </div>
-
             </div>
           )}
 
@@ -255,7 +255,6 @@ function Ajustes() {
           {telaAtual === 'relatorios' && (
             <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
               
-              {/* FILTROS DO RELATÓRIO */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: '#FFFFFF', padding: '8px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <button onClick={() => setFiltroUsinagem('pecas')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: filtroUsinagem === 'pecas' ? '#111827' : 'transparent', color: filtroUsinagem === 'pecas' ? '#FFFFFF' : '#6B7280' }}>
                   <LayoutGrid size={16} /> Por Peça
@@ -273,7 +272,6 @@ function Ajustes() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   
-                  {/* Visão 1: Resumo por Peças */}
                   {filtroUsinagem === 'pecas' && dadosPecas.map((item, index) => {
                     const planejadoMin = Number(item.total_planejado) || 0;
                     const realizadoMin = Number(item.total_realizado) || 0;
@@ -305,25 +303,60 @@ function Ajustes() {
                     );
                   })}
 
-                  {/* Visão 2: Detalhado por Processo */}
-                  {filtroUsinagem === 'processos' && dadosProcessos.map((item, index) => {
-                    const planejado = Number(item.planejado) || 0;
-                    const realizado = Number(item.realizado) || 0;
-                    const estourou = realizado > planejado && planejado > 0;
-
-                    return (
-                      <div key={`proc-${index}`} style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', borderLeft: estourou ? '4px solid #DC2626' : '4px solid #22C55E' }}>
-                        <span style={{ fontSize: '11px', color: '#6B7280', textTransform: 'uppercase' }}>{item.projeto} / {item.peca}</span>
-                        <h4 style={{ margin: '4px 0 12px 0', fontSize: '15px', color: '#111827' }}>{item.processo} <span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>({item.maquina})</span></h4>
-                        <div style={{ display: 'flex', gap: '24px' }}>
-                          <div><span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>Planejado</span><span style={{ fontSize: '14px', fontWeight: '600' }}>{planejado} min</span></div>
-                          <div><span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>Realizado</span><span style={{ fontSize: '14px', fontWeight: '600', color: estourou ? '#DC2626' : '#16A34A' }}>{realizado} min</span></div>
-                        </div>
+                  {/* VIZUALIZAÇÃO POR PROCESSO (COM AGRUPAMENTO) */}
+                  {filtroUsinagem === 'processos' && (
+                    <>
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', paddingBottom: '8px', overflowX: 'auto' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: '#6B7280', alignSelf: 'center', marginRight: '8px' }}>Agrupar por:</span>
+                        {[
+                          { id: 'maquina', label: 'Máquina' },
+                          { id: 'projeto', label: 'Ferramenta' },
+                          { id: 'peca', label: 'Peça' },
+                          { id: 'processo', label: 'Processo' }
+                        ].map(tipo => (
+                          <button
+                            key={tipo.id}
+                            onClick={() => setAgrupamento(tipo.id)}
+                            style={{
+                              padding: '6px 12px', borderRadius: '20px', border: '1px solid #E5E7EB',
+                              backgroundColor: agrupamento === tipo.id ? '#111827' : '#FFFFFF',
+                              color: agrupamento === tipo.id ? '#FFFFFF' : '#4B5563',
+                              fontSize: '12px', fontWeight: '600', cursor: 'pointer'
+                            }}
+                          >
+                            {tipo.label}
+                          </button>
+                        ))}
                       </div>
-                    );
-                  })}
 
-                  {/* Visão 3: Maiores Atrasos */}
+                      {Object.entries(dadosAgrupados).map(([grupo, itens], idx) => (
+                        <div key={idx} style={{ marginBottom: '24px' }}>
+                          <h3 style={{ fontSize: '14px', color: '#111827', borderBottom: '2px solid #E5E7EB', paddingBottom: '8px', marginBottom: '16px', textTransform: 'uppercase' }}>
+                            {grupo} <span style={{ color: '#6B7280', fontSize: '12px', fontWeight: 'normal', textTransform: 'none' }}>({itens.length} registros)</span>
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {itens.map((item, i) => {
+                              const planejado = Number(item.planejado) || 0;
+                              const realizado = Number(item.realizado) || 0;
+                              const estourou = realizado > planejado && planejado > 0;
+
+                              return (
+                                <div key={i} style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', borderLeft: estourou ? '4px solid #DC2626' : '4px solid #22C55E' }}>
+                                  <span style={{ fontSize: '11px', color: '#6B7280', textTransform: 'uppercase' }}>{item.projeto} / {item.peca}</span>
+                                  <h4 style={{ margin: '4px 0 12px 0', fontSize: '15px', color: '#111827' }}>{item.processo} <span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>({item.maquina})</span></h4>
+                                  <div style={{ display: 'flex', gap: '24px' }}>
+                                    <div><span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>Planejado</span><span style={{ fontSize: '14px', fontWeight: '600' }}>{planejado.toFixed(1)} min</span></div>
+                                    <div><span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>Realizado</span><span style={{ fontSize: '14px', fontWeight: '600', color: estourou ? '#DC2626' : '#16A34A' }}>{realizado.toFixed(1)} min</span></div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
                   {filtroUsinagem === 'atrasos' && (
                     processosComAtraso.length === 0 ? (
                       <div style={{ textAlign: 'center', padding: '40px', color: '#16A34A' }}><strong>Excelente!</strong> Nenhuma operação estourou o tempo planejado.</div>
@@ -341,10 +374,10 @@ function Ajustes() {
                                 <h4 style={{ margin: '4px 0 0 0', fontSize: '15px', color: '#7F1D1D' }}>{item.processo} <span style={{ fontSize: '12px', fontWeight: 'normal' }}>({item.maquina})</span></h4>
                               </div>
                               <div style={{ textAlign: 'right', backgroundColor: '#DC2626', color: '#FFF', padding: '6px 12px', borderRadius: '8px', fontWeight: '700' }}>
-                                + {atraso} min
+                                + {atraso.toFixed(1)} min
                               </div>
                             </div>
-                            <p style={{ margin: '12px 0 0 0', fontSize: '13px', color: '#991B1B' }}>Planejado: <strong>{planejado}m</strong> | Realizado: <strong>{realizado}m</strong></p>
+                            <p style={{ margin: '12px 0 0 0', fontSize: '13px', color: '#991B1B' }}>Planejado: <strong>{planejado.toFixed(1)}m</strong> | Realizado: <strong>{realizado.toFixed(1)}m</strong></p>
                           </div>
                         );
                       })
@@ -358,7 +391,6 @@ function Ajustes() {
         </div>
       )}
 
-      {/* Menu Inferior */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
         <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
           <LayoutGrid size={24} />
