@@ -4,13 +4,13 @@ import { Moon, Sun } from 'lucide-react';
 
 // Seus imports de telas vêm todos aqui em cima:
 // (Confirme se os nomes dos seus arquivos estão exatamente assim)
-import Painel from './Painel';
+import Projetos from './Projetos';
 import Producao from './Producao';
 import Dashboard from './Dashboard';
 import Ajustes from './Ajustes';
-// import PecasEstampo from './PecasEstampo';
-// import ProcessosPeca from './ProcessosPeca';
-// import Engenharia from './Engenharia';
+import PecasEstampo from './PecasEstampo';
+import ProcessosPeca from './ProcessosPeca';
+import Engenharia from './Engenharia';
 
 // SÓ PODE EXISTIR ESTE 'function App()' NO ARQUIVO INTEIRO:
 function App() {
@@ -43,15 +43,15 @@ function App() {
 
       {/* SUAS ROTAS FICAM TODAS AQUI DENTRO */}
       <Routes>
-        <Route path="/" element={<Painel />} />
+        <Route path="/" element={<Projetos />} />
         <Route path="/producao" element={<Producao />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/ajustes" element={<Ajustes />} />
         
         {/* Adicione as rotas de peças, correção e engenharia que você já tinha: */}
-        {/* <Route path="/pecas/:id" element={<PecasEstampo />} /> */}
-        {/* <Route path="/processos/:id" element={<ProcessosPeca />} /> */}
-        {/* <Route path="/engenharia" element={<Engenharia />} /> */}
+        <Route path="/pecas/:id" element={<PecasEstampo />} />
+        <Route path="/processos/:id" element={<ProcessosPeca />} />
+        <Route path="/engenharia" element={<Engenharia />} />
       </Routes>
       
     </Router>
