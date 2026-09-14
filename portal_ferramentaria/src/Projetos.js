@@ -136,41 +136,6 @@ function Projetos() {
             {mensagemSucesso}
           </div>
         )}
-
-        {/* Bloco de Cadastro */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-            <div style={{ flex: '2', minWidth: '200px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Nome do Projeto</label>
-              <input type="text" placeholder="Ex: Estampo Progressivo 05..." value={novoProjeto} onChange={(e) => setNovoProjeto(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px' }} />
-            </div>
-            <div style={{ flex: '1', minWidth: '150px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Tipo *</label>
-              <select value={tipoEstampo} onChange={(e) => setTipoEstampo(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px', color: tipoEstampo ? '#111827' : '#9CA3AF', backgroundColor: '#FFF' }}>
-                <option value="" disabled>Selecione...</option>
-                <option value="Progressivo">Progressivo</option>
-                <option value="Corte">Corte Simples</option>
-                <option value="Dobra">Dobra</option>
-                <option value="Repuxo">Repuxo / Crashform</option>
-                <option value="Transfer">Transfer</option>
-                <option value="Outro">Outro</option>
-              </select>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-            <div style={{ flex: '1', minWidth: '140px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Data Início *</label>
-              <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px', color: '#111827' }} />
-            </div>
-            <div style={{ flex: '1', minWidth: '140px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#6B7280', marginBottom: '4px', fontWeight: '600' }}>Previsão Fim</label>
-              <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px', color: '#111827' }} />
-            </div>
-          </div>
-          <button onClick={handleCadastrar} style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '8px', padding: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600', width: '100%', marginTop: '8px' }}>
-            <Plus size={20} /> Cadastrar Projeto
-          </button>
-        </div>
         
         {/* Lista de Projetos */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
