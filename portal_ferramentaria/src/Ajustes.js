@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Lock, Users, Clock, Settings, History, AlertOctagon, LayoutGrid, BarChart2, User, Wrench, Calendar, ClipboardList, KeyRound } from 'lucide-react';
+import { ChevronLeft, Lock, Users, Clock, Settings, History, AlertOctagon, LayoutGrid, BarChart2, User, Wrench, Calendar, ClipboardList, Key } from 'lucide-react';
 
 function Ajustes() {
   const navigate = useNavigate();
@@ -18,7 +18,6 @@ function Ajustes() {
 
   const verificarSenha = (e) => {
     e.preventDefault();
-    // VVV Mude a senha real do seu sistema AQUI VVV
     if (senha === '260817') { 
       setAutenticado(true);
       setErroSenha(false);
@@ -84,7 +83,7 @@ function Ajustes() {
         <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 24px' }}>
           <form onSubmit={verificarSenha} style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', width: '100%', maxWidth: '360px', textAlign: 'center' }}>
             <div style={{ backgroundColor: '#F3F4F6', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 16px auto' }}>
-              <KeyRound size={32} color="#4B5563" />
+              <Key size={32} color="#4B5563" />
             </div>
             <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#111827' }}>Área da Administração</h2>
             <p style={{ margin: '0 0 24px 0', fontSize: '13px', color: '#6B7280' }}>Insira a senha para acessar os ajustes.</p>
