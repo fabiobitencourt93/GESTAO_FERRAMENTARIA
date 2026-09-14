@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Home, Bell, LayoutGrid, BarChart2, Settings, AlertOctagon, User, Tool, Calendar, ClipboardList } from 'lucide-react';
+import { ChevronLeft, Home, Bell, LayoutGrid, BarChart2, Settings, AlertOctagon, User, Wrench, Calendar, ClipboardList } from 'lucide-react';
 
 function Ajustes() {
   const navigate = useNavigate();
@@ -119,7 +119,7 @@ function Ajustes() {
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Tool size={16} color="#6B7280" />
+                        <Wrench size={16} color="#6B7280" />
                         <div>
                           <span style={{ display: 'block', fontSize: '11px', color: '#9CA3AF' }}>Peça / Operação</span>
                           <span style={{ fontSize: '13px', color: '#374151', fontWeight: '600' }}>{item.peca || 'N/A'} - {item.operacao || 'N/A'}</span>
