@@ -715,6 +715,36 @@ app.get('/api/relatorios/processos', async (req, res) => {
 });
 
 // ==========================================
+// ROTA: Histórico de Ocorrências
+// ==========================================
+app.get('/api/ocorrencias', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                a.id,
+                proj.nome AS projeto,
+                pec.nome AS peca,
+                pr.nome_operacao AS operacao,
+                a.operador_id AS operador,
+                a.ocorrencia,
+                TO_CHAR(a.data_hora_fim, 'DD/MM/YYYY HH24:MI') AS data_registro
+            FROM apontamentos a
+            JOIN processos pr ON a.processo_id = pr.id
+            JOIN pecas pec ON pr.peca_id = pec.id
+            JOIN estampos est ON pec.estampo_id = est.id
+            JOIN projetos proj ON est.projeto_id = proj.id
+            WHERE a.ocorrencia IS NOT NULL AND a.ocorrencia != ''
+            ORDER BY a.data_hora_fim DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro ao buscar ocorrências:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
 // Inicialização do Servidor
 // ==========================================
 app.listen(port, () => {
