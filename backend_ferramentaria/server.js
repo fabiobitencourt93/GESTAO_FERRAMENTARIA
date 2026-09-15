@@ -374,15 +374,16 @@ app.listen(PORT, () => {
 });
 
 // ==========================================
-// ROTA DE EMERGÊNCIA: ATUALIZAR BANCO DE DADOS
+// ROTA DE EMERGÊNCIA: ATUALIZAR BANCO DE DADOS (COM LOG DETALHADO)
 // ==========================================
 app.get('/api/atualizar-banco', async (req, res) => {
     try {
         await pool.query('ALTER TABLE estampos ADD COLUMN IF NOT EXISTS tipo VARCHAR(100);');
         await pool.query('ALTER TABLE projetos ADD COLUMN IF NOT EXISTS data_conclusao DATE;');
         await pool.query('ALTER TABLE apontamentos ADD COLUMN IF NOT EXISTS ocorrencia TEXT;');
-        res.send("<h1>Sucesso!</h1><p>As colunas 'tipo', 'data_conclusao' e 'ocorrencia' foram verificadas/criadas no banco de dados.</p><p>Pode voltar para o seu sistema que ele já vai carregar!</p>");
+        res.send("<h1>Sucesso absoluto!</h1><p>Todas as colunas foram criadas/verificadas com sucesso.</p>");
     } catch (err) {
-        res.status(500).send("Erro ao atualizar banco: " + err.message);
+        // Agora o erro completo vai aparecer na tela do navegador para vermos
+        res.status(500).send(`<h1>Erro detalhado do Banco:</h1><pre>${err.message}</pre><p>Detalhe: ${JSON.stringify(err)}</p>`);
     }
 });
