@@ -377,7 +377,10 @@ app.get('/api/relatorios/ao-vivo', async (req, res) => {
                 pr.nome_operacao,
                 pr.maquina_sugerida,
                 pe.nome AS nome_peca,
-                a.data_hora_inicio
+                a.data_hora_inicio,
+                (SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - MAX(data_hora_fim))) / 60 
+                 FROM apontamentos 
+                 WHERE operador_id = o.id AND data_hora_fim IS NOT NULL) AS ocioso_minutos
             FROM operadores o
             LEFT JOIN apontamentos a ON o.id = a.operador_id AND a.data_hora_fim IS NULL
             LEFT JOIN processos pr ON a.processo_id = pr.id
@@ -387,6 +390,7 @@ app.get('/api/relatorios/ao-vivo', async (req, res) => {
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
+        console.error("Erro na Rota Ao Vivo:", err.message);
         res.status(500).send('Erro ao buscar status ao vivo');
     }
 });
