@@ -581,12 +581,12 @@ app.post('/api/auth/login', (req, res) => {
 //==========================================
 app.put('/api/projetos/:id/status', async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, data_conclusao } = req.body;
     
     try {
         const result = await pool.query(
             'UPDATE projetos SET status = $1 WHERE id = $2 RETURNING *',
-            [status, id]
+            [status, data_conclusao, id]
         );
         res.json(result.rows[0]);
     } catch (err) {
