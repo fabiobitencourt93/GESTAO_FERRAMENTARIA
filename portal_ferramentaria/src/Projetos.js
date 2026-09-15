@@ -193,7 +193,7 @@ function Projetos() {
         {projetos.map((proj) => (
           <div 
             key={proj.projeto_id} 
-            onClick={() => navigate(`/estampos/${proj.estampo_id}/processos`)}
+            onClick={() => navigate(`/estampo/${proj.estampo_id}`)}
             style={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
