@@ -58,25 +58,21 @@ function Projetos() {
     }
   };
 
-  // --- NOVA FUNÇÃO UNIFICADA DE STATUS ---
-  // Ela faz exatamente o que a tela de Ajustes faz, mas através dos botões!
-const handleAlterarStatus = async (id, novoStatus, e) => {
+  const handleAlterarStatus = async (id, novoStatus, e) => {
     e.stopPropagation(); 
     const acao = novoStatus === 'Concluído' ? 'marcar este projeto como Concluído' : 'reabrir este projeto (mudando para Em Execução)';
     
     if (!window.confirm(`Deseja ${acao}?`)) return;
 
-    // Lógica inteligente de data
     let dataHoje = null;
     if (novoStatus === 'Concluído') {
-      // Pega o dia exato do clique no formato brasileiro (DD/MM/AAAA)
       dataHoje = new Date().toLocaleDateString('pt-BR'); 
     }
 
     try {
       await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, { 
         status: novoStatus,
-        data_conclusao: dataHoje // <-- Envia a data para o Render!
+        data_conclusao: dataHoje
       });
       carregarProjetos(); 
     } catch (error) {
@@ -139,61 +135,99 @@ const handleAlterarStatus = async (id, novoStatus, e) => {
         
         {/* Lista de Projetos */}
         {projetos.map((proj) => (
-  <div key={proj.projeto_id} style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
-    
-    {/* CABEÇALHO DO CARD */}
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-      <div>
-         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
-           <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
-           
-           {/* TAG DE STATUS */}
-           <span style={{ 
-             backgroundColor: proj.status === 'Concluído' ? '#DCFCE7' : proj.status === 'Em Execução' ? '#DBEAFE' : '#FEF9C3', 
-             color: proj.status === 'Concluído' ? '#166534' : proj.status === 'Em Execução' ? '#1D4ED8' : '#A16207', 
-             padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' 
-           }}>
-             {proj.status}
-           </span>
+          <div 
+            key={proj.projeto_id} 
+            onClick={() => navigate(`/estampos/${proj.estampo_id}/pecas`)} // Rota para abrir as peças
+            style={{ 
+              cursor: 'pointer',
+              backgroundColor: '#FFFFFF', 
+              borderRadius: '12px', 
+              border: '1px solid #E5E7EB', 
+              marginBottom: '16px', 
+              padding: '20px', 
+              boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+              transition: 'all 0.2s ease',
+              ':hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' } // Efeito visual ao passar o mouse
+            }}
+          >
+            
+            {/* CABEÇALHO DO CARD */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                   <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
+                   
+                   {/* TAG DE STATUS */}
+                   <span style={{ 
+                     backgroundColor: proj.status === 'Concluído' ? '#DCFCE7' : proj.status === 'Em Execução' ? '#DBEAFE' : '#FEF9C3', 
+                     color: proj.status === 'Concluído' ? '#166534' : proj.status === 'Em Execução' ? '#1D4ED8' : '#A16207', 
+                     padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' 
+                   }}>
+                     {proj.status}
+                   </span>
 
-           {/* NOVA TAG DE TIPO DO PROJETO */}
-           <span style={{ 
-             backgroundColor: '#F3F4F6', color: '#4B5563', 
-             padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' 
-           }}>
-             {proj.tipo || 'TIPO NÃO DEFINIDO'}
-           </span>
-         </div>
+                   {/* TAG DE TIPO DO PROJETO */}
+                   <span style={{ 
+                     backgroundColor: '#F3F4F6', color: '#4B5563', 
+                     padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' 
+                   }}>
+                     {proj.tipo || 'TIPO NÃO DEFINIDO'}
+                   </span>
+                 </div>
 
-         <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
-           ID do Projeto: {proj.projeto_id} | Estampo: {proj.estampo} (ID: {proj.estampo_id})
-         </p>
-      </div>
+                 <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
+                   ID do Projeto: {proj.projeto_id} | Estampo: {proj.estampo} (ID: {proj.estampo_id})
+                 </p>
+              </div>
 
-      {/* AQUI FICAM SEUS BOTÕES DE CHECK E LIXEIRA */}
-      <div style={{ display: 'flex', gap: '12px' }}>
-         {/* (Mantenha os botões que você já tem codificados aqui) */}
-      </div>
-    </div>
+              {/* BOTÕES DE AÇÃO (Concluir, Reabrir e Deletar) */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                 {proj.status === 'Concluído' ? (
+                   <button 
+                     onClick={(e) => handleAlterarStatus(proj.projeto_id, 'Em Execução', e)} 
+                     title="Reabrir Projeto"
+                     style={{ background: 'none', border: 'none', color: '#D97706', cursor: 'pointer', padding: '4px', transition: '0.2s', display: 'flex', alignItems: 'center' }}
+                   >
+                     <Undo2 size={24} />
+                   </button>
+                 ) : (
+                   <button 
+                     onClick={(e) => handleAlterarStatus(proj.projeto_id, 'Concluído', e)} 
+                     title="Marcar como Concluído"
+                     style={{ background: 'none', border: 'none', color: '#16A34A', cursor: 'pointer', padding: '4px', transition: '0.2s', display: 'flex', alignItems: 'center' }}
+                   >
+                     <CheckCircle2 size={24} />
+                   </button>
+                 )}
 
-    {/* CAIXA CINZA DE DATAS */}
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '8px', border: '1px solid #F3F4F6' }}>
-      <div>
-        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Início Planejado</span>
-        <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_inicio || 'Não informado'}</span>
-      </div>
-      <div>
-        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Previsão de Fim</span>
-        <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_fim || 'Não informado'}</span>
-      </div>
-      <div>
-        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Conclusão Real</span>
-        <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_conclusao || 'Aguardando conclusão'}</span>
-      </div>
-    </div>
+                 <button 
+                   onClick={(e) => handleDeletar(proj.projeto_id, e)} 
+                   title="Apagar Projeto"
+                   style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px', transition: '0.2s', display: 'flex', alignItems: 'center' }}
+                 >
+                   <Trash2 size={24} />
+                 </button>
+              </div>
+            </div>
 
-  </div>
-))}
+            {/* CAIXA CINZA DE DATAS */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '8px', border: '1px solid #F3F4F6' }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Início Planejado</span>
+                <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_inicio || 'Não informado'}</span>
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Previsão de Fim</span>
+                <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_fim || 'Não informado'}</span>
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Conclusão Real</span>
+                <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_conclusao || 'Aguardando conclusão'}</span>
+              </div>
+            </div>
+
+          </div>
+        ))}
       </div>
 
       {/* MENU INFERIOR PADRONIZADO COM 4 BOTÕES */}
