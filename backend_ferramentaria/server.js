@@ -584,9 +584,8 @@ app.put('/api/projetos/:id/status', async (req, res) => {
     const { status } = req.body;
     
     try {
-        // Exemplo de query para Postgres. Ajuste se o nome da sua coluna/tabela for diferente
         const result = await pool.query(
-            'UPDATE projetos SET status = $1 WHERE projeto_id = $2 RETURNING *',
+            'UPDATE projetos SET status = $1 WHERE id = $2 RETURNING *',
             [status, id]
         );
         res.json(result.rows[0]);
