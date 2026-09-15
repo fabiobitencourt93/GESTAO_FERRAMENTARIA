@@ -147,6 +147,7 @@ function Ajustes() {
                 <option value="Dobra">Dobra</option>
                 <option value="Repuxo">Repuxo</option>
                 <option value="Progressivo">Progressivo</option>
+                <option value="Outro">Outro</option>
               </select>
             </div>
           </div>
