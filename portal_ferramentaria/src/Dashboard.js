@@ -54,7 +54,7 @@ function Dashboard() {
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--fundo-tela)', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: modoTV ? '24px' : '120px', transition: 'all 0.3s' }}>
+    <div style={{ backgroundColor: 'var(--fundo-card)', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: modoTV ? '24px' : '120px', transition: 'all 0.3s' }}>
       <style>{`@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }`}</style>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', backgroundColor: modoTV ? '#000000' : 'transparent', color: 'var(--texto-titulo)' }}>
@@ -124,7 +124,7 @@ function Dashboard() {
       </div>
 
       {!modoTV && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'var(--fundo-menu)', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid var(--borda)', zIndex: 10 }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'var(--fundo-card, #FFFFFF)', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid var(--borda, #F3F4F6)', zIndex: 10 }}>
           <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: 'var(--texto-sub)', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
           <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: 'var(--texto-sub)', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span></div>
           <div onClick={() => navigate('/dashboard')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}><Monitor size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>DASHBOARD</span></div>
@@ -134,5 +134,9 @@ function Dashboard() {
     </div>
   );
 }
+
+
+
+
 
 export default Dashboard;
