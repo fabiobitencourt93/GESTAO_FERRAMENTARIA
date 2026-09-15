@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import Welcome from './Welcome';
 import Projetos from './Projetos';
 import PecasEstampo from './PecasEstampo';
 import Producao from './Producao';
@@ -18,8 +17,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Welcome />} />
-        <Route path="/projetos" element={<Projetos />} />
+        
+        <Route path="/" element={<Projetos />} />
         <Route path="/estampo/:id" element={<PecasEstampo />} />
         <Route path="/peca/:id/processos" element={<ProcessosPeca />} />
         <Route path="/producao" element={<Producao />} />

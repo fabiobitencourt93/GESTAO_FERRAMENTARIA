@@ -595,6 +595,36 @@ app.put('/api/projetos/:id/status', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTA: Editar Projeto e Estampo
+// ==========================================
+app.put('/api/projetos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome, tipo, data_inicio, data_fim } = req.body;
+
+        // 1. Atualiza a tabela projetos
+        await pool.query(
+            `UPDATE projetos 
+             SET nome = $1, data_inicio = $2, data_fim = $3 
+             WHERE id = $4`,
+            [nome, data_inicio || null, data_fim || null, id]
+        );
+
+        // 2. Atualiza ou insere o tipo na tabela estampos associada
+        await pool.query(
+            `UPDATE estampos 
+             SET nome = $1, tipo = $2 
+             WHERE projeto_id = $3`,
+            [nome, tipo, id]
+        );
+
+        res.json({ message: "Projeto atualizado com sucesso!" });
+    } catch (err) {
+        console.error("Erro ao editar projeto:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 //==================================================================
 // ROTA: Editar projeto completo (Nome, Início, Fim, Conclusão Real)
