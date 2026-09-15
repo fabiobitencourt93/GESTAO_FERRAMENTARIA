@@ -138,84 +138,62 @@ const handleAlterarStatus = async (id, novoStatus, e) => {
         )}
         
         {/* Lista de Projetos */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {projetos.map((item, index) => {
-            // Cores dinâmicas baseadas no status
-            const statusAtual = item.status || 'Em Planejamento';
-            const corStatus = statusAtual === 'Concluído' ? '#166534' : statusAtual === 'Em Execução' ? '#0369A1' : '#A16207';
-            const fundoStatus = statusAtual === 'Concluído' ? '#DCFCE7' : statusAtual === 'Em Execução' ? '#E0F2FE' : '#FEF08A';
+        {projetos.map((proj) => (
+  <div key={proj.projeto_id} style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+    
+    {/* CABEÇALHO DO CARD */}
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+      <div>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
+           <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
+           
+           {/* TAG DE STATUS */}
+           <span style={{ 
+             backgroundColor: proj.status === 'Concluído' ? '#DCFCE7' : proj.status === 'Em Execução' ? '#DBEAFE' : '#FEF9C3', 
+             color: proj.status === 'Concluído' ? '#166534' : proj.status === 'Em Execução' ? '#1D4ED8' : '#A16207', 
+             padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' 
+           }}>
+             {proj.status}
+           </span>
 
-            return (
-              <div 
-                key={item.projeto_id || index} 
-                onClick={() => item.estampo_id ? navigate(`/estampo/${item.estampo_id}`) : alert("Este projeto ainda não possui um estampo vinculado.")} 
-                style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', cursor: item.estampo_id ? 'pointer' : 'default', border: '1px solid transparent', display: 'flex', flexDirection: 'column', gap: '12px' }}
-              >
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <h3 style={{ margin: 0, fontSize: '16px', color: '#111827', fontWeight: '700' }}>{item.projeto}</h3>
-                      
-                      {/* ETIQUETA DE STATUS COLORIDA */}
-                      <span style={{ 
-                        fontSize: '11px', 
-                        fontWeight: '800', 
-                        padding: '4px 10px', 
-                        borderRadius: '12px', 
-                        backgroundColor: fundoStatus, 
-                        color: corStatus,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {statusAtual}
-                      </span>
-                    </div>
-                    <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
-                      <strong>ID do Projeto:</strong> {item.projeto_id} | <strong>Estampo:</strong> {item.estampo || <span style={{ color: '#EF4444' }}>Pendente</span>} (ID: {item.estampo_id || "-"})
-                    </p>
-                  </div>
-                  
-                  {/* BOTÕES DE AÇÃO (CONCLUIR / REABRIR / DELETAR) */}
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    {statusAtual === 'Concluído' ? (
-                      <button onClick={(e) => handleAlterarStatus(item.projeto_id, 'Em Execução', e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EAB308' }} title="Reabrir Projeto">
-                        <Undo2 size={24} />
-                      </button>
-                    ) : (
-                      <button onClick={(e) => handleAlterarStatus(item.projeto_id, 'Concluído', e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16A34A' }} title="Concluir Projeto">
-                        <CheckCircle2 size={24} />
-                      </button>
-                    )}
-                    
-                    <button onClick={(e) => handleDeletar(item.projeto_id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }} title="Apagar Projeto">
-                      <Trash2 size={24} />
-                    </button>
-                  </div>
-                </div>
+           {/* NOVA TAG DE TIPO DO PROJETO */}
+           <span style={{ 
+             backgroundColor: '#F3F4F6', color: '#4B5563', 
+             padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' 
+           }}>
+             {proj.tipo || 'TIPO NÃO DEFINIDO'}
+           </span>
+         </div>
 
-                {/* Bloco de Datas do MES */}
-                <div style={{ backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                  <div>
-                    <strong style={{ display: 'block', color: '#6B7280', marginBottom: '4px' }}>Início Planejado</strong>
-                    <span style={{ color: '#111827', fontWeight: '500' }}>{item.data_inicio || "Não informado"}</span>
-                  </div>
-                  <div>
-                    <strong style={{ display: 'block', color: '#6B7280', marginBottom: '4px' }}>Previsão de Fim</strong>
-                    <span style={{ color: '#111827', fontWeight: '500' }}>{item.data_fim || "Não informado"}</span>
-                  </div>
-                  <div>
-                    <strong style={{ display: 'block', color: statusAtual === 'Concluído' ? '#16A34A' : '#6B7280', marginBottom: '4px' }}>Conclusão Real</strong>
-                    <span style={{ color: statusAtual === 'Concluído' ? '#166534' : '#9CA3AF', fontWeight: '600' }}>
-                      {item.data_conclusao ? item.data_conclusao : (statusAtual === 'Concluído' ? "Concluído sem data" : "Aguardando conclusão")}
-                    </span>
-                  </div>
-                </div>
+         <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
+           ID do Projeto: {proj.projeto_id} | Estampo: {proj.estampo} (ID: {proj.estampo_id})
+         </p>
+      </div>
 
-              </div>
-            );
-          })}
-        </div>
+      {/* AQUI FICAM SEUS BOTÕES DE CHECK E LIXEIRA */}
+      <div style={{ display: 'flex', gap: '12px' }}>
+         {/* (Mantenha os botões que você já tem codificados aqui) */}
+      </div>
+    </div>
+
+    {/* CAIXA CINZA DE DATAS */}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '8px', border: '1px solid #F3F4F6' }}>
+      <div>
+        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Início Planejado</span>
+        <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_inicio || 'Não informado'}</span>
+      </div>
+      <div>
+        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Previsão de Fim</span>
+        <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_fim || 'Não informado'}</span>
+      </div>
+      <div>
+        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Conclusão Real</span>
+        <span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_conclusao || 'Aguardando conclusão'}</span>
+      </div>
+    </div>
+
+  </div>
+))}
       </div>
 
       {/* MENU INFERIOR PADRONIZADO COM 4 BOTÕES */}

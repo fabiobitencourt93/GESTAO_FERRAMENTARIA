@@ -37,7 +37,8 @@ app.get('/api/projetos', async (req, res) => {
                 TO_CHAR(p.data_fim, 'DD/MM/YYYY') AS data_fim,
                 TO_CHAR(p.data_conclusao, 'DD/MM/YYYY') AS data_conclusao,
                 e.nome AS estampo, 
-                e.id AS estampo_id
+                e.id AS estampo_id,
+                e.tipo AS tipo
             FROM projetos p
             LEFT JOIN estampos e ON p.id = e.projeto_id
             ORDER BY p.id;
