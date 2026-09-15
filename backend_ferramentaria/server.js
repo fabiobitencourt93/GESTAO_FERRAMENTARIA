@@ -576,6 +576,25 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 
+//==========================================
+// ROTA: ALTERAR STATUS DO PROJETO
+//==========================================
+app.put('/api/projetos/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    try {
+        // Exemplo de query para Postgres. Ajuste se o nome da sua coluna/tabela for diferente
+        const result = await pool.query(
+            'UPDATE projetos SET status = $1 WHERE projeto_id = $2 RETURNING *',
+            [status, id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Erro ao atualizar status:", err);
+        res.status(500).json({ error: 'Erro interno ao atualizar status.' });
+    }
+});
 
 // ==========================================
 // Inicialização do Servidor

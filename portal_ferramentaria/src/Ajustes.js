@@ -162,6 +162,15 @@ function Ajustes() {
     } catch (error) { alert(error.response?.data?.error || 'Erro ao excluir projeto.'); }
   };
 
+  const alterarStatusProjeto = async (id, novoStatus) => {
+    try {
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, { status: novoStatus });
+      carregarProjetosDoBanco(); // Recarrega a lista para mostrar a mudança
+    } catch (error) {
+      alert(error.response?.data?.error || 'Erro ao atualizar o status do projeto.');
+    }
+  };
+
   const handleBloquear = () => {
     setAutenticado(false);
   };
@@ -295,7 +304,20 @@ function Ajustes() {
                       <div key={proj.projeto_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
                         <div>
                           <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: '#111827' }}>{proj.projeto}</h4>
-                          <span style={{ fontSize: '12px', color: '#6B7280' }}>Início: {proj.data_inicio} | Status: {proj.status}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                            <span style={{ fontSize: '12px', color: '#6B7280' }}>Início: {proj.data_inicio} | Status:</span>
+                            
+                            {/* CAIXA DE SELEÇÃO DE STATUS */}
+                            <select 
+                              value={proj.status || 'Em Planejamento'} 
+                              onChange={(e) => alterarStatusProjeto(proj.projeto_id, e.target.value)}
+                              style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', border: '1px solid #D1D5DB', backgroundColor: '#FFF', outline: 'none', cursor: 'pointer', fontWeight: '600', color: proj.status === 'Concluído' ? '#16A34A' : proj.status === 'Em Execução' ? '#0284C7' : '#CA8A04' }}
+                            >
+                              <option value="Em Planejamento">Em Planejamento</option>
+                              <option value="Em Execução">Em Execução</option>
+                              <option value="Concluído">Concluído</option>
+                            </select>
+                          </div>
                         </div>
                         <button onClick={() => deletarProjeto(proj.projeto_id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '8px' }}><Trash2 size={20} /></button>
                       </div>
