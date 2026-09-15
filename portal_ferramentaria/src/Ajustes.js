@@ -34,6 +34,7 @@ function Ajustes() {
         // MODO EDIÇÃO
         await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${idEdicao}/editar`, {
           nome: novoProjeto,
+          tipo: tipoEstampo,
           data_inicio: dataInicio,
           data_fim: dataFim,
           data_conclusao: dataConclusao
@@ -111,7 +112,7 @@ function Ajustes() {
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '100px' }}>
       
-      {/* BARRA SUPERIOR (IDÊNTICA AO SEU PRINT) */}
+      {/* BARRA SUPERIOR */}
       <div style={{ display: 'flex', alignItems: 'center', padding: '24px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E5E7EB' }}>
         <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}>
           <ChevronLeft size={24} color="#111827" />
@@ -140,7 +141,7 @@ function Ajustes() {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Tipo *</label>
-              <select value={tipoEstampo} onChange={(e) => setTipoEstampo(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', boxSizing: 'border-box', backgroundColor: '#FFF', outline: 'none' }} disabled={idEdicao !== null}>
+              <select value={tipoEstampo} onChange={(e) => setTipoEstampo(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', boxSizing: 'border-box', backgroundColor: '#FFF', outline: 'none', cursor: 'pointer' }}>
                 <option value="">Selecione...</option>
                 <option value="Corte">Corte</option>
                 <option value="Dobra">Dobra</option>
