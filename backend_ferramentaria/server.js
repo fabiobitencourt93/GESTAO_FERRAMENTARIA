@@ -1,66 +1,30 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const cron = require('node-cron');
 
 const app = express();
-app.use(cors());
+const port = process.env.PORT || 3000;
+
+// Configuração de Middlewares
+app.use(cors()); 
 app.use(express.json());
 
-// ==========================================
-// CONFIGURAÇÃO DO BANCO DE DADOS
-// ==========================================
+// Configuração do Banco de Dados
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL, // Variável de ambiente configurada no Render
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres.qvttpmwhvaokwmefafle:gestaoferramentaria@aws-0-us-west-2.pooler.supabase.com:5432/postgres',
     ssl: { rejectUnauthorized: false }
 });
 
 // ==========================================
-// 1. ROTAS DE AUTENTICAÇÃO
+// ROTA DE HEALTH CHECK
 // ==========================================
-app.post('/api/auth/login', (req, res) => {
-    const { senha } = req.body;
-    // Senha padrão do sistema (pode ser alterada via .env futuramente)
-    const senhaCorreta = process.env.SENHA_SISTEMA || 'senai123'; 
-    if (senha === senhaCorreta) {
-        res.json({ message: 'Autenticado com sucesso' });
-    } else {
-        res.status(401).json({ error: 'Senha incorreta' });
-    }
+app.get('/api/ping', (req, res) => {
+    res.json({ status: 'Servidor MES acordado e rodando!' });
 });
 
 // ==========================================
-// 2. ROTAS DE ALUNOS (OPERADORES)
-// ==========================================
-app.get('/api/operadores', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM operadores ORDER BY nome ASC');
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/api/operadores', async (req, res) => {
-    try {
-        const { id, nome } = req.body;
-        await pool.query('INSERT INTO operadores (id, nome) VALUES ($1, $2)', [id, nome]);
-        res.status(201).json({ message: "Aluno cadastrado com sucesso!" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/api/operadores/:id', async (req, res) => {
-    try {
-        await pool.query('DELETE FROM operadores WHERE id = $1', [req.params.id]);
-        res.json({ message: "Aluno excluído com sucesso!" });
-    } catch (err) {
-        res.status(500).json({ error: "Este crachá já possui apontamentos registrados." });
-    }
-});
-
-// ==========================================
-// 3. ROTAS DE PROJETOS E ESTAMPOS
+// ROTA 1: Lista Geral de Projetos e Estampos
 // ==========================================
 app.get('/api/projetos', async (req, res) => {
     try {
@@ -77,7 +41,7 @@ app.get('/api/projetos', async (req, res) => {
                 e.tipo AS tipo
             FROM projetos p
             LEFT JOIN estampos e ON p.id = e.projeto_id
-            ORDER BY p.id DESC;
+            ORDER BY p.id;
         `;
         const result = await pool.query(query);
         res.json(result.rows);
@@ -86,207 +50,323 @@ app.get('/api/projetos', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTA: Cadastrar novo Projeto e Estampo 
+// ==========================================
 app.post('/api/projetos', async (req, res) => {
     try {
-        const { nome, tipo, data_inicio, data_fim } = req.body;
+        const { nome, data_inicio, data_fim, tipo } = req.body; 
         
-        // Insere o projeto e captura o ID gerado
-        const resultProj = await pool.query(
-            `INSERT INTO projetos (nome, data_inicio, data_fim, status) 
-             VALUES ($1, $2, $3, 'Em Planejamento') RETURNING id`,
-            [nome, data_inicio || null, data_fim || null]
-        );
-        const novoProjetoId = resultProj.rows[0].id;
+        if (!nome) return res.status(400).json({ error: 'O nome é obrigatório.' });
+        if (!data_inicio) return res.status(400).json({ error: 'A data de início é obrigatória.' });
+        if (!tipo) return res.status(400).json({ error: 'O tipo do estampo é obrigatório.' });
 
-        // Insere automaticamente o Estampo atrelado ao projeto (Evita Erro 500 nas peças!)
-        await pool.query(
-            `INSERT INTO estampos (projeto_id, nome, tipo) VALUES ($1, $2, $3)`,
-            [novoProjetoId, nome, tipo || 'Outro']
+        const resultProjeto = await pool.query(
+            'INSERT INTO projetos (nome, data_inicio, data_fim) VALUES ($1, $2, $3) RETURNING *', 
+            [nome, data_inicio, data_fim || null]
+        );
+        
+        const projetoCriado = resultProjeto.rows[0];
+
+        const resultEstampo = await pool.query(
+            'INSERT INTO estampos (nome, projeto_id, tipo) VALUES ($1, $2, $3) RETURNING *',
+            [projetoCriado.nome, projetoCriado.id, tipo]
         );
 
-        res.status(201).json({ message: "Projeto criado com sucesso!" });
+        res.json({ projeto: projetoCriado, estampo: resultEstampo.rows[0] });
     } catch (err) {
-        console.error("Erro ao criar projeto:", err.message);
-        res.status(500).json({ error: err.message });
+        console.error("Erro SQL:", err.message);
+        res.status(500).json({ erroBanco: err.message });
     }
 });
 
-app.put('/api/projetos/:id', async (req, res) => {
+// ==========================================
+// ROTA: Concluir Projeto (Atualizar Status)
+// ==========================================
+app.put('/api/projetos/:id/concluir', async (req, res) => {
     try {
         const { id } = req.params;
-        const { nome, tipo, data_inicio, data_fim } = req.body;
-
         await pool.query(
-            `UPDATE projetos SET nome = $1, data_inicio = NULLIF($2, ''), data_fim = NULLIF($3, '') WHERE id = $4`,
-            [nome, data_inicio, data_fim, id]
+            "UPDATE projetos SET status = 'Concluído', data_conclusao = CURRENT_DATE WHERE id = $1", 
+            [id]
         );
-
-        await pool.query(
-            `UPDATE estampos SET nome = $1, tipo = $2 WHERE projeto_id = $3`,
-            [nome, tipo, id]
-        );
-
-        res.json({ message: "Projeto atualizado!" });
+        res.json({ message: "Projeto concluído com sucesso" });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ erroBanco: err.message });
     }
 });
 
-app.put('/api/projetos/:id/status', async (req, res) => {
+// ==========================================
+// ROTA: Reabrir Projeto
+// ==========================================
+app.put('/api/projetos/:id/reabrir', async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, data_conclusao } = req.body;
         await pool.query(
-            `UPDATE projetos SET status = $1, data_conclusao = $2 WHERE id = $3`,
-            [status, data_conclusao ? new Date() : null, id]
+            "UPDATE projetos SET status = 'Em Andamento', data_conclusao = NULL WHERE id = $1", 
+            [id]
         );
-        res.json({ message: "Status alterado!" });
+        res.json({ message: "Projeto reaberto com sucesso" });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ erroBanco: err.message });
     }
 });
 
+// ==========================================
+// ROTA: Apagar Projeto
+// ==========================================
 app.delete('/api/projetos/:id', async (req, res) => {
     try {
-        // Como o BD é relacional, ao apagar o projeto com CASCADE, ele apaga estampos, peças e processos juntos
-        await pool.query('DELETE FROM projetos WHERE id = $1', [req.params.id]);
-        res.json({ message: "Projeto excluído!" });
+        const { id } = req.params;
+        await pool.query('DELETE FROM estampos WHERE projeto_id = $1', [id]);
+        await pool.query('DELETE FROM projetos WHERE id = $1', [id]);
+        res.json({ message: "Projeto excluído com sucesso" });
     } catch (err) {
-        res.status(500).json({ error: "Este projeto possui apontamentos registrados." });
+        res.status(500).json({ erroBanco: err.message });
     }
 });
 
 // ==========================================
-// 4. ROTAS DE ENGENHARIA (PEÇAS E PROCESSOS)
+// ROTA 2: Lista as Peças de um Estampo Específico
 // ==========================================
-app.get('/api/projetos/:id/engenharia', async (req, res) => {
+app.get('/api/estampos/:id/pecas', async (req, res) => {
     try {
         const { id } = req.params;
-        // Agrupa os processos dentro das peças em formato JSON para o Front-end ler fácil
+        const result = await pool.query(
+            'SELECT * FROM pecas WHERE estampo_id = $1 ORDER BY pos ASC',
+            [id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    }
+});
+
+// ==========================================
+// ROTA 3: Roteiro de Fabricação (Processos da Peça)
+// ==========================================
+app.get('/api/pecas/:id/processos', async (req, res) => {
+    try {
+        const { id } = req.params;
         const query = `
-            SELECT p.*,
-                   COALESCE(
-                     json_agg(pr.* ORDER BY pr.ordem_execucao) FILTER (WHERE pr.id IS NOT NULL), '[]'
-                   ) AS processos
-            FROM pecas p
-            LEFT JOIN processos pr ON p.id = pr.peca_id
-            WHERE p.estampo_id = $1 OR p.projeto_id = $1
-            GROUP BY p.id
-            ORDER BY p.pos ASC;
+            SELECT 
+                pr.*, 
+                pe.pos AS posicao_peca, 
+                pe.nome AS nome_peca,
+                (SELECT MIN(data_hora_inicio) FROM apontamentos WHERE processo_id = pr.id AND data_hora_fim IS NULL) as data_hora_inicio
+            FROM processos pr
+            JOIN pecas pe ON pr.peca_id = pe.id
+            WHERE pr.peca_id = $1 
+            ORDER BY pr.ordem_execucao ASC
         `;
         const result = await pool.query(query, [id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    }
+});
+
+// ==========================================
+// ROTA 4: Iniciar Apontamento (Play)
+// ==========================================
+app.post('/api/apontamentos/iniciar', async (req, res) => {
+    try {
+        const { processo_id, operador_id } = req.body;
+        const query = `
+            INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio)
+            VALUES ($1, $2, CURRENT_TIMESTAMP)
+            RETURNING *
+        `;
+        const result = await pool.query(query, [processo_id, operador_id]);
+        res.json({ message: 'Operação iniciada', apontamento: result.rows[0] });
+    } catch (err) {
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    }
+});
+
+// ==========================================
+// ROTA 5: Finalizar Apontamento (Stop - Parcial)
+// ==========================================
+app.put('/api/apontamentos/finalizar', async (req, res) => {
+    try {
+        const { processo_id, operador_id, ocorrencia } = req.body;
+        
+        const result = await pool.query(`
+            UPDATE apontamentos 
+            SET 
+                data_hora_fim = CURRENT_TIMESTAMP,
+                ocorrencia = $3 
+            WHERE processo_id = $1 
+              AND operador_id = $2 
+              AND data_hora_fim IS NULL 
+            RETURNING *
+        `, [processo_id, operador_id, ocorrencia || null]); 
+
+        if (result.rowCount === 0) {
+            return res.status(403).json({ error: 'Operação não encontrada, já finalizada ou ID do aluno incorreto.' });
+        }
+
+        res.json({ message: 'Operação finalizada com sucesso!', apontamento: result.rows[0] });
+    } catch (err) {
+        res.status(500).send(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    }
+});
+
+// ==========================================
+// ROTA 5.1: Encerrar Apontamento e Marcar 100% Concluído
+// ==========================================
+app.put('/api/apontamentos/finalizar-100', async (req, res) => {
+    const { processo_id, operador_id, ocorrencia } = req.body;
+    try {
+        // 1. Para o cronômetro do aluno e salva a ocorrência
+        await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP,
+                ocorrencia = $3
+            WHERE processo_id = $1 AND operador_id = $2 AND data_hora_fim IS NULL
+        `, [processo_id, operador_id, ocorrencia || null]);
+
+        // 2. Marca a operação como 100% no roteiro
+        await pool.query(`
+            UPDATE processos 
+            SET status = 'Concluído' 
+            WHERE id = $1
+        `, [processo_id]);
+
+        res.json({ message: 'Operação 100% concluída e ocorrência salva!' });
+    } catch (error) {
+        console.error("Erro ao concluir 100%:", error);
+        res.status(500).send('Erro interno ao concluir.');
+    }
+});
+
+// ==========================================
+// ROTA: Lançamento Manual (Retroativo)
+// ==========================================
+app.post('/api/apontamentos/manual', async (req, res) => {
+    const { processo_id, operador_id, data_hora_inicio, data_hora_fim } = req.body;
+    try {
+        await pool.query(`
+            INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio, data_hora_fim)
+            VALUES ($1, $2, $3, $4)
+        `, [processo_id, operador_id, data_hora_inicio, data_hora_fim]);
+        res.json({ message: 'Apontamento retroativo salvo com sucesso!' });
+    } catch (error) {
+        res.status(500).send('Erro interno ao salvar apontamento manual.');
+    }
+});
+
+// ==========================================
+// ROTA: Registrar Ocorrência Avulsa (Edição Posterior)
+// ==========================================
+app.put('/api/apontamentos/:id/ocorrencia', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { ocorrencia } = req.body;
+        await pool.query(
+            "UPDATE apontamentos SET ocorrencia = $1 WHERE id = $2", 
+            [ocorrencia, id]
+        );
+        res.json({ message: "Ocorrência registrada com sucesso!" });
+    } catch (err) {
+        res.status(500).json({ erroBanco: err.message });
+    }
+});
+
+// ==========================================
+// ROTA 6: Relatório de Desempenho (Visão por Peça)
+// ==========================================
+app.get('/api/relatorios/desempenho', async (req, res) => {
+    try {
+        const query = `
+            WITH tempo_real AS (
+                SELECT 
+                    processo_id,
+                    SUM(EXTRACT(EPOCH FROM (data_hora_fim - data_hora_inicio)) / 60.0) AS total_realizado_min
+                FROM apontamentos
+                WHERE data_hora_fim IS NOT NULL
+                GROUP BY processo_id
+            )
+            SELECT 
+                p.nome AS projeto,
+                pe.nome AS peca,
+                SUM(pr.tempo_planejado_min) AS total_planejado,
+                SUM(COALESCE(tr.total_realizado_min, 0)) AS total_realizado
+            FROM processos pr
+            JOIN pecas pe ON pr.peca_id = pe.id
+            JOIN estampos e ON pe.estampo_id = e.id
+            JOIN projetos p ON e.projeto_id = p.id
+            LEFT JOIN tempo_real tr ON pr.id = tr.processo_id
+            GROUP BY p.nome, pe.nome
+            ORDER BY p.nome, pe.nome;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send('Erro ao buscar relatório');
+    }
+});
+
+// ==========================================
+// ROTA 6.1: Relatório Detalhado de Processos e Atrasos
+// ==========================================
+app.get('/api/relatorios/processos', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                proj.nome AS projeto,
+                pec.nome AS peca,
+                pr.nome_operacao AS processo,
+                pr.maquina_sugerida AS maquina,
+                pr.tempo_planejado_min AS planejado,
+                COALESCE(SUM(EXTRACT(EPOCH FROM (a.data_hora_fim - a.data_hora_inicio))/60), 0) AS realizado
+            FROM processos pr
+            JOIN pecas pec ON pr.peca_id = pec.id
+            JOIN estampos est ON pec.estampo_id = est.id
+            JOIN projetos proj ON est.projeto_id = proj.id
+            LEFT JOIN apontamentos a ON a.processo_id = pr.id
+            GROUP BY proj.nome, pec.nome, pr.nome_operacao, pr.maquina_sugerida, pr.tempo_planejado_min, pr.ordem_execucao
+            ORDER BY proj.nome, pec.nome, pr.ordem_execucao;
+        `;
+        const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-app.post('/api/pecas', async (req, res) => {
-    try {
-        const { estampo_id, projeto_id, pos, nome } = req.body;
-        // Blindagem: aceita tanto projeto_id quanto estampo_id
-        const idVinculo = estampo_id || projeto_id;
-
-        const result = await pool.query(
-            // Se o BD der erro aqui de "column does not exist", altere 'estampo_id' para 'projeto_id' na linha abaixo
-            `INSERT INTO pecas (estampo_id, pos, nome) VALUES ($1, $2, $3) RETURNING *`,
-            [idVinculo, pos, nome]
-        );
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error("ERRO AO CRIAR PEÇA:", err.message);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/api/pecas/:id', async (req, res) => {
-    try {
-        await pool.query('DELETE FROM pecas WHERE id = $1', [req.params.id]);
-        res.json({ message: "Peça excluída!" });
-    } catch (err) {
-        res.status(500).json({ error: "Esta peça já possui apontamentos." });
-    }
-});
-
-app.post('/api/processos', async (req, res) => {
-    try {
-        const { peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida } = req.body;
-        await pool.query(
-            `INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida) 
-             VALUES ($1, $2, $3, $4, $5)`,
-            [peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida]
-        );
-        res.status(201).json({ message: "Processo criado!" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.put('/api/processos/:id', async (req, res) => {
-    try {
-        const { ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida } = req.body;
-        await pool.query(
-            `UPDATE processos SET ordem_execucao = $1, nome_operacao = $2, tempo_planejado_min = $3, maquina_sugerida = $4 WHERE id = $5`,
-            [ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida, req.params.id]
-        );
-        res.json({ message: "Processo atualizado!" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/api/processos/:id', async (req, res) => {
-    try {
-        await pool.query('DELETE FROM processos WHERE id = $1', [req.params.id]);
-        res.json({ message: "Processo excluído!" });
-    } catch (err) {
-        res.status(500).json({ error: "Este processo já possui apontamentos de alunos." });
-    }
-});
-
 // ==========================================
-// 5. ROTAS DE APONTAMENTO (CHÃO DE FÁBRICA / 5S)
+// ROTA 7: Histórico de Ocorrências (Completo e Validado)
 // ==========================================
-app.post('/api/apontamentos/iniciar', async (req, res) => {
+app.get('/api/ocorrencias', async (req, res) => {
     try {
-        const { processo_id, operador_id } = req.body;
-        
-        // Verifica se o aluno já tem uma máquina rodando
-        const emAberto = await pool.query(
-            'SELECT id FROM apontamentos WHERE operador_id = $1 AND data_hora_fim IS NULL',
-            [operador_id]
-        );
-        if (emAberto.rows.length > 0) {
-            return res.status(400).json({ error: 'Você já possui uma operação em andamento.' });
-        }
-
-        await pool.query(
-            'INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio) VALUES ($1, $2, CURRENT_TIMESTAMP)',
-            [processo_id, operador_id]
-        );
-        res.status(201).json({ message: 'Apontamento iniciado!' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.put('/api/apontamentos/finalizar', async (req, res) => {
-    try {
-        const { processo_id, operador_id, ocorrencia } = req.body;
-        await pool.query(
-            `UPDATE apontamentos 
-             SET data_hora_fim = CURRENT_TIMESTAMP, ocorrencia = $1 
-             WHERE processo_id = $2 AND operador_id = $3 AND data_hora_fim IS NULL`,
-            [ocorrencia || null, processo_id, operador_id]
-        );
-        res.json({ message: 'Apontamento finalizado com sucesso!' });
+        const query = `
+            SELECT 
+                a.id,
+                a.ocorrencia,
+                TO_CHAR(a.data_hora_fim, 'DD/MM/YYYY HH24:MI') AS data_registro,
+                o.nome AS operador,
+                pr.nome_operacao AS operacao,
+                pec.nome AS peca,
+                proj.nome AS projeto
+            FROM apontamentos a
+            LEFT JOIN operadores o ON a.operador_id = o.id
+            JOIN processos pr ON a.processo_id = pr.id
+            JOIN pecas pec ON pr.peca_id = pec.id
+            JOIN estampos est ON pec.estampo_id = est.id
+            JOIN projetos proj ON est.projeto_id = proj.id
+            WHERE a.ocorrencia IS NOT NULL AND TRIM(a.ocorrencia) <> ''
+            ORDER BY a.data_hora_fim DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
 // ==========================================
-// 6. ROTAS DE RELATÓRIOS E DASHBOARD
+// ROTA 8: Status Ao Vivo dos Alunos
 // ==========================================
 app.get('/api/relatorios/ao-vivo', async (req, res) => {
     try {
@@ -310,80 +390,270 @@ app.get('/api/relatorios/ao-vivo', async (req, res) => {
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("Erro na Rota Ao Vivo:", err.message);
+        res.status(500).send('Erro ao buscar status ao vivo');
     }
 });
 
-app.get('/api/relatorios/processos', async (req, res) => {
+// ==========================================
+// ROTA 9: Buscar Apontamentos Abertos (Esquecidos)
+// ==========================================
+app.get('/api/apontamentos/abertos', async (req, res) => {
     try {
         const query = `
             SELECT 
-                proj.nome AS projeto,
-                pe.nome AS peca,
-                pr.nome_operacao AS processo,
-                pr.maquina_sugerida AS maquina,
-                pr.tempo_planejado_min AS planejado,
-                COALESCE(SUM(EXTRACT(EPOCH FROM (a.data_hora_fim - a.data_hora_inicio))/60), 0) AS realizado
-            FROM processos pr
-            JOIN pecas pe ON pr.peca_id = pe.id
-            JOIN estampos e ON pe.estampo_id = e.id
-            JOIN projetos proj ON e.projeto_id = proj.id
-            LEFT JOIN apontamentos a ON pr.id = a.processo_id
-            GROUP BY proj.nome, pe.nome, pr.nome_operacao, pr.maquina_sugerida, pr.tempo_planejado_min;
-        `;
-        const result = await pool.query(query);
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.get('/api/ocorrencias', async (req, res) => {
-    try {
-        const query = `
-            SELECT 
-                a.id,
-                a.ocorrencia,
-                TO_CHAR(a.data_hora_fim, 'DD/MM/YYYY HH24:MI') as data_registro,
-                pr.nome_operacao as operacao,
-                pe.nome as peca,
-                proj.nome as projeto,
-                o.nome as operador
+                a.processo_id,
+                o.id AS id_aluno,
+                o.nome AS aluno,
+                pr.nome_operacao AS operacao,
+                a.data_hora_inicio AS inicio
             FROM apontamentos a
-            JOIN processos pr ON a.processo_id = pr.id
-            JOIN pecas pe ON pr.peca_id = pe.id
-            JOIN estampos e ON pe.estampo_id = e.id
-            JOIN projetos proj ON e.projeto_id = proj.id
             JOIN operadores o ON a.operador_id = o.id
-            WHERE a.ocorrencia IS NOT NULL AND a.ocorrencia != ''
-            ORDER BY a.data_hora_fim DESC;
+            JOIN processos pr ON a.processo_id = pr.id
+            WHERE a.data_hora_fim IS NULL
+            ORDER BY a.data_hora_inicio ASC;
         `;
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
+        res.status(500).send('Erro ao buscar dados');
+    }
+});
+
+// ==========================================
+// ROTAS DE OPERADORES E ENGENHARIA (CRUD)
+// ==========================================
+app.get('/api/operadores', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM operadores ORDER BY nome ASC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send('Erro ao buscar alunos');
+    }
+});
+
+app.post('/api/operadores', async (req, res) => {
+    try {
+        const { id, nome } = req.body;
+        const result = await pool.query(
+            'INSERT INTO operadores (id, nome) VALUES ($1, $2) RETURNING *',
+            [id, nome]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        if (err.code === '23505') return res.status(400).json({ error: 'Este ID de crachá já está cadastrado.' });
+        res.status(500).send('Erro interno ao cadastrar aluno');
+    }
+});
+
+app.delete('/api/operadores/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM operadores WHERE id = $1', [id]);
+        res.json({ message: 'Aluno removido com sucesso' });
+    } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'Aluno possui horas registradas.' });
+        res.status(500).send('Erro ao excluir aluno');
+    }
+});
+
+app.get('/api/projetos/:id/engenharia', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const pecas = await pool.query(`
+            SELECT pe.id, pe.nome, pe.pos 
+            FROM pecas pe
+            JOIN estampos e ON pe.estampo_id = e.id
+            WHERE e.projeto_id = $1
+            ORDER BY pe.pos ASC
+        `, [id]);
+
+        for (let peca of pecas.rows) {
+            const processos = await pool.query(`
+                SELECT id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida
+                FROM processos
+                WHERE peca_id = $1
+                ORDER BY ordem_execucao ASC
+            `, [peca.id]);
+            peca.processos = processos.rows;
+        }
+        res.json(pecas.rows);
+    } catch (err) {
+        res.status(500).send('Erro ao buscar engenharia');
+    }
+});
+
+app.put('/api/processos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida } = req.body;
+        await pool.query(`
+            UPDATE processos 
+            SET ordem_execucao = $1, nome_operacao = $2, tempo_planejado_min = $3, maquina_sugerida = $4
+            WHERE id = $5
+        `, [ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida, id]);
+        res.json({ message: 'Processo atualizado' });
+    } catch (err) {
+        res.status(500).send('Erro ao atualizar processo');
+    }
+});
+
+app.post('/api/pecas', async (req, res) => {
+    try {
+        const { estampo_id, nome, pos } = req.body;
+        await pool.query('INSERT INTO pecas (estampo_id, nome, pos) VALUES ($1, $2, $3)', [estampo_id, nome, pos]);
+        res.json({ message: 'Peça cadastrada' });
+    } catch (err) {
+        res.status(500).send('Erro ao criar peça');
+    }
+});
+
+app.post('/api/processos', async (req, res) => {
+    try {
+        const { peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida } = req.body;
+        await pool.query(
+            'INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida) VALUES ($1, $2, $3, $4, $5)',
+            [peca_id, ordem_execucao, nome_operacao, tempo_planejado_min, maquina_sugerida]
+        );
+        res.json({ message: 'Processo cadastrado' });
+    } catch (err) {
+        res.status(500).send('Erro ao criar processo');
+    }
+});
+
+app.delete('/api/pecas/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM pecas WHERE id = $1', [id]);
+        res.json({ message: 'Peça removida' });
+    } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'Peça já possui processos.' });
+        res.status(500).send('Erro ao excluir peça');
+    }
+});
+
+app.delete('/api/processos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.query('DELETE FROM processos WHERE id = $1', [id]);
+        res.json({ message: 'Processo removido' });
+    } catch (err) {
+        if (err.code === '23503') return res.status(400).json({ error: 'Processo já possui apontamentos.' });
+        res.status(500).send('Erro ao excluir processo');
+    }
+});
+
+// ==========================================
+// TAREFA AUTOMÁTICA: Fechamento de Turno (16h00)
+// ==========================================
+cron.schedule('0 16 * * *', async () => {
+    console.log('⏰ Executando fechamento automático de turno (16h00)...');
+    try {
+        const result = await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP 
+            WHERE data_hora_fim IS NULL
+        `);
+        console.log(`✅ Fechamento automático concluído. ${result.rowCount} operações abertas foram encerradas.`);
+    } catch (error) {
+        console.error('❌ Erro no fechamento automático:', error);
+    }
+}, {
+    scheduled: true,
+    timezone: "America/Sao_Paulo" 
+});
+
+
+// ==========================================
+// ROTA: Autenticação Segura da Administração
+// ==========================================
+app.post('/api/auth/login', (req, res) => {
+    const { senha } = req.body;
+    
+    // A senha real deve ser configurada nas Variáveis de Ambiente (Environment) do Render!
+    const senhaCorreta = process.env.ADMIN_PASSWORD || '260817';
+
+    if (senha === senhaCorreta) {
+        res.status(200).json({ message: 'Autenticado com sucesso' });
+    } else {
+        res.status(401).json({ error: 'Senha incorreta' });
+    }
+});
+
+
+//==========================================
+// ROTA: ALTERAR STATUS DO PROJETO
+//==========================================
+app.put('/api/projetos/:id/status', async (req, res) => {
+    const { id } = req.params;
+    const { status, data_conclusao } = req.body;
+    
+    try {
+        const result = await pool.query(
+            'UPDATE projetos SET status = $1 WHERE id = $2 RETURNING *',
+            [status, data_conclusao, id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Erro ao atualizar status:", err);
+        res.status(500).json({ error: 'Erro interno ao atualizar status.' });
+    }
+});
+
+// ==========================================
+// ROTA: Editar Projeto e Estampo
+// ==========================================
+app.put('/api/projetos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome, tipo, data_inicio, data_fim } = req.body;
+
+        // 1. Atualiza a tabela projetos
+        await pool.query(
+            `UPDATE projetos 
+             SET nome = $1, data_inicio = $2, data_fim = $3 
+             WHERE id = $4`,
+            [nome, data_inicio || null, data_fim || null, id]
+        );
+
+        // 2. Atualiza ou insere o tipo na tabela estampos associada
+        await pool.query(
+            `UPDATE estampos 
+             SET nome = $1, tipo = $2 
+             WHERE projeto_id = $3`,
+            [nome, tipo, id]
+        );
+
+        res.json({ message: "Projeto atualizado com sucesso!" });
+    } catch (err) {
+        console.error("Erro ao editar projeto:", err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
-// ==========================================
-// INICIAR SERVIDOR
-// ==========================================
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    //console.log(`Servidor MES rodando na porta ${PORT}`);
+//==================================================================
+// ROTA: Editar projeto completo (Nome, Início, Fim, Conclusão Real)
+//==================================================================
+app.put('/api/projetos/:id/editar', async (req, res) => {
+    const { id } = req.params;
+    const { nome, data_inicio, data_fim, data_conclusao } = req.body;
+    
+    try {
+        const result = await pool.query(
+            'UPDATE projetos SET projeto = $1, data_inicio = $2, data_fim = $3, data_conclusao = $4 WHERE id = $5 RETURNING *',
+            [nome, data_inicio, data_fim, data_conclusao, id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Erro ao editar projeto:", err);
+        res.status(500).json({ error: 'Erro interno ao editar o projeto.' });
+    }
 });
 
+
 // ==========================================
-// ROTA DE EMERGÊNCIA: ATUALIZAR BANCO DE DADOS (COM LOG DETALHADO)
+// Inicialização do Servidor
 // ==========================================
-app.get('/api/atualizar-banco', async (req, res) => {
-    try {
-        await pool.query('ALTER TABLE estampos ADD COLUMN IF NOT EXISTS tipo VARCHAR(100);');
-        await pool.query('ALTER TABLE projetos ADD COLUMN IF NOT EXISTS data_conclusao DATE;');
-        await pool.query('ALTER TABLE apontamentos ADD COLUMN IF NOT EXISTS ocorrencia TEXT;');
-        res.send("<h1>Sucesso absoluto!</h1><p>Todas as colunas foram criadas/verificadas com sucesso.</p>");
-    } catch (err) {
-        // Agora o erro completo vai aparecer na tela do navegador para vermos
-        res.status(500).send(`<h1>Erro detalhado do Banco:</h1><pre>${err.message}</pre><p>Detalhe: ${JSON.stringify(err)}</p>`);
-    }
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
 });
