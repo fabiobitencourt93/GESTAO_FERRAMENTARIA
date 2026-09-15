@@ -18,6 +18,17 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+// ROTA DE TESTE DE BANCO DE DADOS
+app.get('/api/test-db', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT NOW()');
+        res.json({ status: 'Conexão com o Supabase OK!', hora_banco: result.rows[0].now });
+    } catch (err) {
+        res.status(500).json({ status: 'FALHA NA CONEXÃO COM O BANCO', erro: err.message });
+    }
+});
+
+
 // Teste de conexão ao iniciar o servidor
 pool.query('SELECT NOW()', (err, res) => {
     if (err) {
