@@ -39,18 +39,20 @@ function GerenciarEngenharia() {
   };
 
   // ==========================================
-  // FUNÇÕES DE CRIAÇÃO E EDIÇÃO
+  // FUNÇÃO SALVAR PEÇA (CORRIGIDA)
   // ==========================================
   const salvarNovaPeca = async () => {
     if (!novaPeca.pos || !novaPeca.nome) return alert("Preencha a Posição e o Nome da Peça.");
-    
-    // Trava de segurança
     if (!projetoSelecionado) return alert("Selecione um projeto antes de salvar a peça.");
+
+    // MÁGICA: Procura o projeto completo na lista para garantir que mandamos o ID do Estampo correto!
+    const projetoEncontrado = projetos.find(p => String(p.projeto_id) === String(projetoSelecionado));
+    const estampoIdCorreto = projetoEncontrado ? (projetoEncontrado.estampo_id || projetoSelecionado) : projetoSelecionado;
 
     try {
       await axios.post('https://gestao-ferramentaria.onrender.com/api/pecas', {
-        projeto_id: projetoSelecionado, // <-- Correção principal 1
-        estampo_id: projetoSelecionado, // <-- Correção principal 2 (garante compatibilidade com o BD)
+        estampo_id: estampoIdCorreto, // Envia o ID original do estampo
+        projeto_id: projetoSelecionado, // Envia o ID do projeto por segurança
         pos: novaPeca.pos, 
         nome: novaPeca.nome
       });
@@ -59,21 +61,20 @@ function GerenciarEngenharia() {
       setNovaPeca({ pos: '', nome: '' });
       carregarPecasEProcessos();
     } catch (err) {
-      console.error("Erro detalhado:", err.response?.data);
+      console.error("Erro detalhado do servidor:", err.response?.data);
       alert("Erro ao cadastrar peça. O servidor recusou os dados.");
     }
   };
 
+  // ==========================================
+  // OUTRAS FUNÇÕES INALTERADAS
+  // ==========================================
   const salvarNovoProcesso = async (pecaId) => {
     if (!novoProcesso.ordem_execucao || !novoProcesso.nome_operacao) return alert("Preencha ao menos a Sequência e o Nome.");
     try {
       const tempoEmMinutos = parseFloat(novoProcesso.tempo_planejado_horas || 0) * 60;
       await axios.post('https://gestao-ferramentaria.onrender.com/api/processos', {
-        peca_id: pecaId, 
-        ordem_execucao: novoProcesso.ordem_execucao, 
-        nome_operacao: novoProcesso.nome_operacao, 
-        tempo_planejado_min: tempoEmMinutos, 
-        maquina_sugerida: novoProcesso.maquina_sugerida
+        peca_id: pecaId, ordem_execucao: novoProcesso.ordem_execucao, nome_operacao: novoProcesso.nome_operacao, tempo_planejado_min: tempoEmMinutos, maquina_sugerida: novoProcesso.maquina_sugerida
       });
       setAdicionandoProcessoNaPeca(null);
       setNovoProcesso({ ordem_execucao: '', nome_operacao: '', tempo_planejado_horas: '', maquina_sugerida: '' });
@@ -95,20 +96,13 @@ function GerenciarEngenharia() {
     }
   };
 
-  // ==========================================
-  // FUNÇÕES DE EXCLUSÃO
-  // ==========================================
   const excluirPeca = async (id, nome) => {
     if (!window.confirm(`ATENÇÃO: Deseja realmente excluir a peça "${nome}"?`)) return;
     try {
       await axios.delete(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}`);
       carregarPecasEProcessos();
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.error) {
-        alert(err.response.data.error);
-      } else {
-        alert("Erro ao excluir a peça.");
-      }
+      alert(err.response?.data?.error || "Erro ao excluir a peça.");
     }
   };
 
@@ -118,55 +112,29 @@ function GerenciarEngenharia() {
       await axios.delete(`https://gestao-ferramentaria.onrender.com/api/processos/${id}`);
       carregarPecasEProcessos();
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.error) {
-        alert(err.response.data.error);
-      } else {
-        alert("Erro ao excluir o processo.");
-      }
+      alert(err.response?.data?.error || "Erro ao excluir o processo.");
     }
   };
 
-  // ==========================================
-  // RENDERIZAÇÃO DA TELA
-  // ==========================================
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '40px' }}>
-      
-      {/* Barra Superior */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px' }}>
-        
-        {/* Lado Esquerdo: Seta Voltar e Título */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <ChevronLeft size={28} color="#111827" />
-          </button>
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><ChevronLeft size={28} color="#111827" /></button>
           <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Planejamento de Fabricação</h1>
         </div>
-
-        {/* Lado Direito: Casinha e Notificações */}
         <div style={{ display: 'flex', gap: '16px' }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <Home size={24} color="#111827" />
-          </button>
-          <button onClick={() => navigate('/notificacoes')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <Bell size={24} color="#111827" />
-          </button>
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Home size={24} color="#111827" /></button>
+          <button onClick={() => navigate('/notificacoes')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Bell size={24} color="#111827" /></button>
         </div>
-
       </div>
 
       <div style={{ padding: '0 24px' }}>
-        
         <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', marginBottom: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
           <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#4B5563', marginBottom: '8px' }}>Selecione o Projeto/Estampo</label>
-          <select 
-            value={projetoSelecionado} 
-            onChange={(e) => setProjetoSelecionado(e.target.value)}
-            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px' }}
-          >
+          <select value={projetoSelecionado} onChange={(e) => setProjetoSelecionado(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', fontSize: '15px' }}>
             <option value="">-- Escolha um Projeto --</option>
             {projetos.map(p => (
-              // <-- Correção 3: Usando projeto_id no value da opção do Select
               <option key={p.projeto_id} value={p.projeto_id}>{p.projeto}</option>
             ))}
           </select>
@@ -176,20 +144,13 @@ function GerenciarEngenharia() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, color: '#111827', fontSize: '16px' }}>Peças do Projeto</h3>
-              <button 
-                onClick={() => setExibirFormPeca(!exibirFormPeca)}
-                style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <Plus size={16} /> Nova Peça
-              </button>
+              <button onClick={() => setExibirFormPeca(!exibirFormPeca)} style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '8px', padding: '8px 12px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={16} /> Nova Peça</button>
             </div>
 
-            {/* Painel para criar nova peça */}
             {exibirFormPeca && (
               <div style={{ backgroundColor: '#E0F2FE', padding: '16px', borderRadius: '12px', display: 'flex', gap: '12px', border: '1px solid #BAE6FD', flexWrap: 'wrap', alignItems: 'center' }}>
                 <input type="number" placeholder="POS (ex: 01)" value={novaPeca.pos} onChange={e => setNovaPeca({...novaPeca, pos: e.target.value})} style={{ width: '100px', padding: '10px', borderRadius: '6px', border: '1px solid #7DD3FC', outline: 'none' }} />
                 <input type="text" placeholder="Nome da Peça (ex: Matriz)" value={novaPeca.nome} onChange={e => setNovaPeca({...novaPeca, nome: e.target.value})} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #7DD3FC', outline: 'none' }} />
-                
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => { setExibirFormPeca(false); setNovaPeca({pos:'', nome:''}); }} style={{ backgroundColor: '#9CA3AF', color: '#FFF', border: 'none', borderRadius: '6px', padding: '10px 16px', cursor: 'pointer', fontWeight: '600' }}>Cancelar</button>
                   <button onClick={salvarNovaPeca} style={{ backgroundColor: '#0284C7', color: '#FFF', border: 'none', borderRadius: '6px', padding: '10px 20px', cursor: 'pointer', fontWeight: '700' }}>Salvar</button>
@@ -199,36 +160,22 @@ function GerenciarEngenharia() {
 
             {pecas.map(peca => (
               <div key={peca.id} style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', overflow: 'hidden' }}>
-                
-                <div 
-                  onClick={() => setPecaExpandida(pecaExpandida === peca.id ? null : peca.id)}
-                  style={{ padding: '16px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-                >
+                <div onClick={() => setPecaExpandida(pecaExpandida === peca.id ? null : peca.id)} style={{ padding: '16px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
                   <div>
                     <span style={{ fontSize: '12px', fontWeight: '700', color: '#0284C7', backgroundColor: '#E0F2FE', padding: '4px 8px', borderRadius: '4px', marginRight: '8px' }}>POS {peca.pos}</span>
                     <span style={{ fontWeight: '600', color: '#111827' }}>{peca.nome}</span>
                   </div>
-                  
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <span style={{ fontSize: '13px', color: '#6B7280' }}>{peca.processos.length} operações</span>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); excluirPeca(peca.id, peca.nome); }}
-                      style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-                      title="Excluir Peça"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); excluirPeca(peca.id, peca.nome); }} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Excluir Peça"><Trash2 size={18} /></button>
                   </div>
                 </div>
 
                 {pecaExpandida === peca.id && (
                   <div style={{ padding: '16px', borderTop: '1px solid #E5E7EB' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      
                       {peca.processos.map(proc => (
                         <div key={proc.id} style={{ backgroundColor: '#F3F4F6', padding: '12px', borderRadius: '8px' }}>
-                          
-                          {/* MODO EDIÇÃO DO PROCESSO */}
                           {editandoProcesso === proc.id ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               <div style={{ display: 'flex', gap: '8px' }}>
@@ -238,17 +185,11 @@ function GerenciarEngenharia() {
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <input type="number" step="0.1" placeholder="Tempo (h)" value={formProcesso.tempo_planejado_horas} onChange={e => setFormProcesso({...formProcesso, tempo_planejado_horas: e.target.value})} style={{ width: '100px', padding: '8px', borderRadius: '6px', border: '1px solid #D1D5DB' }} />
                                 <input type="text" placeholder="Ex: ROMI D800" value={formProcesso.maquina_sugerida} onChange={e => setFormProcesso({...formProcesso, maquina_sugerida: e.target.value})} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #D1D5DB' }} />
-                                
-                                {/* Botão Cancelar Edição */}
                                 <button onClick={() => setEditandoProcesso(null)} style={{ backgroundColor: '#9CA3AF', color: '#FFF', border: 'none', borderRadius: '6px', padding: '0 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Cancelar"><X size={18} /></button>
-                                
-                                {/* Botão Salvar Edição */}
                                 <button onClick={salvarEdicaoProcesso} style={{ backgroundColor: '#007A33', color: '#FFF', border: 'none', borderRadius: '6px', padding: '0 16px', cursor: 'pointer' }}><Save size={18} /></button>
                               </div>
                             </div>
                           ) : (
-                            
-                            /* MODO VISUALIZAÇÃO DO PROCESSO */
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
@@ -260,7 +201,6 @@ function GerenciarEngenharia() {
                                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Wrench size={12} /> {proc.maquina_sugerida}</span>
                                 </div>
                               </div>
-                              
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <button onClick={() => { setEditandoProcesso(proc.id); setFormProcesso({...proc, tempo_planejado_horas: proc.tempo_planejado_min ? (proc.tempo_planejado_min / 60).toFixed(1) : 0}); }} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', padding: '4px' }}><Edit size={18} /></button>
                                 <button onClick={() => excluirProcesso(proc.id, proc.nome_operacao)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px' }}><Trash2 size={18} /></button>
@@ -270,14 +210,8 @@ function GerenciarEngenharia() {
                         </div>
                       ))}
                       
-                      {/* Botão ou Formulário de Novo Processo */}
                       {adicionandoProcessoNaPeca !== peca.id ? (
-                        <button 
-                          onClick={() => setAdicionandoProcessoNaPeca(peca.id)}
-                          style={{ backgroundColor: '#E5E7EB', color: '#4B5563', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', marginTop: '8px' }}
-                        >
-                          + Adicionar Operação (Roteiro)
-                        </button>
+                        <button onClick={() => setAdicionandoProcessoNaPeca(peca.id)} style={{ backgroundColor: '#E5E7EB', color: '#4B5563', border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', marginTop: '8px' }}>+ Adicionar Operação (Roteiro)</button>
                       ) : (
                         <div style={{ backgroundColor: '#DCFCE7', padding: '12px', borderRadius: '8px', marginTop: '8px', border: '1px solid #86EFAC', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <span style={{ fontSize: '12px', fontWeight: '700', color: '#166534' }}>Nova Operação</span>
@@ -293,7 +227,6 @@ function GerenciarEngenharia() {
                           </div>
                         </div>
                       )}
-
                     </div>
                   </div>
                 )}
