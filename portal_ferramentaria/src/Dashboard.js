@@ -111,10 +111,36 @@ function Producao() {
                 IconeCentro = Clock;
               }
 
+              // ==========================================
+              // LÓGICA DE GAMIFICAÇÃO (Fase 2)
+              // ==========================================
+              const xp = op.xp_acumulado || 0;
+              const nivel = op.nivel || 1;
+              const progresso = xp % 100; // Porcentagem para o próximo nível
+
+              // Pódio para o Top 3 (Apenas se o aluno tiver mais de 0 XP)
+              let corBordaAvatar = '#E5E7EB'; 
+              let sombraAvatar = 'none';
+              let iconePodio = null;
+
+              if (xp > 0) {
+                if (idx === 0) {
+                  corBordaAvatar = '#EAB308'; // Ouro
+                  sombraAvatar = '0 0 15px rgba(234, 179, 8, 0.4)';
+                  iconePodio = '👑';
+                } else if (idx === 1) {
+                  corBordaAvatar = '#9CA3AF'; // Prata
+                  iconePodio = '🥈';
+                } else if (idx === 2) {
+                  corBordaAvatar = '#B45309'; // Bronze
+                  iconePodio = '🥉';
+                }
+              }
+
               return (
                 <div key={idx} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: `2px solid ${rodando ? '#22C55E' : corFundo}`, display: 'flex', flexDirection: 'column' }}>
                   
-                  {/* Tarja Superior Dinâmica */}
+                  {/* Tarja Superior Dinâmica (MANTIDA INTACTA) */}
                   <div style={{ backgroundColor: corFundo, color: rodando ? '#FFFFFF' : corForte, padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: '800', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                       {textoStatus}
@@ -123,20 +149,56 @@ function Producao() {
                   </div>
 
                   {/* Corpo do Card */}
-                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ backgroundColor: '#F0F9FF', padding: '10px', borderRadius: '50%' }}>
-                        <User size={24} color="#0284C7" />
+                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    
+                    {/* Cabeçalho do Aluno com Caricatura e Pódio */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                      
+                      {/* Avatar Heroico */}
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <img 
+                          src={`/avatares/${op.operador_id}.jpg`} 
+                          alt={`Caricatura de ${op.operador_nome}`}
+                          onError={(e) => { e.target.src = '/avatares/padrao.jpg' }}
+                          style={{ 
+                            width: '64px', 
+                            height: '64px', 
+                            borderRadius: '50%', 
+                            objectFit: 'cover',
+                            border: `3px solid ${corBordaAvatar}`,
+                            boxShadow: sombraAvatar,
+                            backgroundColor: '#F3F4F6'
+                          }} 
+                        />
+                        {/* Selo do Pódio */}
+                        {iconePodio && (
+                          <div style={{ 
+                            position: 'absolute', bottom: '-4px', right: '-4px', 
+                            backgroundColor: '#FFFFFF', borderRadius: '50%', 
+                            width: '26px', height: '26px', display: 'flex', 
+                            justifyContent: 'center', alignItems: 'center',
+                            fontSize: '14px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' 
+                          }}>
+                            {iconePodio}
+                          </div>
+                        )}
                       </div>
+
+                      {/* Nome e Nível */}
                       <div>
-                        <span style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '600' }}>Operador (Aluno)</span>
-                        <span style={{ fontSize: '16px', color: '#111827', fontWeight: '700' }}>{op.operador_nome}</span>
+                        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Nível {nivel}
+                        </span>
+                        <span style={{ fontSize: '16px', color: '#111827', fontWeight: '700' }}>
+                          {op.operador_nome}
+                        </span>
                       </div>
                     </div>
 
+                    {/* Informações de Operação (MANTIDO INTACTO) */}
                     {rodando ? (
-                      <>
-                        <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%' }}></div>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%', marginBottom: '16px' }}></div>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                           <Wrench size={18} color="#4B5563" style={{ marginTop: '2px' }} />
                           <div>
@@ -145,21 +207,19 @@ function Producao() {
                             <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Peça: {op.nome_peca}</span>
                           </div>
                         </div>
-                        <div style={{ marginTop: 'auto', backgroundColor: '#F0FDF4', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: '1px solid #BBF7D0' }}>
+                        <div style={{ marginTop: '16px', backgroundColor: '#F0FDF4', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: '1px solid #BBF7D0' }}>
                           <Clock size={20} color="#16A34A" />
                           <span style={{ fontSize: '20px', fontWeight: '800', color: '#166534', fontFamily: 'monospace' }}>
                             {formatarTempo(op.data_hora_inicio)}
                           </span>
                         </div>
-                      </>
+                      </div>
                     ) : (
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px 0', opacity: 0.9 }}>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '10px 0', opacity: 0.9 }}>
                         <IconeCentro size={32} color={corForte} style={{ marginBottom: '8px' }} />
                         <span style={{ fontSize: '14px', color: corForte, fontWeight: '700' }}>
                           {textoStatus === 'LIVRE / SEM TAREFA' ? 'Aguardando 1ª tarefa' : 'Aluno Ocioso'}
                         </span>
-                        
-                        {/* Exibe o contador de ociosidade se existir tempo contabilizado */}
                         {ocioso > 0 && (
                           <span style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '6px', fontWeight: '500' }}>
                             Inativo há {Math.floor(ocioso)} minutos
@@ -167,6 +227,23 @@ function Producao() {
                         )}
                       </div>
                     )}
+
+                    {/* BARRA DE EXPERIÊNCIA (XP) FIXA NO RODAPÉ DO CARD */}
+                    <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: '#6B7280' }}>Progresso Nvl {nivel + 1}</span>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#111827' }}>{progresso} / 100 XP</span>
+                      </div>
+                      <div style={{ width: '100%', height: '8px', backgroundColor: '#E5E7EB', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ 
+                          width: `${progresso}%`, 
+                          height: '100%', 
+                          backgroundColor: '#0284C7', // Azul Escuro SENAI
+                          transition: 'width 0.5s ease-out' 
+                        }}></div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               );

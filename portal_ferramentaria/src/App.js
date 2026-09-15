@@ -28,7 +28,7 @@ function App() {
         
         {/* Mantive a rota curta para as correções funcionar perfeito com seu botão! */}
         <Route path="/correcoes" element={<CorrecaoApontamentos />} /> 
-        
+
         <Route path="/engenharia" element={<GerenciarEngenharia />} />
         <Route path="/retroativo" element={<ApontamentoRetroativo />} />
         <Route path="/dashboard" element={<Dashboard />} /> 
