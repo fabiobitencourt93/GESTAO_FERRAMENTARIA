@@ -60,15 +60,25 @@ function Projetos() {
 
   // --- NOVA FUNÇÃO UNIFICADA DE STATUS ---
   // Ela faz exatamente o que a tela de Ajustes faz, mas através dos botões!
-  const handleAlterarStatus = async (id, novoStatus, e) => {
-    e.stopPropagation(); // Evita que clique no botão abra a tela do estampo
+const handleAlterarStatus = async (id, novoStatus, e) => {
+    e.stopPropagation(); 
     const acao = novoStatus === 'Concluído' ? 'marcar este projeto como Concluído' : 'reabrir este projeto (mudando para Em Execução)';
     
     if (!window.confirm(`Deseja ${acao}?`)) return;
 
+    // Lógica inteligente de data
+    let dataHoje = null;
+    if (novoStatus === 'Concluído') {
+      // Pega o dia exato do clique no formato brasileiro (DD/MM/AAAA)
+      dataHoje = new Date().toLocaleDateString('pt-BR'); 
+    }
+
     try {
-      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, { status: novoStatus });
-      carregarProjetos(); // Atualiza a tela instantaneamente
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, { 
+        status: novoStatus,
+        data_conclusao: dataHoje // <-- Envia a data para o Render!
+      });
+      carregarProjetos(); 
     } catch (error) {
       alert(`Erro ao ${novoStatus === 'Concluído' ? 'concluir' : 'reabrir'} projeto.`);
     }

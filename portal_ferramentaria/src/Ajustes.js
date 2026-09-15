@@ -163,9 +163,17 @@ function Ajustes() {
   };
 
   const alterarStatusProjeto = async (id, novoStatus) => {
+    let dataHoje = null;
+    if (novoStatus === 'Concluído') {
+      dataHoje = new Date().toLocaleDateString('pt-BR');
+    }
+
     try {
-      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, { status: novoStatus });
-      carregarProjetosDoBanco(); // Recarrega a lista para mostrar a mudança
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, { 
+        status: novoStatus,
+        data_conclusao: dataHoje 
+      });
+      carregarProjetosDoBanco(); 
     } catch (error) {
       alert(error.response?.data?.error || 'Erro ao atualizar o status do projeto.');
     }
