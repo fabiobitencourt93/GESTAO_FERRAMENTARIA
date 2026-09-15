@@ -163,7 +163,7 @@ function Producao() {
                             alt={`Caricatura de ${op.operador_nome}`}
                             onError={() => { 
                             // Quando der erro, salva o ID do aluno na memória para o React parar de tentar!
-                            etImagensComErro(prev => ({ ...prev, [op.operador_id]: true })); 
+                            setImagensComErro(prev => ({ ...prev, [op.operador_id]: true })); 
                             }}
                             style={{ 
                             width: '64px', 
