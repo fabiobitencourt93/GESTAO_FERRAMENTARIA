@@ -661,7 +661,7 @@ app.put('/api/projetos/:id/status', async (req, res) => {
     const { status, data_conclusao } = req.body;
     
     try {
-        // AQUI ESTÁ A MÁGICA: Agora as variáveis estão na ordem correta ($1, $2 e $3)
+        // Corrigido: As variáveis agora estão na ordem exata ($1, $2 e $3)
         const result = await pool.query(
             'UPDATE projetos SET status = $1, data_conclusao = COALESCE($2, data_conclusao) WHERE id = $3 RETURNING *',
             [status, data_conclusao || null, id]
@@ -707,21 +707,33 @@ app.put('/api/projetos/:id', async (req, res) => {
 //==================================================================
 // ROTA: Editar projeto completo (Nome, Início, Fim, Conclusão Real)
 //==================================================================
-app.put('/api/projetos/:id/editar', async (req, res) => {
-    const { id } = req.params;
-    const { nome, data_inicio, data_fim, data_conclusao } = req.body;
-    
+app.put(['/api/projetos/:id', '/api/projetos/:id/editar'], async (req, res) => {
     try {
-        const result = await pool.query(
-            'UPDATE projetos SET projeto = $1, data_inicio = $2, data_fim = $3, data_conclusao = $4 WHERE id = $5 RETURNING *',
-            [nome, data_inicio, data_fim, data_conclusao, id]
+        const { id } = req.params;
+        // Agora o Back-end está treinado para pegar o 'status' também!
+        const { nome, tipo, data_inicio, data_fim, data_conclusao, status } = req.body;
+
+        await pool.query(
+            `UPDATE projetos 
+             SET nome = COALESCE($1, nome), 
+                 data_inicio = COALESCE($2, data_inicio), 
+                 data_fim = COALESCE($3, data_fim),
+                 data_conclusao = COALESCE($4, data_conclusao),
+                 status = COALESCE($5, status)
+             WHERE id = $6`,
+            [nome || null, data_inicio || null, data_fim || null, data_conclusao || null, status || null, id]
         );
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error("Erro ao editar projeto:", err);
-        res.status(500).json({ error: 'Erro interno ao editar o projeto.' });
+
+        if (tipo) {
+            await pool.query(
+                `UPDATE estampos SET nome = COALESCE($1, nome), tipo = COALESCE($2, tipo) WHERE projeto_id = $3`,
+                [nome || null, tipo || null, id]
+            );
+        }
     }
-});
+    })
+
+    
 
 
 // ==========================================
