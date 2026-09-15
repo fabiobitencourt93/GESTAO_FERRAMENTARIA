@@ -10,8 +10,8 @@ const port = process.env.PORT || 3000;
 app.use(cors()); 
 app.use(express.json());
 
-// Configuração do Banco de Dados (Supabase Pooler - Porta 5432)
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres.qvttpmwhvaokwmefafle:gestaoferramentaria@aws-0-us-west-2.pooler.supabase.com:5432/postgres';
+// Configuração do Banco de Dados (Supabase - Conexão Direta Oficial)
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:gestaoferramentaria@db.qvttpmwhvaokwmefafle.supabase.com:5432/postgres';
 
 const pool = new Pool({
     connectionString: connectionString,
@@ -520,15 +520,51 @@ app.put('/api/processos/:id', async (req, res) => {
     }
 });
 
+
+// ==========================================
+// ROTA: CADASTRAR PEÇA (CORRIGIDA E BLINDADA)
+// ==========================================
 app.post('/api/pecas', async (req, res) => {
     try {
-        const { estampo_id, nome, pos } = req.body;
-        await pool.query('INSERT INTO pecas (estampo_id, nome, pos) VALUES ($1, $2, $3)', [estampo_id, nome, pos]);
-        res.json({ message: 'Peça cadastrada' });
+        const { estampo_id, projeto_id, nome, pos } = req.body;
+        let idFinal = estampo_id || projeto_id;
+
+        if (!idFinal) {
+            return res.status(400).json({ error: 'ID do projeto/estampo não informado.' });
+        }
+
+        // 1. Verifica se esse ID já pertence diretamente à tabela estampos
+        let checarEstampo = await pool.query('SELECT id FROM estampos WHERE id = $1', [idFinal]);
+
+        // 2. Se não encontrou, busca o estampo vinculado a este projeto
+        if (checarEstampo.rows.length === 0) {
+            checarEstampo = await pool.query('SELECT id FROM estampos WHERE projeto_id = $1', [idFinal]);
+        }
+
+        // 3. Se o projeto não tinha estampo (caso de projetos criados de forma avulsa), cria o estampo automaticamente
+        if (checarEstampo.rows.length === 0) {
+            const novoEstampo = await pool.query(
+                'INSERT INTO estampos (projeto_id, nome, tipo) VALUES ($1, $2, $3) RETURNING id',
+                [idFinal, nome || 'Estampo Padrão', 'Outro']
+            );
+            idFinal = novoEstampo.rows[0].id;
+        } else {
+            idFinal = checarEstampo.rows[0].id;
+        }
+
+        // 4. Insere a peça com o estampo_id 100% garantido e válido
+        const resultado = await pool.query(
+            'INSERT INTO pecas (estampo_id, nome, pos) VALUES ($1, $2, $3) RETURNING *',
+            [idFinal, nome, pos]
+        );
+
+        res.status(201).json({ message: 'Peça cadastrada com sucesso!', peca: resultado.rows[0] });
     } catch (err) {
-        res.status(500).send('Erro ao criar peça');
+        console.error('ERRO SQL PEÇAS:', err.message);
+        res.status(500).json({ error: 'Erro ao criar peça: ' + err.message });
     }
 });
+
 
 app.post('/api/processos', async (req, res) => {
     try {
