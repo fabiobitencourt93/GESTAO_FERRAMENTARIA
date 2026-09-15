@@ -18,6 +18,20 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+// ==========================================
+// ROTA DE EMERGÊNCIA: ATUALIZAR BANCO DE DADOS
+// ==========================================
+app.get('/api/atualizar-banco', async (req, res) => {
+    try {
+        await pool.query('ALTER TABLE estampos ADD COLUMN IF NOT EXISTS tipo VARCHAR(100);');
+        await pool.query('ALTER TABLE projetos ADD COLUMN IF NOT EXISTS data_conclusao DATE;');
+        await pool.query('ALTER TABLE apontamentos ADD COLUMN IF NOT EXISTS ocorrencia TEXT;');
+        res.send("<h1>Sucesso absoluto!</h1><p>As colunas foram criadas no Supabase. Pode voltar para o seu sistema que a lista de projetos vai carregar!</p>");
+    } catch (err) {
+        res.status(500).send(`<h1>Erro detalhado do Banco:</h1><pre>${err.message}</pre>`);
+    }
+});
+
 // ROTA DE TESTE DE BANCO DE DADOS
 app.get('/api/test-db', async (req, res) => {
     try {
