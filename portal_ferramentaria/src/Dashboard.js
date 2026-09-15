@@ -8,6 +8,7 @@ function Producao() {
   const [operadores, setOperadores] = useState([]);
   const [modoTV, setModoTV] = useState(false);
   const [agora, setAgora] = useState(new Date());
+  const [imagensComErro, setImagensComErro] = useState({});
 
   const carregarDadosAoVivo = () => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/ao-vivo')
@@ -157,10 +158,14 @@ function Producao() {
                       {/* Avatar Heroico */}
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <img 
-                          src={`/avatares/${op.operador_id}.jpg`} 
-                          alt={`Caricatura de ${op.operador_nome}`}
-                          onError={(e) => { e.target.src = '/avatares/padrao.jpg' }}
-                          style={{ 
+                            // Se a imagem estiver na memória de erro, já carrega a padrão direto. Se não, tenta carregar a do aluno.
+                            src={imagensComErro[op.operador_id] ? '/avatares/padrao.jpg' : `/avatares/${op.operador_id}.jpg`} 
+                            alt={`Caricatura de ${op.operador_nome}`}
+                            onError={() => { 
+                            // Quando der erro, salva o ID do aluno na memória para o React parar de tentar!
+                            etImagensComErro(prev => ({ ...prev, [op.operador_id]: true })); 
+                            }}
+                            style={{ 
                             width: '64px', 
                             height: '64px', 
                             borderRadius: '50%', 
@@ -168,7 +173,7 @@ function Producao() {
                             border: `3px solid ${corBordaAvatar}`,
                             boxShadow: sombraAvatar,
                             backgroundColor: '#F3F4F6'
-                          }} 
+                            }} 
                         />
                         {/* Selo do Pódio */}
                         {iconePodio && (
