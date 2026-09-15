@@ -536,7 +536,7 @@ app.put('/api/processos/:id', async (req, res) => {
 
 
 // ==========================================
-// ROTA: CADASTRAR PEÇA (CORRIGIDA E BLINDADA)
+// ROTA: CADASTRAR PEÇA (CORRIGIDA COM TRATAMENTO TÉRMICO)
 // ==========================================
 app.post('/api/pecas', async (req, res) => {
     try {
@@ -555,7 +555,7 @@ app.post('/api/pecas', async (req, res) => {
             checarEstampo = await pool.query('SELECT id FROM estampos WHERE projeto_id = $1', [idFinal]);
         }
 
-        // 3. Se o projeto não tinha estampo (caso de projetos criados de forma avulsa), cria o estampo automaticamente
+        // 3. Se o projeto não tinha estampo, cria o estampo automaticamente
         if (checarEstampo.rows.length === 0) {
             const novoEstampo = await pool.query(
                 'INSERT INTO estampos (projeto_id, nome, tipo) VALUES ($1, $2, $3) RETURNING id',
@@ -566,10 +566,10 @@ app.post('/api/pecas', async (req, res) => {
             idFinal = checarEstampo.rows[0].id;
         }
 
-        // 4. Insere a peça com o estampo_id 100% garantido e válido
+        // 4. SOLUÇÃO DO ERRO: Inserindo 'N/A' no tratamento_termico para satisfazer o banco!
         const resultado = await pool.query(
-            'INSERT INTO pecas (estampo_id, nome, pos) VALUES ($1, $2, $3) RETURNING *',
-            [idFinal, nome, pos]
+            'INSERT INTO pecas (estampo_id, nome, pos, tratamento_termico) VALUES ($1, $2, $3, $4) RETURNING *',
+            [idFinal, nome, pos, 'N/A']
         );
 
         res.status(201).json({ message: 'Peça cadastrada com sucesso!', peca: resultado.rows[0] });
