@@ -154,7 +154,7 @@ function Ajustes() {
   const prepararEdicao = (projeto) => {
     setIdEdicao(projeto.projeto_id);
     setNovoProjNome(projeto.projeto || '');
-    setNovoProjTipo(projeto.estampo || 'Progressivo'); // Valor padrão caso não venha no JOIN
+    setNovoProjTipo(projeto.estampo || 'Progressivo'); 
     setNovoProjInicio(formatarDataParaInput(projeto.data_inicio));
     setNovoProjFim(formatarDataParaInput(projeto.data_fim));
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -174,7 +174,7 @@ function Ajustes() {
 
     try {
       if (idEdicao) {
-        // MODO EDIÇÃO (Usando a rota PUT que consertamos antes)
+        // MODO EDIÇÃO
         await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${idEdicao}`, {
           nome: novoProjNome,
           tipo: novoProjTipo,
@@ -200,18 +200,27 @@ function Ajustes() {
     }
   };
 
+  // --- FUNÇÃO CORRIGIDA ---
   const alterarStatusProjeto = async (id, novoStatus) => {
     try {
-      if (novoStatus === 'Concluído') {
-        await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/concluir`);
-      } else if (novoStatus === 'Em Execução') {
-        await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/reabrir`);
-      }
+      // Se for concluído, pega a data de hoje. Se não, envia nulo.
+      const dataConclusao = novoStatus === 'Concluído' ? new Date().toISOString().split('T')[0] : null;
+
+      // Envia a ordem para a rota unificada do Back-end
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, {
+          status: novoStatus,
+          data_conclusao: dataConclusao
+      });
+
+      // Recarrega a lista para mostrar a alteração na tela
       carregarProjetosDoBanco();
+      
     } catch (error) {
+      console.error("Erro detalhado ao atualizar status:", error);
       alert(error.response?.data?.error || 'Erro ao atualizar o status.');
     }
   };
+  // ------------------------
 
   const handleDeletarProjeto = async (id) => {
     if (!window.confirm("Tem certeza que deseja APAGAR este projeto?")) return;

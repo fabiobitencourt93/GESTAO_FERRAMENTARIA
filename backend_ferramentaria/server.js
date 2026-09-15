@@ -729,9 +729,10 @@ app.put(['/api/projetos/:id', '/api/projetos/:id/editar'], async (req, res) => {
                 `UPDATE estampos SET nome = COALESCE($1, nome), tipo = COALESCE($2, tipo) WHERE projeto_id = $3`,
                 [nome || null, tipo || null, id]
             );
-        }
-    }
-    })
+                    }
+                }
+            }
+);       
 
     
 
