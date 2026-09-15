@@ -10,8 +10,8 @@ const port = process.env.PORT || 3000;
 app.use(cors()); 
 app.use(express.json());
 
-// Configuração do Banco de Dados (Supabase - Conexão Direta Oficial)
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:gestaoferramentaria@db.qvttpmwhvaokwmefafle.supabase.com:5432/postgres';
+// Configuração do Banco de Dados (Supabase Pooler - Porta 5432)
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres.qvttpmwhvaokwmefafle:gestaoferramentaria@aws-0-us-west-2.pooler.supabase.com:5432/postgres';
 
 const pool = new Pool({
     connectionString: connectionString,
