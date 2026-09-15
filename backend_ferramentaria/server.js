@@ -368,15 +368,21 @@ app.get('/api/ocorrencias', async (req, res) => {
 // ==========================================
 // INICIAR SERVIDOR
 // ==========================================
-//const PORT = process.env.PORT || 10000;
-//app.listen(PORT, () => {
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
     //console.log(`Servidor MES rodando na porta ${PORT}`);
-//});
-
+});
 
 // ==========================================
-// Inicialização do Servidor
+// ROTA DE EMERGÊNCIA: ATUALIZAR BANCO DE DADOS
 // ==========================================
-app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
+app.get('/api/atualizar-banco', async (req, res) => {
+    try {
+        await pool.query('ALTER TABLE estampos ADD COLUMN IF NOT EXISTS tipo VARCHAR(100);');
+        await pool.query('ALTER TABLE projetos ADD COLUMN IF NOT EXISTS data_conclusao DATE;');
+        await pool.query('ALTER TABLE apontamentos ADD COLUMN IF NOT EXISTS ocorrencia TEXT;');
+        res.send("<h1>Sucesso!</h1><p>As colunas 'tipo', 'data_conclusao' e 'ocorrencia' foram verificadas/criadas no banco de dados.</p><p>Pode voltar para o seu sistema que ele já vai carregar!</p>");
+    } catch (err) {
+        res.status(500).send("Erro ao atualizar banco: " + err.message);
+    }
 });
