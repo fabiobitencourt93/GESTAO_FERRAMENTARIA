@@ -43,15 +43,24 @@ function GerenciarEngenharia() {
   // ==========================================
   const salvarNovaPeca = async () => {
     if (!novaPeca.pos || !novaPeca.nome) return alert("Preencha a Posição e o Nome da Peça.");
+    
+    // Trava de segurança
+    if (!projetoSelecionado) return alert("Selecione um projeto antes de salvar a peça.");
+
     try {
       await axios.post('https://gestao-ferramentaria.onrender.com/api/pecas', {
-        estampo_id: projetoSelecionado, pos: novaPeca.pos, nome: novaPeca.nome
+        projeto_id: projetoSelecionado, // <-- Correção principal 1
+        estampo_id: projetoSelecionado, // <-- Correção principal 2 (garante compatibilidade com o BD)
+        pos: novaPeca.pos, 
+        nome: novaPeca.nome
       });
+      
       setExibirFormPeca(false);
       setNovaPeca({ pos: '', nome: '' });
       carregarPecasEProcessos();
     } catch (err) {
-      alert("Erro ao cadastrar peça.");
+      console.error("Erro detalhado:", err.response?.data);
+      alert("Erro ao cadastrar peça. O servidor recusou os dados.");
     }
   };
 
@@ -60,7 +69,11 @@ function GerenciarEngenharia() {
     try {
       const tempoEmMinutos = parseFloat(novoProcesso.tempo_planejado_horas || 0) * 60;
       await axios.post('https://gestao-ferramentaria.onrender.com/api/processos', {
-        peca_id: pecaId, ordem_execucao: novoProcesso.ordem_execucao, nome_operacao: novoProcesso.nome_operacao, tempo_planejado_min: tempoEmMinutos, maquina_sugerida: novoProcesso.maquina_sugerida
+        peca_id: pecaId, 
+        ordem_execucao: novoProcesso.ordem_execucao, 
+        nome_operacao: novoProcesso.nome_operacao, 
+        tempo_planejado_min: tempoEmMinutos, 
+        maquina_sugerida: novoProcesso.maquina_sugerida
       });
       setAdicionandoProcessoNaPeca(null);
       setNovoProcesso({ ordem_execucao: '', nome_operacao: '', tempo_planejado_horas: '', maquina_sugerida: '' });
@@ -135,8 +148,6 @@ function GerenciarEngenharia() {
           <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             <Home size={24} color="#111827" />
           </button>
-          
-          {/* Botão de Sino Copiado do Projetos.js */}
           <button onClick={() => navigate('/notificacoes')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             <Bell size={24} color="#111827" />
           </button>
@@ -155,7 +166,8 @@ function GerenciarEngenharia() {
           >
             <option value="">-- Escolha um Projeto --</option>
             {projetos.map(p => (
-              <option key={p.estampo_id} value={p.estampo_id}>{p.projeto}</option>
+              // <-- Correção 3: Usando projeto_id no value da opção do Select
+              <option key={p.projeto_id} value={p.projeto_id}>{p.projeto}</option>
             ))}
           </select>
         </div>
