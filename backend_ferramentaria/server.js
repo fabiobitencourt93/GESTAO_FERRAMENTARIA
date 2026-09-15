@@ -368,7 +368,15 @@ app.get('/api/ocorrencias', async (req, res) => {
 // ==========================================
 // INICIAR SERVIDOR
 // ==========================================
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`Servidor MES rodando na porta ${PORT}`);
+//const PORT = process.env.PORT || 10000;
+//app.listen(PORT, () => {
+    //console.log(`Servidor MES rodando na porta ${PORT}`);
+//});
+
+
+// ==========================================
+// Inicialização do Servidor
+// ==========================================
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
 });
