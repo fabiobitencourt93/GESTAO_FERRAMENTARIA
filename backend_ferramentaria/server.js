@@ -595,6 +595,27 @@ app.put('/api/projetos/:id/status', async (req, res) => {
     }
 });
 
+
+//==================================================================
+// ROTA: Editar projeto completo (Nome, Início, Fim, Conclusão Real)
+//==================================================================
+app.put('/api/projetos/:id/editar', async (req, res) => {
+    const { id } = req.params;
+    const { nome, data_inicio, data_fim, data_conclusao } = req.body;
+    
+    try {
+        const result = await pool.query(
+            'UPDATE projetos SET projeto = $1, data_inicio = $2, data_fim = $3, data_conclusao = $4 WHERE id = $5 RETURNING *',
+            [nome, data_inicio, data_fim, data_conclusao, id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Erro ao editar projeto:", err);
+        res.status(500).json({ error: 'Erro interno ao editar o projeto.' });
+    }
+});
+
+
 // ==========================================
 // Inicialização do Servidor
 // ==========================================
