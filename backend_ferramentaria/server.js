@@ -653,7 +653,7 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 
-///==========================================
+//==========================================
 // ROTA: ALTERAR STATUS DO PROJETO
 //==========================================
 app.put('/api/projetos/:id/status', async (req, res) => {
@@ -661,7 +661,7 @@ app.put('/api/projetos/:id/status', async (req, res) => {
     const { status, data_conclusao } = req.body;
     
     try {
-        // Corrigido: Agora a query atualiza o status ($1), a data ($2) e filtra pelo ID correto ($3)
+        // AQUI ESTÁ A MÁGICA: Agora as variáveis estão na ordem correta ($1, $2 e $3)
         const result = await pool.query(
             'UPDATE projetos SET status = $1, data_conclusao = COALESCE($2, data_conclusao) WHERE id = $3 RETURNING *',
             [status, data_conclusao || null, id]
