@@ -10,10 +10,21 @@ const port = process.env.PORT || 3000;
 app.use(cors()); 
 app.use(express.json());
 
-// Configuração do Banco de Dados
+// Configuração do Banco de Dados (Supabase - Conexão Direta Oficial)
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:gestaoferramentaria@db.qvttpmwhvaokwmefafle.supabase.com:5432/postgres';
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres.qvttpmwhvaokwmefafle:gestaoferramentaria@aws-0-us-west-2.pooler.supabase.com:5432/postgres',
+    connectionString: connectionString,
     ssl: { rejectUnauthorized: false }
+});
+
+// Teste de conexão ao iniciar o servidor
+pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+        console.error('❌ ERRO AO CONECTAR NO SUPABASE:', err.message);
+    } else {
+        console.log('✅ CONECTADO AO SUPABASE COM SUCESSO! Hora do banco:', res.rows[0].now);
+    }
 });
 
 // ==========================================
