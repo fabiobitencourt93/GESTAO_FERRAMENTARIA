@@ -26,6 +26,9 @@ app.get('/api/atualizar-banco', async (req, res) => {
         await pool.query('ALTER TABLE estampos ADD COLUMN IF NOT EXISTS tipo VARCHAR(100);');
         await pool.query('ALTER TABLE projetos ADD COLUMN IF NOT EXISTS data_conclusao DATE;');
         await pool.query('ALTER TABLE apontamentos ADD COLUMN IF NOT EXISTS ocorrencia TEXT;');
+        // Gamificação
+        await pool.query('ALTER TABLE operadores ADD COLUMN IF NOT EXISTS xp_acumulado INTEGER DEFAULT 0;');
+        await pool.query('ALTER TABLE operadores ADD COLUMN IF NOT EXISTS nivel INTEGER DEFAULT 1;');
         res.send("<h1>Sucesso absoluto!</h1><p>As colunas foram criadas no Supabase. Pode voltar para o seu sistema que a lista de projetos vai carregar!</p>");
     } catch (err) {
         res.status(500).send(`<h1>Erro detalhado do Banco:</h1><pre>${err.message}</pre>`);
@@ -247,7 +250,48 @@ app.put('/api/apontamentos/finalizar', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTA 5.1: Encerrar Apontamento e Marcar 100% Concluído
+// ==========================================
+app.put('/api/apontamentos/finalizar-100', async (req, res) => {
+    const { processo_id, operador_id, ocorrencia } = req.body;
+    try {
+        // 1. Para o cronômetro do aluno e salva a ocorrência
+        await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP,
+                ocorrencia = $3
+            WHERE processo_id = $1 AND operador_id = $2 AND data_hora_fim IS NULL
+        `, [processo_id, operador_id, ocorrencia || null]);
 
+        // 2. Marca a operação como 100% no roteiro
+        await pool.query(`
+            UPDATE processos 
+            SET status = 'Concluído' 
+            WHERE id = $1
+        `, [processo_id]);
+
+        // 3. MOTOR DE GAMIFICAÇÃO BLINDADO (Matemática no Node.js)
+        const aluno = await pool.query('SELECT xp_acumulado FROM operadores WHERE id = $1', [operador_id]);
+        
+        if (aluno.rows.length > 0) {
+            let xpAtual = aluno.rows[0].xp_acumulado || 0;
+            let novoXp = xpAtual + 50;
+            let novoNivel = Math.floor(novoXp / 100) + 1; 
+
+            await pool.query(`
+                UPDATE operadores 
+                SET xp_acumulado = $1, nivel = $2 
+                WHERE id = $3
+            `, [novoXp, novoNivel, operador_id]);
+        }
+
+        res.json({ message: 'Operação 100% concluída e +50 XP ganhos!' });
+    } catch (error) {
+        console.error("Erro ao concluir 100%:", error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // ==========================================
 // ROTA: Lançamento Manual (Retroativo)
@@ -383,6 +427,8 @@ app.get('/api/relatorios/ao-vivo', async (req, res) => {
             SELECT 
                 o.id AS operador_id,
                 o.nome AS operador_nome,
+                o.xp_acumulado,
+                o.nivel,
                 pr.nome_operacao,
                 pr.maquina_sugerida,
                 pe.nome AS nome_peca,
@@ -394,7 +440,7 @@ app.get('/api/relatorios/ao-vivo', async (req, res) => {
             LEFT JOIN apontamentos a ON o.id = a.operador_id AND a.data_hora_fim IS NULL
             LEFT JOIN processos pr ON a.processo_id = pr.id
             LEFT JOIN pecas pe ON pr.peca_id = pe.id
-            ORDER BY o.nome ASC;
+            ORDER BY o.xp_acumulado DESC NULLS LAST, o.nome ASC;
         `;
         const result = await pool.query(query);
         res.json(result.rows);
@@ -508,7 +554,7 @@ app.put('/api/processos/:id', async (req, res) => {
 });
 
 // ==========================================
-// ROTA: CADASTRAR PEÇA (CORRIGIDA COM TRATAMENTO TÉRMICO)
+// ROTA: CADASTRAR PEÇA
 // ==========================================
 app.post('/api/pecas', async (req, res) => {
     try {
@@ -519,15 +565,12 @@ app.post('/api/pecas', async (req, res) => {
             return res.status(400).json({ error: 'ID do projeto/estampo não informado.' });
         }
 
-        // 1. Verifica se esse ID já pertence diretamente à tabela estampos
         let checarEstampo = await pool.query('SELECT id FROM estampos WHERE id = $1', [idFinal]);
 
-        // 2. Se não encontrou, busca o estampo vinculado a este projeto
         if (checarEstampo.rows.length === 0) {
             checarEstampo = await pool.query('SELECT id FROM estampos WHERE projeto_id = $1', [idFinal]);
         }
 
-        // 3. Se o projeto não tinha estampo, cria o estampo automaticamente
         if (checarEstampo.rows.length === 0) {
             const novoEstampo = await pool.query(
                 'INSERT INTO estampos (projeto_id, nome, tipo) VALUES ($1, $2, $3) RETURNING id',
@@ -538,7 +581,6 @@ app.post('/api/pecas', async (req, res) => {
             idFinal = checarEstampo.rows[0].id;
         }
 
-        // 4. SOLUÇÃO DO ERRO: Inserindo 'N/A' no tratamento_termico para satisfazer o banco!
         const resultado = await pool.query(
             'INSERT INTO pecas (estampo_id, nome, pos, tratamento_termico) VALUES ($1, $2, $3, $4) RETURNING *',
             [idFinal, nome, pos, 'N/A']
@@ -611,8 +653,6 @@ cron.schedule('0 16 * * *', async () => {
 // ==========================================
 app.post('/api/auth/login', (req, res) => {
     const { senha } = req.body;
-    
-    // A senha real deve ser configurada nas Variáveis de Ambiente (Environment) do Render!
     const senhaCorreta = process.env.ADMIN_PASSWORD || '260817';
 
     if (senha === senhaCorreta) {
@@ -630,7 +670,6 @@ app.put('/api/projetos/:id/status', async (req, res) => {
     const { status, data_conclusao } = req.body;
     
     try {
-        // Corrigido: As variáveis agora estão na ordem exata ($1, $2 e $3)
         const result = await pool.query(
             'UPDATE projetos SET status = $1, data_conclusao = COALESCE($2, data_conclusao) WHERE id = $3 RETURNING *',
             [status, data_conclusao || null, id]
