@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutGrid, BarChart2, Settings, Home, ChevronLeft, Bell, User, Activity, Wrench, Monitor } from 'lucide-react';
+import { LayoutGrid, BarChart2, Settings, Home, ChevronLeft, Bell, User, Activity, Wrench, Monitor, Lock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 function Producao() {
@@ -13,9 +13,10 @@ function Producao() {
   const [filtroGrafico, setFiltroGrafico] = useState('Geral'); 
   const [filtroProgresso, setFiltroProgresso] = useState('TodasAsPecas'); 
 
-  // Controles da Janela Flutuante (Modal) movidos para DENTRO do componente
+  // Controles da Janela Flutuante (Modal) e TRAVA DE SEGURANÇA
   const [modalOcorrencia, setModalOcorrencia] = useState(false);
   const [textoOcorrencia, setTextoOcorrencia] = useState('');
+  const [idConfirmacao, setIdConfirmacao] = useState(''); // <-- Novo estado para a senha/crachá
   const [dadosParaFinalizar, setDadosParaFinalizar] = useState({ processo_id: null, operador_id: null });
 
   const carregarAoVivo = () => {
@@ -79,10 +80,19 @@ function Producao() {
   const abrirJanelaFinalizar = (processo_id, operador_id) => {
     setDadosParaFinalizar({ processo_id, operador_id });
     setTextoOcorrencia('');
+    setIdConfirmacao(''); // Limpa o campo do crachá ao abrir
     setModalOcorrencia(true); 
   };
 
   const confirmarFinalizacao = async () => {
+    // ==========================================
+    // TRAVA DE SEGURANÇA: COMPARAÇÃO DO ID
+    // ==========================================
+    if (String(idConfirmacao) !== String(dadosParaFinalizar.operador_id)) {
+        alert("❌ ACESSO NEGADO: O número do crachá informado está incorreto!");
+        return; // Interrompe o processo aqui e não envia para o banco
+    }
+
     try {
       await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
         processo_id: dadosParaFinalizar.processo_id,
@@ -94,7 +104,7 @@ function Producao() {
       carregarAoVivo(); // Recarrega a lista de alunos imediatamente
       
     } catch (error) {
-      alert("Erro ao finalizar. Verifique o ID do aluno.");
+      alert("Erro ao finalizar. Verifique se o Back-end está rodando corretamente.");
     }
   };
 
@@ -211,16 +221,34 @@ function Producao() {
 
       </div>
 
-      {/* JANELA FLUTUANTE DE OCORRÊNCIA (MODAL) */}
+      {/* JANELA FLUTUANTE DE OCORRÊNCIA COM TRAVA DE SEGURANÇA */}
       {modalOcorrencia && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', width: '90%', maxWidth: '420px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
-            <h3 style={{ margin: '0 0 8px 0', color: '#111827', fontSize: '18px' }}>Finalizar Operação</h3>
-            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#4B5563' }}>Houve alguma ocorrência durante a usinagem? (Opcional)</p>
-            <textarea value={textoOcorrencia} onChange={(e) => setTextoOcorrencia(e.target.value)} placeholder="Ex: Quebra da pastilha de desbaste, material com sobremetal excessivo..." style={{ width: '100%', boxSizing: 'border-box', height: '100px', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', resize: 'none', marginBottom: '20px', fontFamily: "'Inter', sans-serif", fontSize: '14px' }} />
+            <h3 style={{ margin: '0 0 16px 0', color: '#111827', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+               <Lock size={20} color="#DC2626" /> Segurança da Máquina
+            </h3>
+            
+            {/* NOVO CAMPO: ID DO CRACHÁ */}
+            <div style={{ backgroundColor: '#FEF2F2', padding: '16px', borderRadius: '8px', border: '1px solid #FCA5A5', marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#991B1B', marginBottom: '8px' }}>
+                    Digite seu Crachá para confirmar o encerramento:
+                </label>
+                <input 
+                    type="number" 
+                    placeholder="Seu ID..." 
+                    value={idConfirmacao} 
+                    onChange={(e) => setIdConfirmacao(e.target.value)} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #FCA5A5', outline: 'none', fontSize: '15px', fontWeight: '600', boxSizing: 'border-box' }} 
+                />
+            </div>
+
+            <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#4B5563', fontWeight: '600' }}>Houve alguma ocorrência? (Opcional)</p>
+            <textarea value={textoOcorrencia} onChange={(e) => setTextoOcorrencia(e.target.value)} placeholder="Ex: Quebra da pastilha, parada para ir ao banheiro..." style={{ width: '100%', boxSizing: 'border-box', height: '80px', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', resize: 'none', marginBottom: '20px', fontFamily: "'Inter', sans-serif", fontSize: '14px' }} />
+            
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button onClick={() => setModalOcorrencia(false)} style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#F3F4F6', color: '#374151', cursor: 'pointer', fontWeight: '600' }}>Cancelar</button>
-              <button onClick={confirmarFinalizacao} style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#0284C7', color: '#FFF', cursor: 'pointer', fontWeight: '600' }}>Encerrar Máquina</button>
+              <button onClick={confirmarFinalizacao} style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#EF4444', color: '#FFF', cursor: 'pointer', fontWeight: '600' }}>Confirmar e Encerrar</button>
             </div>
           </div>
         </div>
@@ -232,7 +260,7 @@ function Producao() {
                 <LayoutGrid size={24} />
                 <span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span>
               </div>
-              <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
+              <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}>
                 <BarChart2 size={24} />
                 <span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span>
               </div>

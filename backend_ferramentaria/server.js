@@ -405,28 +405,31 @@ app.get('/api/ocorrencias', async (req, res) => {
 // ==========================================
 app.get('/api/relatorios/ao-vivo', async (req, res) => {
     try {
+        const turma_id = req.query.turma_id || await getTurmaAtiva();
         const query = `
             SELECT 
-                o.id AS operador_id,
-                o.nome AS operador_nome,
-                pr.nome_operacao,
-                pr.maquina_sugerida,
-                pe.nome AS nome_peca,
+                o.id AS operador_id, 
+                o.nome AS operador_nome, 
+                pr.nome_operacao, 
+                pr.maquina_sugerida, 
+                pe.nome AS nome_peca, 
                 a.data_hora_inicio,
+                a.processo_id, -- <<< A CHAVE ESTÁ AQUI! Agora o cartão sabe qual ID encerrar.
                 (SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - MAX(data_hora_fim))) / 60 
                  FROM apontamentos 
                  WHERE operador_id = o.id AND data_hora_fim IS NOT NULL) AS ocioso_minutos
-            FROM operadores o
-            LEFT JOIN apontamentos a ON o.id = a.operador_id AND a.data_hora_fim IS NULL
-            LEFT JOIN processos pr ON a.processo_id = pr.id
+            FROM operadores o 
+            LEFT JOIN apontamentos a ON o.id = a.operador_id AND a.data_hora_fim IS NULL 
+            LEFT JOIN processos pr ON a.processo_id = pr.id 
             LEFT JOIN pecas pe ON pr.peca_id = pe.id
+            WHERE o.turma_id = $1 
             ORDER BY o.nome ASC;
         `;
-        const result = await pool.query(query);
+        const result = await pool.query(query, [turma_id]);
         res.json(result.rows);
-    } catch (err) {
+    } catch (err) { 
         console.error("Erro na Rota Ao Vivo:", err.message);
-        res.status(500).send('Erro ao buscar status ao vivo');
+        res.status(500).json({ error: err.message }); 
     }
 });
 
@@ -700,6 +703,8 @@ app.put(['/api/projetos/:id', '/api/projetos/:id/editar'], async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 }); 
+
+
 
 // ==========================================
 // Inicialização do Servidor
