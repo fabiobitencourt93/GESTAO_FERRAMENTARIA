@@ -878,7 +878,8 @@ function Ajustes() {
           )}
 
       {/* ============================================== */}
-      {/* MODAL DE ENTRADA/SAÍDA DE ESTOQUE              */}
+      {/* MODAL DE ENTRADA/SAÍDA DE ESTOQUE (NOVO)       */}
+      {/* (Cole este trecho ANTES do Menu Inferior Fixo) */}
       {/* ============================================== */}
       {modalMovimentacao && itemMovimentacao && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
@@ -923,16 +924,35 @@ function Ajustes() {
               <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: tipoMovimentacao === 'Entrada' ? '#16A34A' : '#DC2626', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: 'pointer' }}>
                 Confirmar {tipoMovimentacao}
               </button>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' }}>{item.categoria}</span>
+                <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{item.codigo_interno || 'S/N'}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => prepararEdicaoEstoque(item)} style={{ background: 'none', border: 'none', color: '#EA580C', cursor: 'pointer', padding: '0' }} title="Editar"><Edit2 size={16} /></button>
+                  <button onClick={() => deletarItemEstoque(item.id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '0' }} title="Apagar"><Trash2 size={16} /></button>
+              </div>
+            </div> 
             </form>
           </div>
         </div>
       )}
+
+
+
 
       {/* MENU INFERIOR FIXO */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
         <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
         <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span></div>
         <div onClick={() => setTelaAtual('menu')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>AJUSTES</span></div>
+        <div onClick={abrirEstoque} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+            <div style={{ backgroundColor: '#FFF7ED', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Package size={24} color="#F97316" /></div>
+            <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Estoque e Materiais</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Gerencie blocos de aço, componentes e registre entradas e saídas.</p></div>
+                       
+        </div>
       </div>
     </div>
   );
