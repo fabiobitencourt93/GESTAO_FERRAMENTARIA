@@ -160,11 +160,15 @@ app.put('/api/apontamentos/finalizar', async (req, res) => {
 });
 
 // ==========================================
-// ROTA: Encerrar Apontamento 100% (COM AUTO-APONTAMENTO)
+// ROTA: Encerrar Apontamento 100% (COM AUTO-APONTAMENTO E XP)
 // ==========================================
 app.put('/api/apontamentos/finalizar-100', async (req, res) => {
     const { processo_id, operador_id, ocorrencia } = req.body;
     try {
+        // Descobre qual era o tempo planejado da operação (será usado para o XP e para o Auto-apontamento)
+        const procQuery = await pool.query('SELECT tempo_planejado_min FROM processos WHERE id = $1', [processo_id]);
+        const tempoPlanejado = procQuery.rows[0]?.tempo_planejado_min || 1;
+
         // 1. Tenta parar o cronômetro caso o aluno tenha dado o Play antes
         const result = await pool.query(`
             UPDATE apontamentos 
@@ -175,10 +179,6 @@ app.put('/api/apontamentos/finalizar-100', async (req, res) => {
 
         // 2. SE O ALUNO CLICOU DIRETO EM 100% (Esqueceu de dar o Play)
         if (result.rowCount === 0) {
-            // Descobre qual era o tempo planejado da operação
-            const procQuery = await pool.query('SELECT tempo_planejado_min FROM processos WHERE id = $1', [processo_id]);
-            const tempoPlanejado = procQuery.rows[0]?.tempo_planejado_min || 1;
-
             // Cria um apontamento retroativo instantâneo com o tempo perfeito!
             await pool.query(`
                 INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio, data_hora_fim, ocorrencia)
@@ -189,7 +189,18 @@ app.put('/api/apontamentos/finalizar-100', async (req, res) => {
         // 3. Marca a operação como Concluída no roteiro
         await pool.query(`UPDATE processos SET status = 'Concluído' WHERE id = $1`, [processo_id]);
 
-        res.json({ message: 'Operação 100% concluída e apontamento salvo no Dashboard!' });
+        // ==========================================
+        // 4. GAMIFICAÇÃO: INJEÇÃO DE XP NO ALUNO
+        // ==========================================
+        const xpGanho = tempoPlanejado * 5; // Regra: 5 XP por cada minuto trabalhado/planejado
+        
+        await pool.query(`
+            UPDATE operadores 
+            SET xp_acumulado = COALESCE(xp_acumulado, 0) + $1 
+            WHERE id = $2
+        `, [xpGanho, operador_id]);
+
+        res.json({ message: `Operação 100% concluída! Aluno ganhou ${xpGanho} XP!` });
     } catch (error) {
         console.error("Erro no 100%:", error);
         res.status(500).json({ error: error.message });
@@ -257,7 +268,7 @@ app.get('/api/ocorrencias', async (req, res) => {
 });
 
 // ==========================================
-// ROTA 8: Status Ao Vivo dos Alunos
+// ROTA 8: Status Ao Vivo dos Alunos (AGORA ORDENADO POR XP!)
 // ==========================================
 app.get('/api/relatorios/ao-vivo', async (req, res) => {
     try {
@@ -266,11 +277,13 @@ app.get('/api/relatorios/ao-vivo', async (req, res) => {
             SELECT 
                 o.id AS operador_id, 
                 o.nome AS operador_nome, 
+                COALESCE(o.xp_acumulado, 0) AS xp_acumulado,
+                FLOOR(COALESCE(o.xp_acumulado, 0) / 100) + 1 AS nivel,
                 pr.nome_operacao, 
                 pr.maquina_sugerida, 
                 pe.nome AS nome_peca, 
                 a.data_hora_inicio,
-                a.processo_id, -- <<< A CHAVE ESTÁ AQUI! Agora o cartão sabe qual ID encerrar.
+                a.processo_id, 
                 (SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - MAX(data_hora_fim))) / 60 
                  FROM apontamentos 
                  WHERE operador_id = o.id AND data_hora_fim IS NOT NULL) AS ocioso_minutos
@@ -279,7 +292,7 @@ app.get('/api/relatorios/ao-vivo', async (req, res) => {
             LEFT JOIN processos pr ON a.processo_id = pr.id 
             LEFT JOIN pecas pe ON pr.peca_id = pe.id
             WHERE o.turma_id = $1 
-            ORDER BY o.nome ASC;
+            ORDER BY COALESCE(o.xp_acumulado, 0) DESC, o.nome ASC;
         `;
         const result = await pool.query(query, [turma_id]);
         res.json(result.rows);
