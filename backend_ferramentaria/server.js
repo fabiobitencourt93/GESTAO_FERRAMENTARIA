@@ -513,7 +513,32 @@ app.post('/api/estoque/movimentar', async (req, res) => {
     }
 });
 
-
+// 4. Relatório de Movimentações (Kardex)
+app.get('/api/estoque/movimentacoes', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                TO_CHAR(m.data_hora, 'DD/MM/YYYY HH24:MI') AS "Data e Hora",
+                i.codigo_interno AS "Código",
+                i.descricao AS "Material",
+                m.tipo_movimento AS "Movimento",
+                m.quantidade AS "Qtd",
+                i.unidade_medida AS "Unid",
+                COALESCE(o.nome, 'Não informado') AS "Operador/Aluno",
+                COALESCE(p.nome, 'Estoque Geral') AS "Projeto Destino",
+                COALESCE(m.observacao, '-') AS "Observação"
+            FROM estoque_movimentacoes m
+            JOIN estoque_itens i ON m.item_id = i.id
+            LEFT JOIN operadores o ON m.operador_id = o.id
+            LEFT JOIN projetos p ON m.projeto_id = p.id
+            ORDER BY m.data_hora DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) { 
+        res.status(500).json({ error: err.message }); 
+    }
+});
 
 
 app.listen(port, () => { console.log(`Servidor rodando na porta ${port}`); });

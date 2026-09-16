@@ -163,6 +163,16 @@ function Ajustes() {
     setNovoEstoqueEsp(''); setNovoEstoqueMin('');
   };
 
+const baixarRelatorioEstoque = async () => {
+    try {
+      const res = await axios.get('https://gestao-ferramentaria.onrender.com/api/estoque/movimentacoes');
+      if (res.data.length === 0) return alert("Nenhuma movimentação registrada ainda.");
+      exportarParaExcel(res.data, 'Relatorio_Movimentacoes_Estoque');
+    } catch (error) {
+      alert("Erro ao baixar relatório de estoque.");
+    }
+  };
+
   const cadastrarOuEditarItemEstoque = async (e) => {
     e.preventDefault();
     try {
@@ -685,6 +695,12 @@ function Ajustes() {
           {telaAtual === 'estoque' && (
             <div style={{ maxWidth: '900px', margin: '0 auto', marginTop: '10px' }}>
               
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+                 <button onClick={baixarRelatorioEstoque} style={{ backgroundColor: '#10B981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <Download size={16} /> Baixar Relatório de Entradas e Saídas
+                 </button>
+              </div>
+
               {/* CADASTRAR OU EDITAR MATERIAL */}
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: idEdicaoEstoque ? '2px solid #EA580C' : '1px solid #E5E7EB', marginBottom: '32px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
