@@ -54,6 +54,7 @@ function Ajustes() {
   const [novoProjTipo, setNovoProjTipo] = useState('');
   const [novoProjInicio, setNovoProjInicio] = useState('');
   const [novoProjFim, setNovoProjFim] = useState('');
+  
 
   // ==========================================
   // 5. ESTADOS: ESTOQUE E MATERIAIS
@@ -285,7 +286,7 @@ const baixarRelatorioEstoque = async () => {
   const handleUploadImagem = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 2000000) return alert("A imagem é muito pesada! Escolha uma imagem de até 2MB.");
+      if (file.size > 2000000) return alert("A imagem é muito pesada! Escolha uma de até 2MB.");
       const reader = new FileReader();
       reader.onloadend = () => setNovoProjImagem(reader.result);
       reader.readAsDataURL(file);
@@ -535,20 +536,33 @@ const baixarRelatorioEstoque = async () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {projetos.map(proj => (
                       <div key={proj.projeto_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #E5E7EB', flexWrap: 'wrap', gap: '12px' }}>
-                        <div>
-                          <h4 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h4>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '12px', color: '#6B7280' }}>Início: {proj.data_inicio || 'Não definido'} | Status:</span>
-                            <select 
-                              value={proj.status || 'Em Planejamento'} 
-                              onChange={(e) => alterarStatusProjeto(proj.projeto_id, e.target.value)}
-                              style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #D1D5DB', backgroundColor: '#FFFFFF', outline: 'none', cursor: 'pointer', fontWeight: '600', color: proj.status === 'Concluído' ? '#16A34A' : proj.status === 'Em Execução' ? '#0284C7' : '#CA8A04' }}
-                            >
-                              <option value="Em Planejamento">Em Planejamento</option>
-                              <option value="Em Execução">Em Execução</option>
-                              <option value="Concluído">Concluído</option>
-                            </select>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          
+                          {/* EXIBE A FOTO OU O ÍCONE PADRÃO NA LISTA */}
+                          {proj.imagem ? (
+                             <img src={proj.imagem} alt="Ref" style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #D1D5DB' }} />
+                          ) : (
+                             <div style={{ width: '56px', height: '56px', borderRadius: '8px', backgroundColor: '#F3F4F6', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #D1D5DB' }}>
+                               <FolderPlus size={24} color="#9CA3AF"/>
+                             </div>
+                          )}
+
+                          <div>
+                            <h4 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h4>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '12px', color: '#6B7280' }}>Início: {proj.data_inicio || 'Não definido'} | Status:</span>
+                              <select 
+                                value={proj.status || 'Em Planejamento'} 
+                                onChange={(e) => alterarStatusProjeto(proj.projeto_id, e.target.value)} 
+                                style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #D1D5DB', backgroundColor: '#FFFFFF', outline: 'none', cursor: 'pointer', fontWeight: '600', color: proj.status === 'Concluído' ? '#16A34A' : proj.status === 'Em Execução' ? '#0284C7' : '#CA8A04' }}
+                              >
+                                <option value="Em Planejamento">Em Planejamento</option>
+                                <option value="Em Execução">Em Execução</option>
+                                <option value="Concluído">Concluído</option>
+                              </select>
+                            </div>
                           </div>
+
                         </div>
                         <div style={{ display: 'flex', gap: '12px' }}>
                           <button onClick={() => prepararEdicao(proj)} style={{ background: 'none', border: 'none', color: '#0284C7', cursor: 'pointer', padding: '4px' }} title="Editar"><Edit2 size={20} /></button>
