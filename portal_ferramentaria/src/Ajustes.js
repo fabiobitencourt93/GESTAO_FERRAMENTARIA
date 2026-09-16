@@ -19,7 +19,7 @@ function Ajustes() {
   const [telaAtual, setTelaAtual] = useState('menu'); 
   
   // ==========================================
-  // 2. ESTADOS: TURMAS / SEMESTRES (NOVO)
+  // 2. ESTADOS: TURMAS / SEMESTRES 
   // ==========================================
   const [turmas, setTurmas] = useState([]);
   const [carregandoTurmas, setCarregandoTurmas] = useState(false);
@@ -52,6 +52,26 @@ function Ajustes() {
   const [novoProjTipo, setNovoProjTipo] = useState('');
   const [novoProjInicio, setNovoProjInicio] = useState('');
   const [novoProjFim, setNovoProjFim] = useState('');
+
+  // ==========================================
+  // 5. ESTADOS: ESTOQUE E MATERIAIS
+  // ==========================================
+  const [estoque, setEstoque] = useState([]);
+  const [carregandoEstoque, setCarregandoEstoque] = useState(false);
+  
+  const [novoEstoqueCodigo, setNovoEstoqueCodigo] = useState('');
+  const [novoEstoqueDesc, setNovoEstoqueDesc] = useState('');
+  const [novoEstoqueCat, setNovoEstoqueCat] = useState('Matéria-Prima');
+  const [novoEstoqueEsp, setNovoEstoqueEsp] = useState('');
+  const [novoEstoqueMin, setNovoEstoqueMin] = useState('');
+  const [idEdicaoEstoque, setIdEdicaoEstoque] = useState(null); 
+  const [modalMovimentacao, setModalMovimentacao] = useState(false);
+  const [itemMovimentacao, setItemMovimentacao] = useState(null);
+  const [tipoMovimentacao, setTipoMovimentacao] = useState('Entrada');
+  const [movQuantidade, setMovQuantidade] = useState('');
+  const [movOperadorId, setMovOperadorId] = useState('');
+  const [movProjetoId, setMovProjetoId] = useState('');
+  const [movObservacao, setMovObservacao] = useState('');
 
   // ==========================================
   // FUNÇÕES GERAIS E AUTENTICAÇÃO
@@ -93,223 +113,38 @@ function Ajustes() {
   // NAVEGAÇÃO ENTRE ABAS
   // ==========================================
   const abrirTurmas = () => {
-    setCarregandoTurmas(true);
-    setTelaAtual('turmas');
-    carregarTurmasDoBanco();
+    setCarregandoTurmas(true); setTelaAtual('turmas'); carregarTurmasDoBanco();
   };
 
   const abrirHistorico = () => {
-    setCarregandoOcorrencias(true);
-    setTelaAtual('historico');
-    axios.get('https://gestao-ferramentaria.onrender.com/api/ocorrencias')
-      .then(res => { setOcorrencias(res.data); setCarregandoOcorrencias(false); })
-      .catch(err => { console.error(err); setCarregandoOcorrencias(false); });
+    setCarregandoOcorrencias(true); setTelaAtual('historico');
+    axios.get('https://gestao-ferramentaria.onrender.com/api/ocorrencias').then(res => { setOcorrencias(res.data); setCarregandoOcorrencias(false); }).catch(console.error);
   };
 
   const abrirRelatorios = () => {
-    setCarregandoRelatorio(true);
-    setTelaAtual('relatorios');
-    setFiltroUsinagem('pecas');
+    setCarregandoRelatorio(true); setTelaAtual('relatorios'); setFiltroUsinagem('pecas');
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/desempenho').then(res => setDadosPecas(res.data)).catch(console.error);
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/processos').then(res => { setDadosProcessos(res.data); setCarregandoRelatorio(false); }).catch(console.error);
   };
 
   const abrirAlunos = () => {
-    setCarregandoAlunos(true);
-    setTelaAtual('alunos');
-    carregarAlunosDoBanco();
+    setCarregandoAlunos(true); setTelaAtual('alunos'); carregarAlunosDoBanco();
   };
 
   const abrirProjetos = () => {
-    setCarregandoProjetos(true);
-    setTelaAtual('projetos');
-    carregarProjetosDoBanco();
+    setCarregandoProjetos(true); setTelaAtual('projetos'); carregarProjetosDoBanco();
   };
 
-  // ==========================================
-  // LÓGICA DE TURMAS (SEMESTRES)
-  // ==========================================
-  const carregarTurmasDoBanco = () => {
-    axios.get('https://gestao-ferramentaria.onrender.com/api/turmas')
-      .then(res => { setTurmas(res.data); setCarregandoTurmas(false); })
-      .catch(console.error);
+  const abrirEstoque = () => {
+    setCarregandoEstoque(true); setTelaAtual('estoque'); 
+    carregarEstoqueDoBanco(); carregarProjetosDoBanco(); carregarAlunosDoBanco(); 
   };
-
-  const criarNovaTurma = async (e) => {
-    e.preventDefault();
-    if (!nomeNovaTurma) return;
-    try {
-      await axios.post('https://gestao-ferramentaria.onrender.com/api/turmas', { nome: nomeNovaTurma });
-      setNomeNovaTurma('');
-      carregarTurmasDoBanco();
-      alert("Nova turma criada e ativada! O sistema agora está limpo para este semestre.");
-    } catch (error) {
-      alert("Erro ao criar turma.");
-    }
-  };
-
-  const ativarTurma = async (id) => {
-    try {
-      await axios.put(`https://gestao-ferramentaria.onrender.com/api/turmas/${id}/ativar`);
-      carregarTurmasDoBanco();
-      alert("Turma ativada com sucesso! O sistema (Alunos, Projetos e Relatórios) foi atualizado para focar nesta turma.");
-    } catch (error) {
-      alert("Erro ao ativar turma.");
-    }
-  };
-
-  const carregarAlunosDoBanco = () => {
-    axios.get('https://gestao-ferramentaria.onrender.com/api/operadores').then(res => { setAlunos(res.data); setCarregandoAlunos(false); }).catch(console.error);
-  };
-
-  const carregarProjetosDoBanco = () => {
-    axios.get('https://gestao-ferramentaria.onrender.com/api/projetos').then(res => { setProjetos(res.data); setCarregandoProjetos(false); }).catch(console.error);
-  };
-
-  const cadastrarAluno = async (e) => {
-    e.preventDefault();
-    if (!novoAlunoId || !novoAlunoNome) return;
-    try {
-      await axios.post('https://gestao-ferramentaria.onrender.com/api/operadores', { id: novoAlunoId, nome: novoAlunoNome });
-      setNovoAlunoId(''); setNovoAlunoNome(''); carregarAlunosDoBanco(); 
-    } catch (error) { alert(error.response?.data?.error || 'Erro ao cadastrar aluno.'); }
-  };
-
-  const deletarAluno = async (id) => {
-    if (!window.confirm('Tem certeza que deseja remover este crachá?')) return;
-    try {
-      await axios.delete(`https://gestao-ferramentaria.onrender.com/api/operadores/${id}`);
-      carregarAlunosDoBanco();
-    } catch (error) { alert(error.response?.data?.error || 'Erro ao excluir aluno.'); }
-  };
-
-  const formatarDataParaInput = (dataBR) => {
-    if (!dataBR || dataBR === 'Não definido') return '';
-    const partes = dataBR.split('/');
-    if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
-    return dataBR;
-  };
-
-  const prepararEdicao = (projeto) => {
-    setIdEdicao(projeto.projeto_id);
-    setNovoProjNome(projeto.projeto || '');
-    setNovoProjTipo(projeto.estampo || 'Progressivo'); 
-    setNovoProjInicio(formatarDataParaInput(projeto.data_inicio));
-    setNovoProjFim(formatarDataParaInput(projeto.data_fim));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const cancelarEdicao = () => {
-    setIdEdicao(null);
-    setNovoProjNome('');
-    setNovoProjTipo('');
-    setNovoProjInicio('');
-    setNovoProjFim('');
-  };
-
-  const cadastrarOuEditarProjeto = async (e) => {
-    e.preventDefault();
-    if (!novoProjNome) return alert("Por favor, digite o nome do projeto.");
-
-    try {
-      if (idEdicao) {
-        await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${idEdicao}`, {
-          nome: novoProjNome,
-          tipo: novoProjTipo,
-          data_inicio: novoProjInicio,
-          data_fim: novoProjFim
-        });
-        alert("Projeto atualizado com sucesso!");
-      } else {
-        if (!novoProjInicio) return alert("A data de início é obrigatória.");
-        await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', {
-          nome: novoProjNome,
-          tipo: novoProjTipo,
-          data_inicio: novoProjInicio,
-          data_fim: novoProjFim
-        });
-        alert("Projeto cadastrado com sucesso!");
-      }
-      cancelarEdicao();
-      carregarProjetosDoBanco();
-    } catch (error) {
-      alert(error.response?.data?.error || "Erro ao salvar o projeto.");
-    }
-  };
-
-  const alterarStatusProjeto = async (id, novoStatus) => {
-    try {
-      const dataConclusao = novoStatus === 'Concluído' ? new Date().toISOString().split('T')[0] : null;
-      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, {
-          status: novoStatus,
-          data_conclusao: dataConclusao
-      });
-      carregarProjetosDoBanco();
-    } catch (error) {
-      console.error("Erro detalhado ao atualizar status:", error);
-      alert(error.response?.data?.error || 'Erro ao atualizar o status.');
-    }
-  };
-
-  const handleDeletarProjeto = async (id) => {
-    if (!window.confirm("Tem certeza que deseja APAGAR este projeto?")) return;
-    try {
-      await axios.delete(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}`);
-      carregarProjetosDoBanco();
-    } catch (error) {
-      alert("Erro ao deletar projeto.");
-    }
-  };
-  
-
-  // Processamentos para Relatórios
-  const processosComAtraso = [...dadosProcessos].filter(p => Number(p.realizado) > Number(p.planejado)).sort((a, b) => (Number(b.realizado) - Number(b.planejado)) - (Number(a.realizado) - Number(a.planejado)));
-  const dadosAgrupados = dadosProcessos.reduce((acc, item) => {
-    const chave = item[agrupamento] || 'Não definido';
-    if (!acc[chave]) acc[chave] = [];
-    acc[chave].push(item);
-    return acc;
-  }, {});
-
-  const estiloInput = { width: '100%', boxSizing: 'border-box', padding: '12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '14px', outline: 'none', backgroundColor: '#FFFFFF' };
-  const estiloLabel = { display: 'block', fontSize: '12px', fontWeight: '600', color: '#4B5563', marginBottom: '6px' };
-
-
-
-  // ==========================================
-  // ESTADOS: ESTOQUE E MATERIAIS (NOVO)
-  // ==========================================
-  const [estoque, setEstoque] = useState([]);
-  const [carregandoEstoque, setCarregandoEstoque] = useState(false);
-  
-  const [novoEstoqueCodigo, setNovoEstoqueCodigo] = useState('');
-  const [novoEstoqueDesc, setNovoEstoqueDesc] = useState('');
-  const [novoEstoqueCat, setNovoEstoqueCat] = useState('Matéria-Prima');
-  const [novoEstoqueEsp, setNovoEstoqueEsp] = useState('');
-  const [novoEstoqueMin, setNovoEstoqueMin] = useState('');
-  const [idEdicaoEstoque, setIdEdicaoEstoque] = useState(null); // <-- NOVO ESTADO AQUI
-  const [modalMovimentacao, setModalMovimentacao] = useState(false);
-  const [itemMovimentacao, setItemMovimentacao] = useState(null);
-  const [tipoMovimentacao, setTipoMovimentacao] = useState('Entrada');
-  const [movQuantidade, setMovQuantidade] = useState('');
-  const [movOperadorId, setMovOperadorId] = useState('');
-  const [movProjetoId, setMovProjetoId] = useState('');
-  const [movObservacao, setMovObservacao] = useState('');
 
   // ==========================================
   // FUNÇÕES DE ESTOQUE E MATERIAIS
   // ==========================================
-  const abrirEstoque = () => {
-    setCarregandoEstoque(true); setTelaAtual('estoque'); 
-    carregarEstoqueDoBanco();
-    carregarProjetosDoBanco(); // Necessário para a tela de Saída
-    carregarAlunosDoBanco();   // Necessário para a tela de Saída
-  };
-
   const carregarEstoqueDoBanco = () => {
-    axios.get('https://gestao-ferramentaria.onrender.com/api/estoque')
-      .then(res => { setEstoque(res.data); setCarregandoEstoque(false); })
-      .catch(console.error);
+    axios.get('https://gestao-ferramentaria.onrender.com/api/estoque').then(res => { setEstoque(res.data); setCarregandoEstoque(false); }).catch(console.error);
   };
 
   const prepararEdicaoEstoque = (item) => {
@@ -333,22 +168,18 @@ function Ajustes() {
     try {
       if (idEdicaoEstoque) {
         await axios.put(`https://gestao-ferramentaria.onrender.com/api/estoque/${idEdicaoEstoque}`, {
-          codigo_interno: novoEstoqueCodigo, descricao: novoEstoqueDesc, categoria: novoEstoqueCat,
-          especificacao: novoEstoqueEsp, estoque_minimo: novoEstoqueMin
+          codigo_interno: novoEstoqueCodigo, descricao: novoEstoqueDesc, categoria: novoEstoqueCat, especificacao: novoEstoqueEsp, estoque_minimo: novoEstoqueMin
         });
         alert("Material atualizado com sucesso!");
       } else {
         await axios.post('https://gestao-ferramentaria.onrender.com/api/estoque', {
-          codigo_interno: novoEstoqueCodigo, descricao: novoEstoqueDesc, categoria: novoEstoqueCat,
-          especificacao: novoEstoqueEsp, estoque_minimo: novoEstoqueMin
+          codigo_interno: novoEstoqueCodigo, descricao: novoEstoqueDesc, categoria: novoEstoqueCat, especificacao: novoEstoqueEsp, estoque_minimo: novoEstoqueMin
         });
         alert("Material cadastrado no estoque!");
       }
       cancelarEdicaoEstoque();
       carregarEstoqueDoBanco();
-    } catch (error) {
-      alert(error.response?.data?.error || "Erro ao salvar material.");
-    }
+    } catch (error) { alert(error.response?.data?.error || "Erro ao salvar material."); }
   };
 
   const deletarItemEstoque = async (id) => {
@@ -360,13 +191,7 @@ function Ajustes() {
   };
 
   const abrirPainelMovimentacao = (item, tipo) => {
-    setItemMovimentacao(item);
-    setTipoMovimentacao(tipo);
-    setMovQuantidade('');
-    setMovOperadorId('');
-    setMovProjetoId('');
-    setMovObservacao('');
-    setModalMovimentacao(true);
+    setItemMovimentacao(item); setTipoMovimentacao(tipo); setMovQuantidade(''); setMovOperadorId(''); setMovProjetoId(''); setMovObservacao(''); setModalMovimentacao(true);
   };
 
   const confirmarMovimentacaoEstoque = async (e) => {
@@ -374,30 +199,111 @@ function Ajustes() {
     if (tipoMovimentacao === 'Saída' && Number(movQuantidade) > Number(itemMovimentacao.quantidade_atual)) {
       if(!window.confirm("Atenção: A quantidade de saída é maior que o estoque atual. O estoque ficará negativo. Deseja continuar?")) return;
     }
-
     try {
       await axios.post('https://gestao-ferramentaria.onrender.com/api/estoque/movimentar', {
-        item_id: itemMovimentacao.id,
-        tipo_movimento: tipoMovimentacao,
-        quantidade: movQuantidade,
-        operador_id: movOperadorId || null,
-        projeto_id: movProjetoId || null,
-        observacao: movObservacao
+        item_id: itemMovimentacao.id, tipo_movimento: tipoMovimentacao, quantidade: movQuantidade,
+        operador_id: movOperadorId || null, projeto_id: movProjetoId || null, observacao: movObservacao
       });
       alert(`Movimentação de ${tipoMovimentacao} registrada com sucesso!`);
       setModalMovimentacao(false);
       carregarEstoqueDoBanco();
-    } catch (error) {
-      alert("Erro ao movimentar o estoque.");
-    }
+    } catch (error) { alert("Erro ao movimentar o estoque."); }
   };
 
+  // ==========================================
+  // LÓGICA DE TURMAS (SEMESTRES)
+  // ==========================================
+  const carregarTurmasDoBanco = () => { axios.get('https://gestao-ferramentaria.onrender.com/api/turmas').then(res => { setTurmas(res.data); setCarregandoTurmas(false); }).catch(console.error); };
+  
+  const criarNovaTurma = async (e) => {
+    e.preventDefault();
+    if (!nomeNovaTurma) return;
+    try {
+      await axios.post('https://gestao-ferramentaria.onrender.com/api/turmas', { nome: nomeNovaTurma });
+      setNomeNovaTurma(''); carregarTurmasDoBanco(); alert("Nova turma criada e ativada! O sistema agora está limpo para este semestre.");
+    } catch (error) { alert("Erro ao criar turma."); }
+  };
 
+  const ativarTurma = async (id) => {
+    try {
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/turmas/${id}/ativar`);
+      carregarTurmasDoBanco(); alert("Turma ativada com sucesso! O sistema foi atualizado.");
+    } catch (error) { alert("Erro ao ativar turma."); }
+  };
 
+  // ==========================================
+  // LÓGICA DE ALUNOS E PROJETOS
+  // ==========================================
+  const carregarAlunosDoBanco = () => { axios.get('https://gestao-ferramentaria.onrender.com/api/operadores').then(res => { setAlunos(res.data); setCarregandoAlunos(false); }).catch(console.error); };
+  const carregarProjetosDoBanco = () => { axios.get('https://gestao-ferramentaria.onrender.com/api/projetos').then(res => { setProjetos(res.data); setCarregandoProjetos(false); }).catch(console.error); };
 
+  const cadastrarAluno = async (e) => {
+    e.preventDefault();
+    if (!novoAlunoId || !novoAlunoNome) return;
+    try {
+      await axios.post('https://gestao-ferramentaria.onrender.com/api/operadores', { id: novoAlunoId, nome: novoAlunoNome });
+      setNovoAlunoId(''); setNovoAlunoNome(''); carregarAlunosDoBanco(); 
+    } catch (error) { alert(error.response?.data?.error || 'Erro ao cadastrar aluno.'); }
+  };
 
+  const deletarAluno = async (id) => {
+    if (!window.confirm('Tem certeza que deseja remover este crachá?')) return;
+    try { await axios.delete(`https://gestao-ferramentaria.onrender.com/api/operadores/${id}`); carregarAlunosDoBanco(); } catch (error) { alert('Erro ao excluir aluno.'); }
+  };
 
+  const formatarDataParaInput = (dataBR) => {
+    if (!dataBR || dataBR === 'Não definido') return '';
+    const partes = dataBR.split('/');
+    return partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : dataBR;
+  };
 
+  const prepararEdicao = (projeto) => {
+    setIdEdicao(projeto.projeto_id); setNovoProjNome(projeto.projeto || ''); setNovoProjTipo(projeto.estampo || 'Progressivo'); 
+    setNovoProjInicio(formatarDataParaInput(projeto.data_inicio)); setNovoProjFim(formatarDataParaInput(projeto.data_fim)); window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelarEdicao = () => { setIdEdicao(null); setNovoProjNome(''); setNovoProjTipo(''); setNovoProjInicio(''); setNovoProjFim(''); };
+
+  const cadastrarOuEditarProjeto = async (e) => {
+    e.preventDefault();
+    if (!novoProjNome) return alert("Por favor, digite o nome do projeto.");
+    try {
+      if (idEdicao) {
+        await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${idEdicao}`, { nome: novoProjNome, tipo: novoProjTipo, data_inicio: novoProjInicio, data_fim: novoProjFim });
+        alert("Projeto atualizado com sucesso!");
+      } else {
+        if (!novoProjInicio) return alert("A data de início é obrigatória.");
+        await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', { nome: novoProjNome, tipo: novoProjTipo, data_inicio: novoProjInicio, data_fim: novoProjFim });
+        alert("Projeto cadastrado com sucesso!");
+      }
+      cancelarEdicao(); carregarProjetosDoBanco();
+    } catch (error) { alert("Erro ao salvar o projeto."); }
+  };
+
+  const alterarStatusProjeto = async (id, novoStatus) => {
+    try {
+      const dataConclusao = novoStatus === 'Concluído' ? new Date().toISOString().split('T')[0] : null;
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, { status: novoStatus, data_conclusao: dataConclusao });
+      carregarProjetosDoBanco();
+    } catch (error) { alert('Erro ao atualizar o status.'); }
+  };
+
+  const handleDeletarProjeto = async (id) => {
+    if (!window.confirm("Tem certeza que deseja APAGAR este projeto?")) return;
+    try { await axios.delete(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}`); carregarProjetosDoBanco(); } catch (error) { alert("Erro ao deletar projeto."); }
+  };
+  
+  // Processamentos para Relatórios
+  const processosComAtraso = [...dadosProcessos].filter(p => Number(p.realizado) > Number(p.planejado)).sort((a, b) => (Number(b.realizado) - Number(b.planejado)) - (Number(a.realizado) - Number(a.planejado)));
+  const dadosAgrupados = dadosProcessos.reduce((acc, item) => {
+    const chave = item[agrupamento] || 'Não definido';
+    if (!acc[chave]) acc[chave] = [];
+    acc[chave].push(item);
+    return acc;
+  }, {});
+
+  const estiloInput = { width: '100%', boxSizing: 'border-box', padding: '12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '14px', outline: 'none', backgroundColor: '#FFFFFF' };
+  const estiloLabel = { display: 'block', fontSize: '12px', fontWeight: '600', color: '#4B5563', marginBottom: '6px' };
 
   return (
     <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: '120px' }}>
@@ -416,7 +322,8 @@ function Ajustes() {
               telaAtual === 'relatorios' ? 'Relatórios de Usinagem' : 
               telaAtual === 'alunos' ? 'Gerenciar Alunos' : 
               telaAtual === 'projetos' ? 'Projetos e Estampos' : 
-              telaAtual === 'turmas' ? 'Gerenciar Semestres' : 'Ajustes do Sistema'}
+              telaAtual === 'turmas' ? 'Gerenciar Semestres' : 
+              telaAtual === 'estoque' ? 'Gestão de Estoque' : 'Ajustes do Sistema'}
           </h1>
         </div>
         {autenticado && telaAtual === 'menu' && (
@@ -445,32 +352,41 @@ function Ajustes() {
           {telaAtual === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
               
-              {/* NOVO MENU: TURMAS */}
               <div onClick={abrirTurmas} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '2px solid #8B5CF6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F5F3FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><BookOpen size={24} color="#8B5CF6" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: '#111827' }}>Gerenciar Semestres (Turmas)</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Crie novos anos letivos e alterne entre as turmas do sistema.</p></div>
+              </div>
+
+              <div onClick={abrirEstoque} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                <div style={{ backgroundColor: '#FFF7ED', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Package size={24} color="#F97316" /></div>
+                <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Estoque e Materiais</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Gerencie blocos de aço, componentes e registre entradas e saídas.</p></div>
               </div>
 
               <div onClick={abrirRelatorios} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F0F9FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><TrendingUp size={24} color="#0284C7" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Relatórios de Usinagem</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Analise atrasos, exporte dados e veja processos.</p></div>
               </div>
+              
               <div onClick={abrirProjetos} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F0FDF4', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><FolderPlus size={24} color="#16A34A" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Gerenciar Projetos</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Edite estampos, defina prazos e mude o status.</p></div>
               </div>
+              
               <div onClick={abrirAlunos} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FFF7ED', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Users size={24} color="#EA580C" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Gerenciar Alunos (Crachás)</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar, editar ou remover IDs de operadores.</p></div>
               </div>
+              
               <div onClick={abrirHistorico} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #FEE2E2', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FEF2F2', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><AlertOctagon size={24} color="#DC2626" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Relatório de Ocorrências</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Visualize quebras, paradas e relatos dos alunos.</p></div>
               </div>
+              
               <div onClick={() => navigate('/correcoes')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#FEF9C3', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Clock size={24} color="#CA8A04" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Correção de Apontamentos</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Ajustar manualmente horários que ficaram em aberto.</p></div>
               </div>
+              
               <div onClick={() => navigate('/engenharia')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F3F4F6', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Settings size={24} color="#4B5563" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Engenharia e Roteiros</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar peças, editar processos, sequência e tempos alvo.</p></div>
@@ -479,7 +395,7 @@ function Ajustes() {
           )}
 
           {/* ============================================== */}
-          {/* TELA DE TURMAS E SEMESTRES (NOVA)              */}
+          {/* TELA DE TURMAS E SEMESTRES                     */}
           {/* ============================================== */}
           {telaAtual === 'turmas' && (
             <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
@@ -493,7 +409,7 @@ function Ajustes() {
               </div>
 
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Histórico de Turmas (Alternar Visão)</h3>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Histórico de Turmas</h3>
                 {carregandoTurmas ? (
                   <p style={{ color: '#6B7280', textAlign: 'center' }}>Buscando turmas...</p>
                 ) : turmas.length === 0 ? (
@@ -525,7 +441,6 @@ function Ajustes() {
           {telaAtual === 'projetos' && (
             <div style={{ maxWidth: '900px', margin: '0 auto', marginTop: '10px' }}>
               
-              {/* Formulário Centralizado de Cadastro/Edição */}
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: idEdicao ? '2px solid #0284C7' : '1px solid #E5E7EB', marginBottom: '32px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 {idEdicao && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -568,7 +483,6 @@ function Ajustes() {
                 </form>
               </div>
 
-              {/* Lista Dinâmica de Projetos */}
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Projetos Ativos (Turma Atual)</h3>
                 {carregandoProjetos ? (
@@ -579,7 +493,6 @@ function Ajustes() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {projetos.map(proj => (
                       <div key={proj.projeto_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #E5E7EB', flexWrap: 'wrap', gap: '12px' }}>
-                        
                         <div>
                           <h4 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h4>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -595,7 +508,6 @@ function Ajustes() {
                             </select>
                           </div>
                         </div>
-                        
                         <div style={{ display: 'flex', gap: '12px' }}>
                           <button onClick={() => prepararEdicao(proj)} style={{ background: 'none', border: 'none', color: '#0284C7', cursor: 'pointer', padding: '4px' }} title="Editar"><Edit2 size={20} /></button>
                           <button onClick={() => handleDeletarProjeto(proj.projeto_id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px' }} title="Apagar"><Trash2 size={20} /></button>
@@ -766,17 +678,14 @@ function Ajustes() {
               )}
             </div>
           )}
-        </div>
-      )}
 
-
-      {/* ============================================== */}
+          {/* ============================================== */}
           {/* TELA DE ESTOQUE (NOVO)                         */}
           {/* ============================================== */}
           {telaAtual === 'estoque' && (
             <div style={{ maxWidth: '900px', margin: '0 auto', marginTop: '10px' }}>
               
-             {/* CADASTRAR OU EDITAR MATERIAL */}
+              {/* CADASTRAR OU EDITAR MATERIAL */}
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: idEdicaoEstoque ? '2px solid #EA580C' : '1px solid #E5E7EB', marginBottom: '32px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h3 style={{ margin: 0, fontSize: '16px', color: idEdicaoEstoque ? '#EA580C' : '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -877,9 +786,11 @@ function Ajustes() {
             </div>
           )}
 
+        </div>
+      )}
+
       {/* ============================================== */}
-      {/* MODAL DE ENTRADA/SAÍDA DE ESTOQUE (NOVO)       */}
-      {/* (Cole este trecho ANTES do Menu Inferior Fixo) */}
+      {/* MODAL DE ENTRADA/SAÍDA DE ESTOQUE              */}
       {/* ============================================== */}
       {modalMovimentacao && itemMovimentacao && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
@@ -924,35 +835,16 @@ function Ajustes() {
               <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: tipoMovimentacao === 'Entrada' ? '#16A34A' : '#DC2626', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: 'pointer' }}>
                 Confirmar {tipoMovimentacao}
               </button>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-              <div>
-                <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' }}>{item.categoria}</span>
-                <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{item.codigo_interno || 'S/N'}</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => prepararEdicaoEstoque(item)} style={{ background: 'none', border: 'none', color: '#EA580C', cursor: 'pointer', padding: '0' }} title="Editar"><Edit2 size={16} /></button>
-                  <button onClick={() => deletarItemEstoque(item.id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '0' }} title="Apagar"><Trash2 size={16} /></button>
-              </div>
-            </div> 
             </form>
           </div>
         </div>
       )}
-
-
-
 
       {/* MENU INFERIOR FIXO */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
         <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
         <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span></div>
         <div onClick={() => setTelaAtual('menu')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>AJUSTES</span></div>
-        <div onClick={abrirEstoque} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
-            <div style={{ backgroundColor: '#FFF7ED', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Package size={24} color="#F97316" /></div>
-            <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Estoque e Materiais</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Gerencie blocos de aço, componentes e registre entradas e saídas.</p></div>
-                       
-        </div>
       </div>
     </div>
   );
