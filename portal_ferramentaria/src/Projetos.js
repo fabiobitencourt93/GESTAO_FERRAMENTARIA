@@ -198,7 +198,17 @@ function Projetos() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               
-              
+              {/* === INÍCIO DA ÁREA DA IMAGEM + TÍTULOS === */}
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                
+                {/* MINIATURA DA IMAGEM */}
+                {proj.imagem ? (
+                  <img src={proj.imagem} alt="Referência" style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E5E7EB', flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: '80px', height: '80px', borderRadius: '8px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #D1D5DB', flexShrink: 0 }}>
+                    <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' }}>Sem Foto</span>
+                  </div>
+                )}
               <div>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
                    <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
@@ -224,8 +234,11 @@ function Projetos() {
               <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Conclusão Real</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_conclusao || 'Aguardando conclusão'}</span></div>
             </div>
           </div>
-        ))}
       </div>
+      
+        ))}
+
+      </div>  
 
       {/* MODAL DE ATALHO PARA LIMPEZA */}
       {modalLimpeza && (
