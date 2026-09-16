@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Home, Bell, LayoutGrid, BarChart2, Settings, AlertTriangle, CheckCircle2, Trash2, Undo2, Monitor, Play, Square, X, Sparkles } from 'lucide-react';
+import { ChevronLeft, Home, Bell, LayoutGrid, BarChart2, Settings, AlertTriangle, CheckCircle2, Trash2, Undo2, Monitor, Play, Square, X, Sparkles, FolderPlus } from 'lucide-react';
 
 function Projetos() {
   const navigate = useNavigate();
@@ -197,6 +197,8 @@ function Projetos() {
             style={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              
+              
               <div>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
                    <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
