@@ -421,4 +421,71 @@ app.put(['/api/projetos/:id', '/api/projetos/:id/editar'], async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 }); 
 
+
+
+
+
+
+// ==========================================
+// ROTAS DE ESTOQUE (MATERIAIS E COMPONENTES)
+// ==========================================
+
+// 1. Listar todo o estoque
+app.get('/api/estoque', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM estoque_itens ORDER BY categoria, descricao ASC');
+        res.json(result.rows);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 2. Cadastrar novo material/componente
+app.post('/api/estoque', async (req, res) => {
+    try {
+        const { codigo_interno, descricao, categoria, especificacao, estoque_minimo } = req.body;
+        
+        // Forçamos 'Unid' como unidade de medida conforme sua regra
+        const result = await pool.query(
+            `INSERT INTO estoque_itens (codigo_interno, descricao, categoria, especificacao, unidade_medida, estoque_minimo) 
+             VALUES ($1, $2, $3, $4, 'Unid', $5) RETURNING *`,
+            [codigo_interno || null, descricao, categoria, especificacao, estoque_minimo || 0]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) { 
+        if (err.code === '23505') return res.status(400).json({ error: 'Já existe um item com este código interno.' });
+        res.status(500).json({ error: err.message }); 
+    }
+});
+
+// 3. Movimentar Estoque (Entrada ou Saída Inteligente)
+app.post('/api/estoque/movimentar', async (req, res) => {
+    const { item_id, tipo_movimento, quantidade, operador_id, projeto_id, observacao } = req.body;
+    
+    try {
+        await pool.query('BEGIN'); // Inicia uma transação segura (Kardex + Saldo)
+        
+        // Salva o registro no histórico de movimentações
+        await pool.query(
+            `INSERT INTO estoque_movimentacoes (item_id, tipo_movimento, quantidade, operador_id, projeto_id, observacao) 
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [item_id, tipo_movimento, quantidade, operador_id || null, projeto_id || null, observacao]
+        );
+
+        // Atualiza a quantidade na tabela principal somando ou subtraindo
+        const sinal = tipo_movimento === 'Entrada' ? '+' : '-';
+        await pool.query(
+            `UPDATE estoque_itens SET quantidade_atual = quantidade_atual ${sinal} $1 WHERE id = $2`,
+            [quantidade, item_id]
+        );
+
+        await pool.query('COMMIT'); // Salva as duas operações juntas
+        res.json({ message: `Movimentação de ${tipo_movimento} realizada com sucesso!` });
+    } catch (err) { 
+        await pool.query('ROLLBACK'); // Desfaz se algo der errado, evitando falhas no saldo
+        res.status(500).json({ error: err.message }); 
+    }
+});
+
+
+
+
 app.listen(port, () => { console.log(`Servidor rodando na porta ${port}`); });
