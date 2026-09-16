@@ -220,10 +220,6 @@ function Projetos() {
                   <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>ID do Projeto: {proj.projeto_id} | Estampo: {proj.estampo} (ID: {proj.estampo_id})</p>
                 </div>
               </div>
-              <div>
-                 
-                 <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>ID do Projeto: {proj.projeto_id} | Estampo: {proj.estampo} (ID: {proj.estampo_id})</p>
-              </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                  {proj.status === 'Concluído' ? (
