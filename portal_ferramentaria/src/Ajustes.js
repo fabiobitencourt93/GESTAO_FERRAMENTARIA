@@ -287,7 +287,7 @@ function Ajustes() {
   const [novoEstoqueCat, setNovoEstoqueCat] = useState('Matéria-Prima');
   const [novoEstoqueEsp, setNovoEstoqueEsp] = useState('');
   const [novoEstoqueMin, setNovoEstoqueMin] = useState('');
-
+  const [idEdicaoEstoque, setIdEdicaoEstoque] = useState(null); // <-- NOVO ESTADO AQUI
   const [modalMovimentacao, setModalMovimentacao] = useState(false);
   const [itemMovimentacao, setItemMovimentacao] = useState(null);
   const [tipoMovimentacao, setTipoMovimentacao] = useState('Entrada');
@@ -312,22 +312,51 @@ function Ajustes() {
       .catch(console.error);
   };
 
-  const cadastrarItemEstoque = async (e) => {
+  const prepararEdicaoEstoque = (item) => {
+    setIdEdicaoEstoque(item.id);
+    setNovoEstoqueCodigo(item.codigo_interno || '');
+    setNovoEstoqueDesc(item.descricao || '');
+    setNovoEstoqueCat(item.categoria || 'Matéria-Prima');
+    setNovoEstoqueEsp(item.especificacao || '');
+    setNovoEstoqueMin(item.estoque_minimo || '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelarEdicaoEstoque = () => {
+    setIdEdicaoEstoque(null);
+    setNovoEstoqueCodigo(''); setNovoEstoqueDesc(''); setNovoEstoqueCat('Matéria-Prima');
+    setNovoEstoqueEsp(''); setNovoEstoqueMin('');
+  };
+
+  const cadastrarOuEditarItemEstoque = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://gestao-ferramentaria.onrender.com/api/estoque', {
-        codigo_interno: novoEstoqueCodigo,
-        descricao: novoEstoqueDesc,
-        categoria: novoEstoqueCat,
-        especificacao: novoEstoqueEsp,
-        estoque_minimo: novoEstoqueMin
-      });
-      alert("Material cadastrado no estoque!");
-      setNovoEstoqueCodigo(''); setNovoEstoqueDesc(''); setNovoEstoqueEsp(''); setNovoEstoqueMin('');
+      if (idEdicaoEstoque) {
+        await axios.put(`https://gestao-ferramentaria.onrender.com/api/estoque/${idEdicaoEstoque}`, {
+          codigo_interno: novoEstoqueCodigo, descricao: novoEstoqueDesc, categoria: novoEstoqueCat,
+          especificacao: novoEstoqueEsp, estoque_minimo: novoEstoqueMin
+        });
+        alert("Material atualizado com sucesso!");
+      } else {
+        await axios.post('https://gestao-ferramentaria.onrender.com/api/estoque', {
+          codigo_interno: novoEstoqueCodigo, descricao: novoEstoqueDesc, categoria: novoEstoqueCat,
+          especificacao: novoEstoqueEsp, estoque_minimo: novoEstoqueMin
+        });
+        alert("Material cadastrado no estoque!");
+      }
+      cancelarEdicaoEstoque();
       carregarEstoqueDoBanco();
     } catch (error) {
-      alert(error.response?.data?.error || "Erro ao cadastrar material.");
+      alert(error.response?.data?.error || "Erro ao salvar material.");
     }
+  };
+
+  const deletarItemEstoque = async (id) => {
+    if (!window.confirm("Tem certeza que deseja APAGAR este material? Todo o histórico de entradas e saídas dele também será perdido!")) return;
+    try {
+      await axios.delete(`https://gestao-ferramentaria.onrender.com/api/estoque/${id}`);
+      carregarEstoqueDoBanco();
+    } catch (error) { alert("Erro ao deletar material."); }
   };
 
   const abrirPainelMovimentacao = (item, tipo) => {
@@ -747,10 +776,18 @@ function Ajustes() {
           {telaAtual === 'estoque' && (
             <div style={{ maxWidth: '900px', margin: '0 auto', marginTop: '10px' }}>
               
-              {/* CADASTRAR NOVO MATERIAL */}
-              <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '32px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}><Archive size={18} color="#F97316"/> Cadastrar Novo Material</h3>
-                <form onSubmit={cadastrarItemEstoque}>
+             {/* CADASTRAR OU EDITAR MATERIAL */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: idEdicaoEstoque ? '2px solid #EA580C' : '1px solid #E5E7EB', marginBottom: '32px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ margin: 0, fontSize: '16px', color: idEdicaoEstoque ? '#EA580C' : '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {idEdicaoEstoque ? <Edit2 size={18} /> : <Archive size={18} color="#F97316"/>}
+                    {idEdicaoEstoque ? `Editando Material (ID: ${idEdicaoEstoque})` : 'Cadastrar Novo Material'}
+                  </h3>
+                  {idEdicaoEstoque && (
+                    <button onClick={cancelarEdicaoEstoque} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '600' }}><X size={16} /> Cancelar</button>
+                  )}
+                </div>
+                <form onSubmit={cadastrarOuEditarItemEstoque}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                     <div>
                       <label style={estiloLabel}>Categoria *</label>
@@ -777,8 +814,8 @@ function Ajustes() {
                       <input type="number" placeholder="Ex: 5" value={novoEstoqueMin} onChange={e => setNovoEstoqueMin(e.target.value)} style={estiloInput} />
                     </div>
                   </div>
-                  <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
-                    <Plus size={18} /> Salvar no Cadastro
+                  <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: idEdicaoEstoque ? '#EA580C' : '#111827', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                    {idEdicaoEstoque ? 'Salvar Alterações' : <><Plus size={18} /> Salvar no Cadastro</>}
                   </button>
                 </form>
               </div>
@@ -801,9 +838,16 @@ function Ajustes() {
                       return (
                         <div key={item.id} style={{ padding: '16px', backgroundColor: semEstoque ? '#FEF2F2' : emAlerta ? '#FFFBEB' : '#F9FAFB', borderRadius: '12px', border: `1px solid ${semEstoque ? '#FCA5A5' : emAlerta ? '#FDE047' : '#E5E7EB'}`, display: 'flex', flexDirection: 'column' }}>
                           
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' }}>{item.categoria}</span>
-                            <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{item.codigo_interno || 'S/N'}</span>
+                          {/* CABEÇALHO COM BOTÕES DE EDIÇÃO */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                            <div>
+                              <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' }}>{item.categoria}</span>
+                              <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{item.codigo_interno || 'S/N'}</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button onClick={() => prepararEdicaoEstoque(item)} style={{ background: 'none', border: 'none', color: '#EA580C', cursor: 'pointer', padding: '0' }} title="Editar"><Edit2 size={16} /></button>
+                              <button onClick={() => deletarItemEstoque(item.id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '0' }} title="Apagar"><Trash2 size={16} /></button>
+                            </div>
                           </div>
                           
                           <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: '#111827', fontWeight: '700' }}>{item.descricao}</h4>
@@ -834,8 +878,7 @@ function Ajustes() {
           )}
 
       {/* ============================================== */}
-      {/* MODAL DE ENTRADA/SAÍDA DE ESTOQUE (NOVO)       */}
-      {/* (Cole este trecho ANTES do Menu Inferior Fixo) */}
+      {/* MODAL DE ENTRADA/SAÍDA DE ESTOQUE              */}
       {/* ============================================== */}
       {modalMovimentacao && itemMovimentacao && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
@@ -885,18 +928,11 @@ function Ajustes() {
         </div>
       )}
 
-
-
-
       {/* MENU INFERIOR FIXO */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
         <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
         <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span></div>
         <div onClick={() => setTelaAtual('menu')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>AJUSTES</span></div>
-        <div onClick={abrirEstoque} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
-            <div style={{ backgroundColor: '#FFF7ED', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Package size={24} color="#F97316" /></div>
-            <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Estoque e Materiais</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Gerencie blocos de aço, componentes e registre entradas e saídas.</p></div>
-        </div>
       </div>
     </div>
   );

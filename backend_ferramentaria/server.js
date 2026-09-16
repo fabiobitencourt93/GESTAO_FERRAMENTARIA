@@ -456,6 +456,34 @@ app.post('/api/estoque', async (req, res) => {
     }
 });
 
+
+// 2.1 Editar material do estoque
+app.put('/api/estoque/:id', async (req, res) => {
+    try {
+        const { codigo_interno, descricao, categoria, especificacao, estoque_minimo } = req.body;
+        await pool.query(
+            `UPDATE estoque_itens 
+             SET codigo_interno = $1, descricao = $2, categoria = $3, especificacao = $4, estoque_minimo = $5 
+             WHERE id = $6`,
+            [codigo_interno || null, descricao, categoria, especificacao, estoque_minimo || 0, req.params.id]
+        );
+        res.json({ message: 'Item atualizado com sucesso!' });
+    } catch (err) {
+        if (err.code === '23505') return res.status(400).json({ error: 'Já existe um item com este código interno.' });
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 2.2 Excluir material do estoque
+app.delete('/api/estoque/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM estoque_itens WHERE id = $1', [req.params.id]);
+        res.json({ message: 'Item excluído com sucesso!' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+
+
 // 3. Movimentar Estoque (Entrada ou Saída Inteligente)
 app.post('/api/estoque/movimentar', async (req, res) => {
     const { item_id, tipo_movimento, quantidade, operador_id, projeto_id, observacao } = req.body;
