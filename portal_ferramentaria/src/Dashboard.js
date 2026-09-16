@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap } from 'lucide-react';
+// IMPORTANTE: Adicionamos o ícone 'Flame' na lista abaixo!
+import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame } from 'lucide-react';
 
 function Producao() {
   const navigate = useNavigate();
@@ -63,6 +64,12 @@ function Producao() {
       <style>{`
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .medalha-hover:hover { transform: scale(1.1); transition: transform 0.2s; }
+        
+        /* NOVA ANIMAÇÃO DA CHAMA DO 4º LUGAR */
+        @keyframes fire { 
+          0% { filter: drop-shadow(0 0 2px #EF4444); transform: scale(1); } 
+          100% { filter: drop-shadow(0 0 8px #DC2626); transform: scale(1.15); } 
+        }
       `}</style>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', backgroundColor: modoTV ? '#111827' : 'transparent', color: modoTV ? '#FFFFFF' : '#111827', transition: 'all 0.3s' }}>
@@ -134,14 +141,39 @@ function Producao() {
                 } else if (idx === 2) {
                   corBordaAvatar = '#B45309'; 
                   iconePodio = '🥉';
+                } 
+                // Ameaça do 4º Lugar!
+                else if (idx === 3) {
+                  corBordaAvatar = '#EF4444'; // Borda Vermelha
+                  sombraAvatar = '0 0 10px rgba(239, 68, 68, 0.3)';
+                  iconePodio = <Flame size={16} color="#DC2626" style={{ animation: 'fire 0.6s infinite alternate' }} />;
                 }
               }
 
-              // Destravando Conquistas baseadas no Nível
               const medalhas = [];
               if (nivel >= 2) medalhas.push({ id: 'mestre-5s', nome: 'Mestre do 5S', cor: '#EAB308', fallback: <Shield size={18} color="#FDE047" /> });
               if (nivel >= 5) medalhas.push({ id: 'operador-ferro', nome: 'Operador de Ferro', cor: '#9CA3AF', fallback: <Wrench size={18} color="#E5E7EB" /> });
               if (nivel >= 10) medalhas.push({ id: 'lenda-cnc', nome: 'Lenda CNC', cor: '#8B5CF6', fallback: <Zap size={18} color="#C4B5FD" /> });
+
+              // Lógica para calcular XP faltante do 4º lugar
+              let bannerCacada = null;
+              if (idx === 3 && xp > 0 && operadores[2]) {
+                const xpTerceiro = operadores[2].xp_acumulado || 0;
+                const diferenca = xpTerceiro - xp;
+                // Pega só o primeiro nome do 3º colocado para caber bonito na tela
+                const nomeTerceiro = operadores[2].operador_nome.split(' ')[0]; 
+                
+                if (diferenca > 0) {
+                  bannerCacada = (
+                    <div style={{ backgroundColor: '#FEF2F2', padding: '8px 12px', borderRadius: '6px', border: '1px dashed #FCA5A5', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Flame size={16} color="#DC2626" style={{ animation: 'fire 0.6s infinite alternate' }} />
+                      <span style={{ fontSize: '11.5px', color: '#991B1B', fontWeight: '700' }}>
+                        Na caçada! Faltam {diferenca} XP para roubar o pódio de {nomeTerceiro}!
+                      </span>
+                    </div>
+                  );
+                }
+              }
 
               return (
                 <div key={op.operador_id} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: `2px solid ${rodando ? '#22C55E' : corFundo}`, display: 'flex', flexDirection: 'column' }}>
@@ -180,7 +212,6 @@ function Producao() {
                           {op.operador_nome}
                         </span>
                         
-                        {/* RACK DE CONQUISTAS */}
                         {medalhas.length > 0 && (
                           <div style={{ display: 'flex', gap: '6px' }}>
                             {medalhas.map(m => (
@@ -190,7 +221,6 @@ function Producao() {
                                 display: 'flex', justifyContent: 'center', alignItems: 'center',
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)', position: 'relative', overflow: 'hidden'
                               }}>
-                                {/* Imagem da medalha. Se falhar, mostra o ícone de aço */}
                                 <img src={`/medalhas/${m.id}.jpg`} alt={m.nome}
                                   onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -236,8 +266,10 @@ function Producao() {
                       </div>
                     )}
 
-                    {/* BARRA DE PROGRESSO DE NÍVEL */}
-                    <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
+                    {/* BANNER DE CAÇADA EXCLUSIVO DO 4º LUGAR INJETADO AQUI */}
+                    {bannerCacada}
+
+                    <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                         <span style={{ fontSize: '11px', fontWeight: '600', color: '#6B7280' }}>Próximo: Nível {nivel + 1}</span>
                         <span style={{ fontSize: '11px', fontWeight: '800', color: '#111827' }}>{progresso} / 100 XP</span>
