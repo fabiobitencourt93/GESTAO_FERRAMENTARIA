@@ -247,41 +247,7 @@ app.put('/api/apontamentos/finalizar', async (req, res) => {
     }
 });
 
-// ==========================================
-// ROTA 5.1: Encerrar Apontamento e Marcar 100% Concluído
-// ==========================================
-app.put('/api/apontamentos/finalizar-100', async (req, res) => {
-    const { processo_id, operador_id, ocorrencia } = req.body;
-    try {
-        // 1. Para o cronômetro do aluno e salva a ocorrência
-        await pool.query(`
-            UPDATE apontamentos 
-            SET data_hora_fim = CURRENT_TIMESTAMP,
-                ocorrencia = $3
-            WHERE processo_id = $1 AND operador_id = $2 AND data_hora_fim IS NULL
-        `, [processo_id, operador_id, ocorrencia || null]);
 
-        // 2. Marca a operação como 100% no roteiro
-        await pool.query(`
-            UPDATE processos 
-            SET status = 'Concluído' 
-            WHERE id = $1
-        `, [processo_id]);
-
-        // 3. MOTOR DE GAMIFICAÇÃO CORRIGIDO: Cálculo nativo de inteiros
-        await pool.query(`
-            UPDATE operadores 
-            SET xp_acumulado = COALESCE(xp_acumulado, 0) + 50,
-                nivel = ((COALESCE(xp_acumulado, 0) + 50) / 100) + 1
-            WHERE id = $1
-        `, [operador_id]);
-
-        res.json({ message: 'Operação 100% concluída e +50 XP ganhos!' });
-    } catch (error) {
-        console.error("Erro ao concluir 100%:", error);
-        res.status(500).send('Erro interno ao concluir.');
-    }
-});
 
 // ==========================================
 // ROTA: Lançamento Manual (Retroativo)
