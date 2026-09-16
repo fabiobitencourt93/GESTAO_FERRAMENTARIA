@@ -45,6 +45,7 @@ function Ajustes() {
   const [novoAlunoNome, setNovoAlunoNome] = useState('');
   const [carregandoAlunos, setCarregandoAlunos] = useState(false);
   const [novoProjImagem, setNovoProjImagem] = useState('');
+  
 
   const [projetos, setProjetos] = useState([]);
   const [carregandoProjetos, setCarregandoProjetos] = useState(false);
@@ -275,8 +276,12 @@ const baixarRelatorioEstoque = async () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const cancelarEdicao = () => { setIdEdicao(null); setNovoProjNome(''); setNovoProjTipo(''); setNovoProjInicio(''); setNovoProjFim(''); };
+  const cancelarEdicao = () => { 
+    setIdEdicao(null); setNovoProjNome(''); setNovoProjTipo(''); setNovoProjInicio(''); setNovoProjFim(''); setNovoProjImagem(''); // <-- LIMPA A IMAGEM
+  };    
 
+
+  
   const handleUploadImagem = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -502,6 +507,11 @@ const baixarRelatorioEstoque = async () => {
                     <div>
                       <label style={estiloLabel}>Previsão Fim</label>
                       <input type="date" value={novoProjFim} onChange={e => setNovoProjFim(e.target.value)} style={estiloInput} />
+                    </div>
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <label style={estiloLabel}>Imagem de Referência (Opcional)</label>
+                      <input type="file" accept="image/*" onChange={handleUploadImagem} style={{...estiloInput, padding: '8px'}} />
+                      {novoProjImagem && <img src={novoProjImagem} alt="Preview" style={{ marginTop: '8px', height: '64px', borderRadius: '8px', border: '1px solid #E5E7EB', objectFit: 'cover' }} />}
                     </div>
                   </div>
                   <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#0284C7', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
