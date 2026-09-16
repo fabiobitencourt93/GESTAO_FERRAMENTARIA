@@ -1,15 +1,5 @@
--- 1. Criando o Projeto
-INSERT INTO projetos (nome, cliente, data_inicio) 
-VALUES ('Destacador Macho', 'SENAI', '2026-01-19'),('Destacador Fêmea', 'SENAI', '2026-01-19'),('Crashform', 'SENAI', '2026-01-19');
-
--- 2. Criando os 3 Estampos para o Projeto (ID = 1)
-INSERT INTO estampos (projeto_id, nome, tipo) VALUES 
-(1, 'Estampo Progressivo 01 - Destacador Macho', 'Progressivo'),
-(2, 'Estampo Progressivo 02 - Destacador Fêmea', 'Progressivo'),
-(3, 'Estampo de Repuxo - Crashform', 'Repuxo');
-
 -- =======================================================================
--- ESTAMPO 1: PROGRESSIVO (DESTACADOR MACHO) - ID 2
+-- ESTAMPO 2: PROGRESSIVO (DESTACADOR FÊMEA) - ID 2
 -- =======================================================================
 -- Peças
 INSERT INTO pecas (estampo_id, pos, quantidade, nome, material, tratamento_termico) VALUES 
@@ -123,40 +113,3 @@ INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida,
 (4, 7, 'Cortar Janelas dos Insertos', 'Erosão a fio', 24),
 (4, 8, 'Montagem dos Insertos', 'Retífica Plana e Bancada', 24),
 (4, 9, 'Cortar Perfis dos Insertos', 'Erosão a fio', 8);
-
-
-
-
--- =======================================================================
--- ESTAMPO 2: PROGRESSIVO (DOBRA) - ID 2
--- =======================================================================
--- Peças
-INSERT INTO pecas (estampo_id, nome, material) VALUES 
-(2, 'Matriz de Dobra', 'Aço D2'),
-(2, 'Punção de Dobra', 'Aço D2');
-
--- Processos Sequenciais do Punção DE DOBRA (ID 5)
-INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida) VALUES 
-(5, 1, 'Esquadrejamento', 'Fresadora'),
-(5, 2, 'Usinagem de Perfil 3D', 'Centro de Usinagem CNC'),
-(5, 3, 'Tratamento Térmico', 'Forno'),
-(5, 4, 'Retífica Plana (Base)', 'Retífica Plana'),
-(5, 5, 'Polimento nas áreas de atrito', 'Bancada (Manual)');
-
--- =======================================================================
--- ESTAMPO 3: REPUXO - ID 3
--- =======================================================================
--- Peças (Repuxo exige peças específicas de conformação)
-INSERT INTO pecas (estampo_id, nome, material) VALUES 
-(3, 'Punção de Repuxo', 'Ferro Fundido Nodular / Aço D2'),
-(3, 'Matriz Cavidade de Repuxo', 'Aço D2'),
-(3, 'Prensa-Chapas (Sujeitador)', 'Aço P20');
-
--- Processos Sequenciais da Matriz DE REPUXO (ID 7)
-INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida) VALUES 
-(7, 1, 'Faceamento e Esquadrejamento', 'Fresadora Grande Porte'),
-(7, 2, 'Desbaste de Cavidade 3D', 'Centro de Usinagem CNC'),
-(7, 3, 'Tratamento Térmico', 'Forno'),
-(7, 4, 'Acabamento Fino 3D', 'Centro de Usinagem CNC (Alta Rotação)'),
-(7, 5, 'Polimento Espelhado (Crucial p/ Repuxo)', 'Bancada (Chicote/Manual)'),
-(7, 6, 'Try-out e Ajuste de Folgas', 'Prensa de Try-out');
