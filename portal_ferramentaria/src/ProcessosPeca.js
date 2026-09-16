@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Activity, Clock, Timer, Home, CheckCircle, Monitor } from 'lucide-react';
+import { ChevronLeft, Bell, Play, Square, LayoutGrid, BarChart2, Settings, X, Activity, Clock, Timer, Home, CheckCircle, Monitor, Lock } from 'lucide-react';
 
 function ProcessosPeca() {
   const { id } = useParams();
@@ -40,8 +40,11 @@ function ProcessosPeca() {
   };
 
   const confirmarAcao = async () => {
-    if (!operadorId) return alert("Digite o ID do Aluno!");
+    if (!operadorId) return alert("Digite o ID do Aluno (Crachá)!");
     
+    // ==========================================
+    // AÇÃO 1: INICIAR OPERAÇÃO
+    // ==========================================
     if (tipoAcao === 'iniciar') {
       try {
         await axios.post('https://gestao-ferramentaria.onrender.com/api/apontamentos/iniciar', {
@@ -50,10 +53,14 @@ function ProcessosPeca() {
         });
         fecharModal();
         carregarProcessos(); 
+        alert('▶️ Operação iniciada com sucesso!');
       } catch (error) {
-        alert('Erro ao iniciar. O ID deste aluno existe?');
+        alert('❌ Erro ao iniciar. Verifique se o ID deste aluno está cadastrado.');
       }
     } 
+    // ==========================================
+    // AÇÃO 2: PAUSAR (PARCIAL)
+    // ==========================================
     else if (tipoAcao === 'finalizar') {
       try {
         await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
@@ -63,11 +70,19 @@ function ProcessosPeca() {
         });
         fecharModal();
         carregarProcessos(); 
+        alert('⏱️ Operação pausada com sucesso!');
       } catch (error) {
-        alert('Erro: ID incorreto ou apontamento não está aberto.');
+        alert('❌ ACESSO NEGADO: O número do crachá está incorreto ou a operação não está aberta.');
       }
     }
+    // ==========================================
+    // AÇÃO 3: CONCLUIR 100%
+    // ==========================================
     else if (tipoAcao === 'finalizar-100') {
+      // Confirmação extra pedindo a certeza do aluno
+      const certeza = window.confirm("ATENÇÃO: Você está marcando esta operação como 100% CONCLUÍDA. Confirma esta ação?");
+      if (!certeza) return; 
+
       try {
         await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar-100', {
           processo_id: processoSelecionado.id, 
@@ -76,8 +91,9 @@ function ProcessosPeca() {
         });
         fecharModal();
         carregarProcessos(); 
+        alert('✅ Sucesso! Operação concluída em 100%!');
       } catch (error) {
-        alert('Erro ao concluir 100%. Verifique o ID.');
+        alert('❌ ACESSO NEGADO: O número do crachá está incorreto ou a operação não está aberta.');
       }
     }
   };
@@ -155,7 +171,7 @@ function ProcessosPeca() {
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => abrirModal(proc, 'iniciar')} style={{ backgroundColor: '#007A33', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: emAndamento ? 0.5 : 1 }} disabled={emAndamento}><Play size={20} fill="currentColor" /></button>
                   <button onClick={() => abrirModal(proc, 'finalizar')} style={{ backgroundColor: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: !emAndamento ? 0.5 : 1 }} disabled={!emAndamento}><Square size={18} fill="currentColor" /></button>
-                  <button onClick={() => abrirModal(proc, 'finalizar-100')} style={{ backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)' }}>100%</button>
+                  <button onClick={() => abrirModal(proc, 'finalizar-100')} style={{ backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)', opacity: !emAndamento ? 0.5 : 1 }} disabled={!emAndamento}>100%</button>
                 </div>
               </div>
             );
@@ -165,10 +181,13 @@ function ProcessosPeca() {
 
       {modalAberto && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
-          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', width: '90%', maxWidth: '340px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', width: '90%', maxWidth: '360px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            
+            {/* CABEÇALHO DO MODAL DINÂMICO */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827' }}>
-                {tipoAcao === 'iniciar' ? 'Iniciar Operação' : tipoAcao === 'finalizar-100' ? 'Concluir 100%' : 'Parar Operação'}
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {tipoAcao === 'iniciar' ? <Play size={20} color="#007A33"/> : tipoAcao === 'finalizar-100' ? <CheckCircle size={20} color="#16A34A"/> : <Lock size={20} color="#DC2626" />} 
+                {tipoAcao === 'iniciar' ? 'Iniciar Operação' : tipoAcao === 'finalizar-100' ? 'Concluir 100%' : 'Segurança da Máquina'}
               </h3>
               <button onClick={fecharModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 0 }}><X size={24} /></button>
             </div>
@@ -181,12 +200,30 @@ function ProcessosPeca() {
               </div>
             </div>
 
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Seu ID (Crachá)</label>
-            <input type="number" value={operadorId} onChange={(e) => setOperadorId(e.target.value)} placeholder="Ex: 20265" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', marginBottom: (tipoAcao === 'finalizar' || tipoAcao === 'finalizar-100') ? '16px' : '24px', backgroundColor: '#FAFBFC' }} />
+            {/* SE FOR INICIAR: INPUT NORMAL / SE FOR ENCERRAR: INPUT DE SEGURANÇA VERMELHO */}
+            {tipoAcao === 'iniciar' ? (
+              <>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Seu ID (Crachá)</label>
+                <input type="number" value={operadorId} onChange={(e) => setOperadorId(e.target.value)} placeholder="Ex: 20265" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', marginBottom: '24px', backgroundColor: '#FAFBFC' }} />
+              </>
+            ) : (
+              <div style={{ backgroundColor: '#FEF2F2', padding: '16px', borderRadius: '8px', border: '1px solid #FCA5A5', marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#991B1B', marginBottom: '8px' }}>
+                    Digite seu Crachá para confirmar o encerramento:
+                </label>
+                <input 
+                    type="number" 
+                    placeholder="Seu ID..." 
+                    value={operadorId} 
+                    onChange={(e) => setOperadorId(e.target.value)} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #FCA5A5', outline: 'none', fontSize: '15px', fontWeight: '600', boxSizing: 'border-box' }} 
+                />
+              </div>
+            )}
             
             {(tipoAcao === 'finalizar' || tipoAcao === 'finalizar-100') && (
               <>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Ocorrência (Opcional)</label>
+                <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#4B5563', fontWeight: '600' }}>Houve alguma ocorrência? (Opcional)</p>
                 <textarea 
                   value={ocorrencia} 
                   onChange={(e) => setOcorrencia(e.target.value)} 
