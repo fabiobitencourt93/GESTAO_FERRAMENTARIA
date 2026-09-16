@@ -12,7 +12,7 @@ function Ajustes() {
   // ==========================================
   // 1. ESTADOS DE AUTENTICAÇÃO E NAVEGAÇÃO
   // ==========================================
-  const [autenticado, setAutenticado] = useState(false);
+  const [autenticado, setAutenticado] = useState(true);
   const [senha, setSenha] = useState('');
   const [erroSenha, setErroSenha] = useState(false);
   const [carregandoLogin, setCarregandoLogin] = useState(false);
