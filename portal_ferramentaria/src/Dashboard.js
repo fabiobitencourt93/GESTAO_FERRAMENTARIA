@@ -8,6 +8,8 @@ function Producao() {
   const [operadores, setOperadores] = useState([]);
   const [modoTV, setModoTV] = useState(false);
   const [agora, setAgora] = useState(new Date());
+  
+  // Memória para o React saber quais alunos ainda não têm foto
   const [imagensComErro, setImagensComErro] = useState({});
 
   const carregarDadosAoVivo = () => {
@@ -91,14 +93,14 @@ function Producao() {
               const rodando = !!op.data_hora_inicio;
               const ocioso = op.ocioso_minutos ? Number(op.ocioso_minutos) : 0;
               
-              let corForte = '#6B7280'; // Cinza (padrão / aluno recém cadastrado)
+              let corForte = '#6B7280'; // Cinza (padrão)
               let corFundo = '#F3F4F6';
               let textoStatus = 'LIVRE / SEM TAREFA';
               let IconeCentro = CheckCircle;
 
               if (rodando) {
                 corForte = '#22C55E'; // Verde
-                corFundo = '#22C55E'; // Fundo sólido para a tarja superior
+                corFundo = '#22C55E'; 
                 textoStatus = 'EM OPERAÇÃO';
               } else if (ocioso >= 60) {
                 corForte = '#DC2626'; // Vermelho
@@ -139,9 +141,9 @@ function Producao() {
               }
 
               return (
-                <div key={idx} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: `2px solid ${rodando ? '#22C55E' : corFundo}`, display: 'flex', flexDirection: 'column' }}>
+                <div key={op.operador_id} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: `2px solid ${rodando ? '#22C55E' : corFundo}`, display: 'flex', flexDirection: 'column' }}>
                   
-                  {/* Tarja Superior Dinâmica (MANTIDA INTACTA) */}
+                  {/* Tarja Superior Dinâmica */}
                   <div style={{ backgroundColor: corFundo, color: rodando ? '#FFFFFF' : corForte, padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: '800', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                       {textoStatus}
@@ -152,43 +154,27 @@ function Producao() {
                   {/* Corpo do Card */}
                   <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                     
-                    {/* Cabeçalho do Aluno com Caricatura e Pódio */}
+                    {/* Cabeçalho do Aluno com Caricatura Automática e Pódio */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
                       
-                      {/* Avatar Heroico */}
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        {/* Avatar Heroico */}
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
-  <img 
-    // Se a foto do aluno não existir, gera um avatar automático com as iniciais dele!
-    src={imagensComErro[op.operador_id] 
-      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=E5E7EB&color=374151&size=64&bold=true` 
-      : `/avatares/${op.operador_id}.jpg`} 
-    alt={`Avatar de ${op.operador_nome}`}
-    onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
-    style={{ 
-      width: '64px', 
-      height: '64px', 
-      borderRadius: '50%', 
-      objectFit: 'cover',
-      border: `3px solid ${corBordaAvatar}`,
-      boxShadow: sombraAvatar,
-      backgroundColor: '#F3F4F6'
-    }} 
-  />
-  {/* Selo do Pódio */}
-  {iconePodio && (
-    <div style={{ 
-      position: 'absolute', bottom: '-4px', right: '-4px', 
-      backgroundColor: '#FFFFFF', borderRadius: '50%', 
-      width: '26px', height: '26px', display: 'flex', 
-      justifyContent: 'center', alignItems: 'center',
-      fontSize: '14px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' 
-    }}>
-      {iconePodio}
-    </div>
-  )}
-                      </div>
+                        <img 
+                          // A MÁGICA: Se der erro, gera as iniciais do aluno. Se não, tenta a foto.
+                          src={imagensComErro[op.operador_id] 
+                            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=E5E7EB&color=374151&size=64&bold=true` 
+                            : `/avatares/${op.operador_id}.jpg`} 
+                          alt={`Avatar de ${op.operador_nome}`}
+                          onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
+                          style={{ 
+                            width: '64px', 
+                            height: '64px', 
+                            borderRadius: '50%', 
+                            objectFit: 'cover',
+                            border: `3px solid ${corBordaAvatar}`,
+                            boxShadow: sombraAvatar,
+                            backgroundColor: '#F3F4F6'
+                          }} 
+                        />
                         {/* Selo do Pódio */}
                         {iconePodio && (
                           <div style={{ 
@@ -214,7 +200,7 @@ function Producao() {
                       </div>
                     </div>
 
-                    {/* Informações de Operação (MANTIDO INTACTO) */}
+                    {/* Informações de Operação */}
                     {rodando ? (
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                         <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%', marginBottom: '16px' }}></div>
@@ -247,7 +233,7 @@ function Producao() {
                       </div>
                     )}
 
-                    {/* BARRA DE EXPERIÊNCIA (XP) FIXA NO RODAPÉ DO CARD */}
+                    {/* BARRA DE EXPERIÊNCIA (XP) */}
                     <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                         <span style={{ fontSize: '11px', fontWeight: '600', color: '#6B7280' }}>Progresso Nvl {nivel + 1}</span>
@@ -257,7 +243,7 @@ function Producao() {
                         <div style={{ 
                           width: `${progresso}%`, 
                           height: '100%', 
-                          backgroundColor: '#0284C7', // Azul Escuro SENAI
+                          backgroundColor: '#0284C7', // Azul SENAI
                           transition: 'width 0.5s ease-out' 
                         }}></div>
                       </div>
