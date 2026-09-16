@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Lock, Users, Clock, Settings, AlertOctagon, LayoutGrid, BarChart2, User, Wrench, Calendar, ClipboardList, Key, TrendingUp, Filter, AlertTriangle, Plus, Trash2, FolderPlus, Download, Edit2, X } from 'lucide-react';
+import { ChevronLeft, Lock, Users, Clock, Settings, AlertOctagon, LayoutGrid, BarChart2, User, Wrench, Calendar, ClipboardList, Key, TrendingUp, Filter, AlertTriangle, Plus, Trash2, FolderPlus, Download, Edit2, X, BookOpen } from 'lucide-react';
 
 function Ajustes() {
   const navigate = useNavigate();
@@ -16,7 +16,14 @@ function Ajustes() {
   const [telaAtual, setTelaAtual] = useState('menu'); 
   
   // ==========================================
-  // 2. ESTADOS: OCORRÊNCIAS & RELATÓRIOS
+  // 2. ESTADOS: TURMAS / SEMESTRES (NOVO)
+  // ==========================================
+  const [turmas, setTurmas] = useState([]);
+  const [carregandoTurmas, setCarregandoTurmas] = useState(false);
+  const [nomeNovaTurma, setNomeNovaTurma] = useState('');
+
+  // ==========================================
+  // 3. ESTADOS: OCORRÊNCIAS & RELATÓRIOS
   // ==========================================
   const [ocorrencias, setOcorrencias] = useState([]);
   const [carregandoOcorrencias, setCarregandoOcorrencias] = useState(false);
@@ -28,16 +35,13 @@ function Ajustes() {
   const [agrupamento, setAgrupamento] = useState('maquina'); 
 
   // ==========================================
-  // 3. ESTADOS: ALUNOS (CRACHÁS)
+  // 4. ESTADOS: ALUNOS E PROJETOS
   // ==========================================
   const [alunos, setAlunos] = useState([]);
   const [novoAlunoId, setNovoAlunoId] = useState('');
   const [novoAlunoNome, setNovoAlunoNome] = useState('');
   const [carregandoAlunos, setCarregandoAlunos] = useState(false);
 
-  // ==========================================
-  // 4. ESTADOS: PROJETOS (INCLUINDO EDIÇÃO)
-  // ==========================================
   const [projetos, setProjetos] = useState([]);
   const [carregandoProjetos, setCarregandoProjetos] = useState(false);
   const [idEdicao, setIdEdicao] = useState(null);
@@ -85,6 +89,12 @@ function Ajustes() {
   // ==========================================
   // NAVEGAÇÃO ENTRE ABAS
   // ==========================================
+  const abrirTurmas = () => {
+    setCarregandoTurmas(true);
+    setTelaAtual('turmas');
+    carregarTurmasDoBanco();
+  };
+
   const abrirHistorico = () => {
     setCarregandoOcorrencias(true);
     setTelaAtual('historico');
@@ -107,23 +117,52 @@ function Ajustes() {
     carregarAlunosDoBanco();
   };
 
-  const carregarAlunosDoBanco = () => {
-    axios.get('https://gestao-ferramentaria.onrender.com/api/operadores').then(res => { setAlunos(res.data); setCarregandoAlunos(false); }).catch(console.error);
-  };
-
   const abrirProjetos = () => {
     setCarregandoProjetos(true);
     setTelaAtual('projetos');
     carregarProjetosDoBanco();
   };
 
+  // ==========================================
+  // LÓGICA DE TURMAS (SEMESTRES)
+  // ==========================================
+  const carregarTurmasDoBanco = () => {
+    axios.get('https://gestao-ferramentaria.onrender.com/api/turmas')
+      .then(res => { setTurmas(res.data); setCarregandoTurmas(false); })
+      .catch(console.error);
+  };
+
+  const criarNovaTurma = async (e) => {
+    e.preventDefault();
+    if (!nomeNovaTurma) return;
+    try {
+      await axios.post('https://gestao-ferramentaria.onrender.com/api/turmas', { nome: nomeNovaTurma });
+      setNomeNovaTurma('');
+      carregarTurmasDoBanco();
+      alert("Nova turma criada e ativada! O sistema agora está limpo para este semestre.");
+    } catch (error) {
+      alert("Erro ao criar turma.");
+    }
+  };
+
+  const ativarTurma = async (id) => {
+    try {
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/turmas/${id}/ativar`);
+      carregarTurmasDoBanco();
+      alert("Turma ativada com sucesso! O sistema (Alunos, Projetos e Relatórios) foi atualizado para focar nesta turma.");
+    } catch (error) {
+      alert("Erro ao ativar turma.");
+    }
+  };
+
+  const carregarAlunosDoBanco = () => {
+    axios.get('https://gestao-ferramentaria.onrender.com/api/operadores').then(res => { setAlunos(res.data); setCarregandoAlunos(false); }).catch(console.error);
+  };
+
   const carregarProjetosDoBanco = () => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/projetos').then(res => { setProjetos(res.data); setCarregandoProjetos(false); }).catch(console.error);
   };
 
-  // ==========================================
-  // LÓGICA DE ALUNOS
-  // ==========================================
   const cadastrarAluno = async (e) => {
     e.preventDefault();
     if (!novoAlunoId || !novoAlunoNome) return;
@@ -141,9 +180,6 @@ function Ajustes() {
     } catch (error) { alert(error.response?.data?.error || 'Erro ao excluir aluno.'); }
   };
 
-  // ==========================================
-  // LÓGICA DE PROJETOS (NOVA MESTRE)
-  // ==========================================
   const formatarDataParaInput = (dataBR) => {
     if (!dataBR || dataBR === 'Não definido') return '';
     const partes = dataBR.split('/');
@@ -174,7 +210,6 @@ function Ajustes() {
 
     try {
       if (idEdicao) {
-        // MODO EDIÇÃO
         await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${idEdicao}`, {
           nome: novoProjNome,
           tipo: novoProjTipo,
@@ -183,7 +218,6 @@ function Ajustes() {
         });
         alert("Projeto atualizado com sucesso!");
       } else {
-        // MODO CADASTRO
         if (!novoProjInicio) return alert("A data de início é obrigatória.");
         await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', {
           nome: novoProjNome,
@@ -200,27 +234,19 @@ function Ajustes() {
     }
   };
 
-  // --- FUNÇÃO CORRIGIDA ---
   const alterarStatusProjeto = async (id, novoStatus) => {
     try {
-      // Se for concluído, pega a data de hoje. Se não, envia nulo.
       const dataConclusao = novoStatus === 'Concluído' ? new Date().toISOString().split('T')[0] : null;
-
-      // Envia a ordem para a rota unificada do Back-end
       await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${id}/status`, {
           status: novoStatus,
           data_conclusao: dataConclusao
       });
-
-      // Recarrega a lista para mostrar a alteração na tela
       carregarProjetosDoBanco();
-      
     } catch (error) {
       console.error("Erro detalhado ao atualizar status:", error);
       alert(error.response?.data?.error || 'Erro ao atualizar o status.');
     }
   };
-  // ------------------------
 
   const handleDeletarProjeto = async (id) => {
     if (!window.confirm("Tem certeza que deseja APAGAR este projeto?")) return;
@@ -260,7 +286,8 @@ function Ajustes() {
               telaAtual === 'historico' ? 'Histórico de Ocorrências' : 
               telaAtual === 'relatorios' ? 'Relatórios de Usinagem' : 
               telaAtual === 'alunos' ? 'Gerenciar Alunos' : 
-              telaAtual === 'projetos' ? 'Projetos e Estampos' : 'Ajustes do Sistema'}
+              telaAtual === 'projetos' ? 'Projetos e Estampos' : 
+              telaAtual === 'turmas' ? 'Gerenciar Semestres' : 'Ajustes do Sistema'}
           </h1>
         </div>
         {autenticado && telaAtual === 'menu' && (
@@ -288,8 +315,15 @@ function Ajustes() {
           {/* MENU PRINCIPAL DE AJUSTES */}
           {telaAtual === 'menu' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
+              
+              {/* NOVO MENU: TURMAS */}
+              <div onClick={abrirTurmas} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '2px solid #8B5CF6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                <div style={{ backgroundColor: '#F5F3FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><BookOpen size={24} color="#8B5CF6" /></div>
+                <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '800', color: '#111827' }}>Gerenciar Semestres (Turmas)</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Crie novos anos letivos e alterne entre as turmas do sistema.</p></div>
+              </div>
+
               <div onClick={abrirRelatorios} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
-                <div style={{ backgroundColor: '#F5F3FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><TrendingUp size={24} color="#8B5CF6" /></div>
+                <div style={{ backgroundColor: '#F0F9FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><TrendingUp size={24} color="#0284C7" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Relatórios de Usinagem</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Analise atrasos, exporte dados e veja processos.</p></div>
               </div>
               <div onClick={abrirProjetos} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
@@ -297,7 +331,7 @@ function Ajustes() {
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Gerenciar Projetos</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Edite estampos, defina prazos e mude o status.</p></div>
               </div>
               <div onClick={abrirAlunos} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
-                <div style={{ backgroundColor: '#F0F9FF', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Users size={24} color="#0284C7" /></div>
+                <div style={{ backgroundColor: '#FFF7ED', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Users size={24} color="#EA580C" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Gerenciar Alunos (Crachás)</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar, editar ou remover IDs de operadores.</p></div>
               </div>
               <div onClick={abrirHistorico} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #FEE2E2', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
@@ -311,6 +345,47 @@ function Ajustes() {
               <div onClick={() => navigate('/engenharia')} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', borderRadius: '12px', border: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ backgroundColor: '#F3F4F6', minWidth: '48px', height: '48px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Settings size={24} color="#4B5563" /></div>
                 <div><h3 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: '700', color: '#111827' }}>Engenharia e Roteiros</h3><p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>Cadastrar peças, editar processos, sequência e tempos alvo.</p></div>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================== */}
+          {/* TELA DE TURMAS E SEMESTRES (NOVA)              */}
+          {/* ============================================== */}
+          {telaAtual === 'turmas' && (
+            <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6', marginBottom: '24px' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Abrir Novo Semestre Letivo</h3>
+                <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '16px' }}>Ao criar uma nova turma, ela se tornará a turma ativa e o painel ficará em branco pronto para novos projetos e alunos.</p>
+                <form onSubmit={criarNovaTurma} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <input type="text" placeholder="Ex: Turma 2027 - 1º Semestre" value={nomeNovaTurma} onChange={e => setNomeNovaTurma(e.target.value)} required style={{ flex: 1, minWidth: '200px', ...estiloInput }} />
+                  <button type="submit" style={{ backgroundColor: '#8B5CF6', color: 'white', padding: '0 24px', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><Plus size={18} /> Criar Turma</button>
+                </form>
+              </div>
+
+              <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Histórico de Turmas (Alternar Visão)</h3>
+                {carregandoTurmas ? (
+                  <p style={{ color: '#6B7280', textAlign: 'center' }}>Buscando turmas...</p>
+                ) : turmas.length === 0 ? (
+                  <p style={{ color: '#6B7280', textAlign: 'center' }}>Nenhuma turma cadastrada.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {turmas.map(turma => (
+                      <div key={turma.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', backgroundColor: turma.ativa ? '#F5F3FF' : '#F9FAFB', borderRadius: '8px', border: turma.ativa ? '2px solid #8B5CF6' : '1px solid #E5E7EB' }}>
+                        <div>
+                          <span style={{ fontWeight: '800', color: turma.ativa ? '#5B21B6' : '#374151', fontSize: '15px', display: 'block', marginBottom: '4px' }}>{turma.nome}</span>
+                          <span style={{ fontSize: '12px', color: '#6B7280' }}>ID: {turma.id} | Criado em: {new Date(turma.criado_em).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                        {turma.ativa ? (
+                          <span style={{ backgroundColor: '#8B5CF6', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>⭐ Turma Ativa</span>
+                        ) : (
+                          <button onClick={() => ativarTurma(turma.id)} style={{ backgroundColor: '#111827', color: 'white', padding: '8px 16px', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '13px' }}>Carregar Dados</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -351,7 +426,6 @@ function Ajustes() {
                     </div>
                     <div>
                       <label style={estiloLabel}>Data Início *</label>
-                      {/* O type="date" previne erros de SQL no banco */}
                       <input type="date" value={novoProjInicio} onChange={e => setNovoProjInicio(e.target.value)} required style={estiloInput} />
                     </div>
                     <div>
@@ -367,11 +441,11 @@ function Ajustes() {
 
               {/* Lista Dinâmica de Projetos */}
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Projetos Ativos</h3>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Projetos Ativos (Turma Atual)</h3>
                 {carregandoProjetos ? (
                   <p style={{ color: '#6B7280', textAlign: 'center' }}>Buscando projetos...</p>
                 ) : projetos.length === 0 ? (
-                  <p style={{ color: '#6B7280', textAlign: 'center' }}>Nenhum projeto cadastrado.</p>
+                  <p style={{ color: '#6B7280', textAlign: 'center' }}>Nenhum projeto cadastrado nesta turma.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {projetos.map(proj => (
@@ -419,11 +493,11 @@ function Ajustes() {
                 </form>
               </div>
               <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Alunos Cadastrados</h3>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Alunos da Turma Atual</h3>
                 {carregandoAlunos ? (
                   <p style={{ color: '#6B7280', textAlign: 'center' }}>Buscando crachás...</p>
                 ) : alunos.length === 0 ? (
-                  <p style={{ color: '#6B7280', textAlign: 'center' }}>Nenhum aluno cadastrado.</p>
+                  <p style={{ color: '#6B7280', textAlign: 'center' }}>Nenhum aluno cadastrado nesta turma.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {alunos.map(aluno => (
@@ -453,7 +527,7 @@ function Ajustes() {
                 <p style={{ color: '#6B7280', textAlign: 'center', marginTop: '40px' }}>Buscando registros no banco de dados...</p>
               ) : ocorrencias.length === 0 ? (
                 <div style={{ backgroundColor: '#F0FDF4', padding: '24px', borderRadius: '12px', textAlign: 'center', color: '#166534', border: '1px solid #22C55E' }}>
-                  <strong>Nenhuma ocorrência registrada!</strong>
+                  <strong>Nenhuma ocorrência registrada nesta turma!</strong>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
