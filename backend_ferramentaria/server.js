@@ -160,11 +160,42 @@ app.put('/api/apontamentos/finalizar', async (req, res) => {
 });
 
 app.put('/api/apontamentos/finalizar-100', async (req, res) => {
+    const { processo_id, operador_id, ocorrencia } = req.body;
     try {
-        await pool.query(`UPDATE apontamentos SET data_hora_fim = CURRENT_TIMESTAMP, ocorrencia = $3 WHERE processo_id = $1 AND operador_id = $2 AND data_hora_fim IS NULL`, [req.body.processo_id, req.body.operador_id, req.body.ocorrencia || null]);
-        await pool.query(`UPDATE processos SET status = 'Concluído' WHERE id = $1`, [req.body.processo_id]);
-        res.json({ message: 'Operação 100% concluída!' });
-    } catch (error) { res.status(500).json({ error: error.message }); }
+        // 1. Tenta parar o cronômetro normalmente se o aluno tiver dado o Play antes
+        const result = await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP,
+                ocorrencia = $3
+            WHERE processo_id = $1 AND operador_id = $2 AND data_hora_fim IS NULL
+            RETURNING id
+        `, [processo_id, operador_id, ocorrencia || null]);
+
+        // 2. SE O ALUNO CLICOU DIRETO EM 100% (Esqueceu de dar o Play)
+        if (result.rowCount === 0) {
+            // Descobre qual era o tempo planejado (alvo) para essa operação
+            const procQuery = await pool.query('SELECT tempo_planejado_min FROM processos WHERE id = $1', [processo_id]);
+            const tempoPlanejado = procQuery.rows[0]?.tempo_planejado_min || 1; // Padrão 1 min para não zerar
+
+            // Cria um apontamento automático usando o tempo perfeito!
+            await pool.query(`
+                INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio, data_hora_fim, ocorrencia)
+                VALUES ($1, $2, CURRENT_TIMESTAMP - ($3 * interval '1 minute'), CURRENT_TIMESTAMP, $4)
+            `, [processo_id, operador_id, tempoPlanejado, ocorrencia || null]);
+        }
+
+        // 3. Marca a operação como Concluída no roteiro
+        await pool.query(`
+            UPDATE processos 
+            SET status = 'Concluído' 
+            WHERE id = $1
+        `, [processo_id]);
+
+        res.json({ message: 'Operação 100% concluída e apontamento salvo!' });
+    } catch (error) {
+        console.error("Erro ao concluir 100%:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.post('/api/apontamentos/manual', async (req, res) => {
