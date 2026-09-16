@@ -159,41 +159,39 @@ app.put('/api/apontamentos/finalizar', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ==========================================
+// ROTA: Encerrar Apontamento 100% (COM AUTO-APONTAMENTO)
+// ==========================================
 app.put('/api/apontamentos/finalizar-100', async (req, res) => {
     const { processo_id, operador_id, ocorrencia } = req.body;
     try {
-        // 1. Tenta parar o cronômetro normalmente se o aluno tiver dado o Play antes
+        // 1. Tenta parar o cronômetro caso o aluno tenha dado o Play antes
         const result = await pool.query(`
             UPDATE apontamentos 
-            SET data_hora_fim = CURRENT_TIMESTAMP,
-                ocorrencia = $3
+            SET data_hora_fim = CURRENT_TIMESTAMP, ocorrencia = $3
             WHERE processo_id = $1 AND operador_id = $2 AND data_hora_fim IS NULL
             RETURNING id
         `, [processo_id, operador_id, ocorrencia || null]);
 
         // 2. SE O ALUNO CLICOU DIRETO EM 100% (Esqueceu de dar o Play)
         if (result.rowCount === 0) {
-            // Descobre qual era o tempo planejado (alvo) para essa operação
+            // Descobre qual era o tempo planejado da operação
             const procQuery = await pool.query('SELECT tempo_planejado_min FROM processos WHERE id = $1', [processo_id]);
-            const tempoPlanejado = procQuery.rows[0]?.tempo_planejado_min || 1; // Padrão 1 min para não zerar
+            const tempoPlanejado = procQuery.rows[0]?.tempo_planejado_min || 1;
 
-            // Cria um apontamento automático usando o tempo perfeito!
+            // Cria um apontamento retroativo instantâneo com o tempo perfeito!
             await pool.query(`
                 INSERT INTO apontamentos (processo_id, operador_id, data_hora_inicio, data_hora_fim, ocorrencia)
-                VALUES ($1, $2, CURRENT_TIMESTAMP - ($3 * interval '1 minute'), CURRENT_TIMESTAMP, $4)
+                VALUES ($1, $2, CURRENT_TIMESTAMP - (CAST($3 AS NUMERIC) * INTERVAL '1 minute'), CURRENT_TIMESTAMP, $4)
             `, [processo_id, operador_id, tempoPlanejado, ocorrencia || null]);
         }
 
         // 3. Marca a operação como Concluída no roteiro
-        await pool.query(`
-            UPDATE processos 
-            SET status = 'Concluído' 
-            WHERE id = $1
-        `, [processo_id]);
+        await pool.query(`UPDATE processos SET status = 'Concluído' WHERE id = $1`, [processo_id]);
 
-        res.json({ message: 'Operação 100% concluída e apontamento salvo!' });
+        res.json({ message: 'Operação 100% concluída e apontamento salvo no Dashboard!' });
     } catch (error) {
-        console.error("Erro ao concluir 100%:", error);
+        console.error("Erro no 100%:", error);
         res.status(500).json({ error: error.message });
     }
 });
