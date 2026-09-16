@@ -203,9 +203,9 @@ function Projetos() {
                 
                 {/* MINIATURA DA IMAGEM */}
                 {proj.imagem ? (
-                  <img src={proj.imagem} alt="Referência" style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E5E7EB', flexShrink: 0 }} />
+                  <img src={proj.imagem} alt="Referência" style={{ width: '120px', height: '120px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E5E7EB', flexShrink: 0 }} />
                 ) : (
-                  <div style={{ width: '80px', height: '80px', borderRadius: '8px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #D1D5DB', flexShrink: 0 }}>
+                  <div style={{ width: '120px', height: '120px', borderRadius: '8px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #D1D5DB', flexShrink: 0 }}>
                     <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' }}>Sem Foto</span>
                   </div>
                 )}
