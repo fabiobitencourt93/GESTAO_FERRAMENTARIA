@@ -268,7 +268,15 @@ app.put('/api/apontamentos/finalizar-100', async (req, res) => {
             WHERE id = $1
         `, [processo_id]);
 
-        res.json({ message: 'Operação 100% concluída e ocorrência salva!' });
+        // 3. MOTOR DE GAMIFICAÇÃO CORRIGIDO: Cálculo nativo de inteiros
+        await pool.query(`
+            UPDATE operadores 
+            SET xp_acumulado = COALESCE(xp_acumulado, 0) + 50,
+                nivel = ((COALESCE(xp_acumulado, 0) + 50) / 100) + 1
+            WHERE id = $1
+        `, [operador_id]);
+
+        res.json({ message: 'Operação 100% concluída e +50 XP ganhos!' });
     } catch (error) {
         console.error("Erro ao concluir 100%:", error);
         res.status(500).send('Erro interno ao concluir.');
