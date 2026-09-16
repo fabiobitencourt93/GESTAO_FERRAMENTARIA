@@ -157,24 +157,38 @@ function Producao() {
                       
                       {/* Avatar Heroico */}
                       <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <img 
-                            // Se a imagem estiver na memória de erro, já carrega a padrão direto. Se não, tenta carregar a do aluno.
-                            src={imagensComErro[op.operador_id] ? '/avatares/padrao.jpg' : `/avatares/${op.operador_id}.jpg`} 
-                            alt={`Caricatura de ${op.operador_nome}`}
-                            onError={() => { 
-                            // Quando der erro, salva o ID do aluno na memória para o React parar de tentar!
-                            setImagensComErro(prev => ({ ...prev, [op.operador_id]: true })); 
-                            }}
-                            style={{ 
-                            width: '64px', 
-                            height: '64px', 
-                            borderRadius: '50%', 
-                            objectFit: 'cover',
-                            border: `3px solid ${corBordaAvatar}`,
-                            boxShadow: sombraAvatar,
-                            backgroundColor: '#F3F4F6'
-                            }} 
-                        />
+                        {/* Avatar Heroico */}
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
+  <img 
+    // Se a foto do aluno não existir, gera um avatar automático com as iniciais dele!
+    src={imagensComErro[op.operador_id] 
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=E5E7EB&color=374151&size=64&bold=true` 
+      : `/avatares/${op.operador_id}.jpg`} 
+    alt={`Avatar de ${op.operador_nome}`}
+    onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
+    style={{ 
+      width: '64px', 
+      height: '64px', 
+      borderRadius: '50%', 
+      objectFit: 'cover',
+      border: `3px solid ${corBordaAvatar}`,
+      boxShadow: sombraAvatar,
+      backgroundColor: '#F3F4F6'
+    }} 
+  />
+  {/* Selo do Pódio */}
+  {iconePodio && (
+    <div style={{ 
+      position: 'absolute', bottom: '-4px', right: '-4px', 
+      backgroundColor: '#FFFFFF', borderRadius: '50%', 
+      width: '26px', height: '26px', display: 'flex', 
+      justifyContent: 'center', alignItems: 'center',
+      fontSize: '14px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' 
+    }}>
+      {iconePodio}
+    </div>
+  )}
+                      </div>
                         {/* Selo do Pódio */}
                         {iconePodio && (
                           <div style={{ 
