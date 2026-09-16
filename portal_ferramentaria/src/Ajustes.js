@@ -44,6 +44,7 @@ function Ajustes() {
   const [novoAlunoId, setNovoAlunoId] = useState('');
   const [novoAlunoNome, setNovoAlunoNome] = useState('');
   const [carregandoAlunos, setCarregandoAlunos] = useState(false);
+  const [novoProjImagem, setNovoProjImagem] = useState('');
 
   const [projetos, setProjetos] = useState([]);
   const [carregandoProjetos, setCarregandoProjetos] = useState(false);
@@ -269,21 +270,37 @@ const baixarRelatorioEstoque = async () => {
 
   const prepararEdicao = (projeto) => {
     setIdEdicao(projeto.projeto_id); setNovoProjNome(projeto.projeto || ''); setNovoProjTipo(projeto.estampo || 'Progressivo'); 
-    setNovoProjInicio(formatarDataParaInput(projeto.data_inicio)); setNovoProjFim(formatarDataParaInput(projeto.data_fim)); window.scrollTo({ top: 0, behavior: 'smooth' });
+    setNovoProjInicio(formatarDataParaInput(projeto.data_inicio)); setNovoProjFim(formatarDataParaInput(projeto.data_fim)); 
+    setNovoProjImagem(projeto.imagem || ''); // <-- CARREGA A IMAGEM
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const cancelarEdicao = () => { setIdEdicao(null); setNovoProjNome(''); setNovoProjTipo(''); setNovoProjInicio(''); setNovoProjFim(''); };
+
+  const handleUploadImagem = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2000000) return alert("A imagem é muito pesada! Escolha uma imagem de até 2MB.");
+      const reader = new FileReader();
+      reader.onloadend = () => setNovoProjImagem(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
 
   const cadastrarOuEditarProjeto = async (e) => {
     e.preventDefault();
     if (!novoProjNome) return alert("Por favor, digite o nome do projeto.");
     try {
       if (idEdicao) {
-        await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${idEdicao}`, { nome: novoProjNome, tipo: novoProjTipo, data_inicio: novoProjInicio, data_fim: novoProjFim });
+        await axios.put(`https://gestao-ferramentaria.onrender.com/api/projetos/${idEdicao}`, { 
+          nome: novoProjNome, tipo: novoProjTipo, data_inicio: novoProjInicio, data_fim: novoProjFim, imagem: novoProjImagem 
+        });
         alert("Projeto atualizado com sucesso!");
       } else {
         if (!novoProjInicio) return alert("A data de início é obrigatória.");
-        await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', { nome: novoProjNome, tipo: novoProjTipo, data_inicio: novoProjInicio, data_fim: novoProjFim });
+        await axios.post('https://gestao-ferramentaria.onrender.com/api/projetos', { 
+          nome: novoProjNome, tipo: novoProjTipo, data_inicio: novoProjInicio, data_fim: novoProjFim, imagem: novoProjImagem 
+        });
         alert("Projeto cadastrado com sucesso!");
       }
       cancelarEdicao(); carregarProjetosDoBanco();
@@ -490,6 +507,11 @@ const baixarRelatorioEstoque = async () => {
                   <button type="submit" style={{ width: '100%', padding: '14px', backgroundColor: '#0284C7', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
                     {idEdicao ? 'Salvar Alterações' : <><Plus size={18} /> Cadastrar Projeto</>}
                   </button>
+                  <div style={{ gridColumn: 'span 2' }}>
+                      <label style={estiloLabel}>Imagem de Referência (Opcional)</label>
+                      <input type="file" accept="image/*" onChange={handleUploadImagem} style={{...estiloInput, padding: '8px'}} />
+                      {novoProjImagem && <img src={novoProjImagem} alt="Preview" style={{ marginTop: '8px', height: '64px', borderRadius: '8px', border: '1px solid #E5E7EB', objectFit: 'cover' }} />}
+                    </div>
                 </form>
               </div>
 

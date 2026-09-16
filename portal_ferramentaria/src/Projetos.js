@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Home, Bell, LayoutGrid, BarChart2, Settings, AlertTriangle, CheckCircle2, Trash2, Undo2, Monitor, Play, Square, X, Sparkles } from 'lucide-react';
+import { ChevronLeft, Home, Bell, LayoutGrid, BarChart2, Settings, AlertTriangle, CheckCircle2, Trash2, Undo2, Monitor, Play, Square, X, Sparkles, FolderPlus } from 'lucide-react';
 
 function Projetos() {
   const navigate = useNavigate();
@@ -215,7 +215,16 @@ function Projetos() {
                  <button onClick={(e) => handleDeletar(proj.projeto_id, e)} title="Apagar Projeto" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}><Trash2 size={24} /></button>
               </div>
             </div>
-
+              
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                            {proj.imagem ? (
+                               <img src={proj.imagem} alt="Ref" style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #D1D5DB' }} />
+                            ) : (
+                               <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#F3F4F6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><FolderPlus size={20} color="#9CA3AF"/></div>
+                            )}
+                            <h4 style={{ margin: 0, fontSize: '15px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h4>
+                          </div>
+              
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '8px', border: '1px solid #F3F4F6' }}>
               <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Início Planejado</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_inicio || 'Não informado'}</span></div>
               <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Previsão de Fim</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_fim || 'Não informado'}</span></div>

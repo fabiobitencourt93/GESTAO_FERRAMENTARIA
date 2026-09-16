@@ -61,7 +61,7 @@ app.get('/api/projetos', async (req, res) => {
         const turma_id = req.query.turma_id || await getTurmaAtiva();
         const query = `
             SELECT 
-                p.id AS projeto_id, p.nome AS projeto, p.status,
+                p.id AS projeto_id, p.nome AS projeto, p.status, p.imagem,
                 TO_CHAR(p.data_inicio, 'DD/MM/YYYY') AS data_inicio,
                 TO_CHAR(p.data_fim, 'DD/MM/YYYY') AS data_fim,
                 TO_CHAR(p.data_conclusao, 'DD/MM/YYYY') AS data_conclusao,
@@ -409,17 +409,17 @@ app.put('/api/projetos/:id/status', async (req, res) => {
 
 app.put(['/api/projetos/:id', '/api/projetos/:id/editar'], async (req, res) => {
     try {
-        const { nome, tipo, data_inicio, data_fim, data_conclusao, status } = req.body;
+        const { nome, tipo, data_inicio, data_fim, data_conclusao, status, imagem } = req.body;
         await pool.query(
-            `UPDATE projetos SET nome = COALESCE($1, nome), data_inicio = COALESCE($2, data_inicio), data_fim = COALESCE($3, data_fim), data_conclusao = COALESCE($4, data_conclusao), status = COALESCE($5, status) WHERE id = $6`,
-            [nome || null, data_inicio || null, data_fim || null, data_conclusao || null, status || null, req.params.id]
+            `UPDATE projetos SET nome = COALESCE($1, nome), data_inicio = COALESCE($2, data_inicio), data_fim = COALESCE($3, data_fim), data_conclusao = COALESCE($4, data_conclusao), status = COALESCE($5, status), imagem = COALESCE($6, imagem) WHERE id = $7`,
+            [nome || null, data_inicio || null, data_fim || null, data_conclusao || null, status || null, imagem || null, req.params.id]
         );
         if (tipo) {
             await pool.query(`UPDATE estampos SET nome = COALESCE($1, nome), tipo = COALESCE($2, tipo) WHERE projeto_id = $3`, [nome || null, tipo || null, req.params.id]);
         }
         res.json({ message: "Projeto atualizado!" });
     } catch (err) { res.status(500).json({ error: err.message }); }
-}); 
+});
 
 
 
