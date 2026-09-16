@@ -209,6 +209,17 @@ function Projetos() {
                     <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' }}>Sem Foto</span>
                   </div>
                 )}
+
+                {/* TEXTOS (NOME, BADGES E SUBTÍTULO) */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
+                    <span style={{ backgroundColor: proj.status === 'Concluído' ? '#DCFCE7' : proj.status === 'Em Execução' ? '#DBEAFE' : '#FEF9C3', color: proj.status === 'Concluído' ? '#166534' : proj.status === 'Em Execução' ? '#1D4ED8' : '#A16207', padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{proj.status}</span>
+                    <span style={{ backgroundColor: '#F3F4F6', color: '#4B5563', padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{proj.tipo || 'TIPO NÃO DEFINIDO'}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>ID do Projeto: {proj.projeto_id} | Estampo: {proj.estampo} (ID: {proj.estampo_id})</p>
+                </div>
+              </div>
               <div>
                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
                    <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
@@ -234,7 +245,7 @@ function Projetos() {
               <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Conclusão Real</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_conclusao || 'Aguardando conclusão'}</span></div>
             </div>
           </div>
-      </div>
+      
       
         ))}
 
