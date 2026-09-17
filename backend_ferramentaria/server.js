@@ -245,19 +245,32 @@ app.get('/api/relatorios/desempenho', async (req, res) => {
 app.get('/api/relatorios/processos', async (req, res) => {
     try {
         const turma_id = req.query.turma_id || await getTurmaAtiva();
-        const operador_id = req.query.operador_id; // Novo parâmetro opcional
+        const operador_id = req.query.operador_id;
         
         let query = `
-            WITH tempo_real_processo AS (
+            WITH apontamentos_unicos AS (
+                SELECT 
+                    processo_id,
+                    operador_id,
+                    EXTRACT(EPOCH FROM (data_hora_fim - data_hora_inicio))/60.0 AS duracao,
+                    -- Numera os cliques do mesmo aluno, na mesma operação, no mesmo dia
+                    ROW_NUMBER() OVER(
+                        PARTITION BY operador_id, processo_id, CAST(data_hora_inicio AS DATE) 
+                        ORDER BY id DESC
+                    ) as rn
+                FROM apontamentos
+                WHERE data_hora_fim IS NOT NULL 
+                  AND data_hora_fim >= data_hora_inicio
+            ),
+            tempo_real_processo AS (
                 SELECT 
                     a.processo_id, 
-                    SUM(EXTRACT(EPOCH FROM (a.data_hora_fim - a.data_hora_inicio))/60.0) AS total_realizado,
+                    SUM(a.duracao) AS total_realizado,
                     MAX(op.nome) AS operador_nome,
                     MAX(op.id) AS operador_id_reg
-                FROM apontamentos a
+                FROM apontamentos_unicos a
                 LEFT JOIN operadores op ON a.operador_id = op.id
-                WHERE a.data_hora_fim IS NOT NULL 
-                  AND a.data_hora_fim >= a.data_hora_inicio
+                WHERE a.rn = 1 -- A MÁGICA AQUI: Pega apenas o clique 1 e descarta os duplos cliques!
                 GROUP BY a.processo_id
             )
             SELECT 
@@ -265,10 +278,10 @@ app.get('/api/relatorios/processos', async (req, res) => {
                 pec.nome AS peca, 
                 pr.nome_operacao AS processo, 
                 pr.maquina_sugerida AS maquina, 
-                pr.tempo_planejado_min AS planejado, 
-                COALESCE(tr.total_realizado, 0) AS realizado,
-                COALESCE(tr.operador_nome, 'Não informado') AS operador_nome,
-                tr.operador_id_reg
+                MAX(pr.tempo_planejado_min) AS planejado, 
+                COALESCE(MAX(tr.total_realizado), 0) AS realizado,
+                COALESCE(MAX(tr.operador_nome), 'Não informado') AS operador_nome,
+                MAX(tr.operador_id_reg) AS operador_id_reg
             FROM processos pr 
             JOIN pecas pec ON pr.peca_id = pec.id 
             JOIN estampos est ON pec.estampo_id = est.id 
@@ -278,13 +291,19 @@ app.get('/api/relatorios/processos', async (req, res) => {
         `;
         
         const params = [turma_id];
+        
+        // Filtro opcional por aluno
         if (operador_id && operador_id !== 'todos') {
             query += ` AND tr.operador_id_reg = $2`;
             params.push(operador_id);
         }
         
-        query += ` ORDER BY proj.nome, pec.nome, pr.ordem_execucao;`;
-
+        // Agrupa pelos nomes para evitar duplicatas vindas da tabela de engenharia
+        query += ` 
+            GROUP BY proj.nome, pec.nome, pr.nome_operacao, pr.maquina_sugerida
+            ORDER BY proj.nome, pec.nome, MIN(pr.ordem_execucao);
+        `;
+        
         const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) { 
