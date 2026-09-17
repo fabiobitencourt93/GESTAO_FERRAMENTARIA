@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// IMPORTANTE: Adicionamos o ícone 'Flame' na lista abaixo!
 import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame } from 'lucide-react';
 
 function Producao() {
@@ -14,7 +13,33 @@ function Producao() {
   const carregarDadosAoVivo = () => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/ao-vivo')
       .then(response => {
-        setOperadores(response.data);
+        // MÁGICA DE AGRUPAMENTO: Transforma várias linhas em uma ficha única por aluno
+        const alunosAgrupados = [];
+        const mapa = {};
+
+        response.data.forEach(item => {
+          if (!mapa[item.operador_id]) {
+            // Se é a primeira vez que vemos esse aluno, criamos a "ficha" dele
+            mapa[item.operador_id] = {
+              ...item,
+              tarefas: [] // Criamos uma gaveta vazia para as tarefas
+            };
+            alunosAgrupados.push(mapa[item.operador_id]);
+          }
+          
+          // Se essa linha do banco tem uma operação rodando, guarda na gaveta do aluno
+          if (item.data_hora_inicio) {
+            mapa[item.operador_id].tarefas.push({
+              nome_operacao: item.nome_operacao,
+              maquina_sugerida: item.maquina_sugerida,
+              nome_peca: item.nome_peca,
+              data_hora_inicio: item.data_hora_inicio
+            });
+          }
+        });
+
+        // Atualiza a tela com os alunos agrupados!
+        setOperadores(alunosAgrupados);
       })
       .catch(error => console.error("Erro ao carregar Dashboard:", error));
   };
@@ -95,7 +120,8 @@ function Producao() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', marginTop: '16px' }}>
             {operadores.map((op, idx) => {
               
-              const rodando = !!op.data_hora_inicio;
+              // AGORA OLHAMOS PARA A NOSSA GAVETA DE TAREFAS
+              const rodando = op.tarefas && op.tarefas.length > 0;
               const ocioso = op.ocioso_minutos ? Number(op.ocioso_minutos) : 0;
               
               let corForte = '#6B7280'; 
@@ -106,7 +132,7 @@ function Producao() {
               if (rodando) {
                 corForte = '#22C55E'; 
                 corFundo = '#22C55E'; 
-                textoStatus = 'EM OPERAÇÃO';
+                textoStatus = op.tarefas.length > 1 ? `${op.tarefas.length} OPERAÇÕES ATIVAS` : 'EM OPERAÇÃO';
               } else if (ocioso >= 60) {
                 corForte = '#DC2626'; 
                 corFundo = '#FEF2F2';
@@ -119,9 +145,7 @@ function Producao() {
                 IconeCentro = Clock;
               }
 
-              // ==========================================
               // SISTEMA DE NÍVEIS E MEDALHAS
-              // ==========================================
               const xp = op.xp_acumulado || 0;
               const nivel = op.nivel || 1;
               const progresso = xp % 100; 
@@ -142,9 +166,8 @@ function Producao() {
                   corBordaAvatar = '#B45309'; 
                   iconePodio = '🥉';
                 } 
-                // Ameaça do 4º Lugar!
                 else if (idx === 3) {
-                  corBordaAvatar = '#EF4444'; // Borda Vermelha
+                  corBordaAvatar = '#EF4444'; 
                   sombraAvatar = '0 0 10px rgba(239, 68, 68, 0.3)';
                   iconePodio = <Flame size={16} color="#DC2626" style={{ animation: 'fire 0.6s infinite alternate' }} />;
                 }
@@ -155,12 +178,10 @@ function Producao() {
               if (nivel >= 5) medalhas.push({ id: 'operador-ferro', nome: 'Operador de Ferro', cor: '#9CA3AF', fallback: <Wrench size={18} color="#E5E7EB" /> });
               if (nivel >= 10) medalhas.push({ id: 'lenda-cnc', nome: 'Lenda CNC', cor: '#8B5CF6', fallback: <Zap size={18} color="#C4B5FD" /> });
 
-              // Lógica para calcular XP faltante do 4º lugar
               let bannerCacada = null;
               if (idx === 3 && xp > 0 && operadores[2]) {
                 const xpTerceiro = operadores[2].xp_acumulado || 0;
                 const diferenca = xpTerceiro - xp;
-                // Pega só o primeiro nome do 3º colocado para caber bonito na tela
                 const nomeTerceiro = operadores[2].operador_nome.split(' ')[0]; 
                 
                 if (diferenca > 0) {
@@ -188,69 +209,79 @@ function Producao() {
                   <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', marginBottom: '16px', textAlign: 'center' }}>
-  <div style={{ position: 'relative', flexShrink: 0 }}>
-    <img 
-      src={imagensComErro[op.operador_id] 
-        ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=E5E7EB&color=374151&size=300&bold=true` 
-        : `/avatares/${op.operador_id}.jpg`} 
-      alt={`Avatar de ${op.operador_nome}`}
-      onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
-      style={{ width: '300px', height: '300px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' }} 
-    />
-    {iconePodio && (
-      <div style={{ position: 'absolute', bottom: '25px', right: '25px', backgroundColor: '#FFFFFF', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
-        {iconePodio}
-      </div>
-    )}
-  </div>
-
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-    <span style={{ display: 'block', fontSize: '14px', color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-      Nível {nivel}
-    </span>
-    <span style={{ display: 'block', fontSize: '20px', color: '#111827', fontWeight: '700', marginBottom: '12px' }}>
-      {op.operador_nome}
-    </span>
-    
-    {medalhas.length > 0 && (
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-        {medalhas.map(m => (
-          <div key={m.id} title={m.nome} className="medalha-hover" style={{
-            width: '36px', height: '36px', borderRadius: '10px',
-            backgroundColor: '#1F2937', border: `2px solid ${m.cor}`,
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)', position: 'relative', overflow: 'hidden'
-          }}>
-            <img src={`/medalhas/${m.id}.jpg`} alt={m.nome}
-              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <div style={{ display: 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-              {m.fallback}
-            </div>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-</div>
-
-                    {rodando ? (
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%', marginBottom: '16px' }}></div>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                          <Wrench size={18} color="#4B5563" style={{ marginTop: '2px' }} />
-                          <div>
-                            <span style={{ display: 'block', fontSize: '14px', color: '#111827', fontWeight: '700' }}>{op.nome_operacao}</span>
-                            <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Máquina: {op.maquina_sugerida}</span>
-                            <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Peça: {op.nome_peca}</span>
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <img 
+                          src={imagensComErro[op.operador_id] 
+                            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=E5E7EB&color=374151&size=300&bold=true` 
+                            : `/avatares/${op.operador_id}.jpg`} 
+                          alt={`Avatar de ${op.operador_nome}`}
+                          onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
+                          style={{ width: '300px', height: '300px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' }} 
+                        />
+                        {iconePodio && (
+                          <div style={{ position: 'absolute', bottom: '25px', right: '25px', backgroundColor: '#FFFFFF', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+                            {iconePodio}
                           </div>
-                        </div>
-                        <div style={{ marginTop: '16px', backgroundColor: '#F0FDF4', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: '1px solid #BBF7D0' }}>
-                          <Clock size={20} color="#16A34A" />
-                          <span style={{ fontSize: '20px', fontWeight: '800', color: '#166534', fontFamily: 'monospace' }}>
-                            {formatarTempo(op.data_hora_inicio)}
-                          </span>
-                        </div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <span style={{ display: 'block', fontSize: '14px', color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Nível {nivel}
+                        </span>
+                        <span style={{ display: 'block', fontSize: '20px', color: '#111827', fontWeight: '700', marginBottom: '12px' }}>
+                          {op.operador_nome}
+                        </span>
+                        
+                        {medalhas.length > 0 && (
+                          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                            {medalhas.map(m => (
+                              <div key={m.id} title={m.nome} className="medalha-hover" style={{
+                                width: '36px', height: '36px', borderRadius: '10px',
+                                backgroundColor: '#1F2937', border: `2px solid ${m.cor}`,
+                                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)', position: 'relative', overflow: 'hidden'
+                              }}>
+                                <img src={`/medalhas/${m.id}.jpg`} alt={m.nome}
+                                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div style={{ display: 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                                  {m.fallback}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ======================================================== */}
+                    {/* NOVA ÁREA DA USINAGEM (Mostra Múltiplos Processos)       */}
+                    {/* ======================================================== */}
+                    {rodando ? (
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%', marginBottom: '8px' }}></div>
+                        
+                        {/* Loop apenas para os cronômetros (tarefas do aluno) */}
+                        {op.tarefas.map((tarefa, idxTarefa) => (
+                          <div key={idxTarefa} style={{ backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              <Wrench size={18} color="#4B5563" style={{ marginTop: '2px' }} />
+                              <div>
+                                <span style={{ display: 'block', fontSize: '14px', color: '#111827', fontWeight: '700' }}>{tarefa.nome_operacao}</span>
+                                <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Máquina: {tarefa.maquina_sugerida}</span>
+                                <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Peça: {tarefa.nome_peca}</span>
+                              </div>
+                            </div>
+                            <div style={{ marginTop: '12px', backgroundColor: '#F0FDF4', padding: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: '1px solid #BBF7D0' }}>
+                              <Clock size={18} color="#16A34A" />
+                              <span style={{ fontSize: '18px', fontWeight: '800', color: '#166534', fontFamily: 'monospace' }}>
+                                {formatarTempo(tarefa.data_hora_inicio)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+
                       </div>
                     ) : (
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '10px 0', opacity: 0.9 }}>
@@ -266,7 +297,6 @@ function Producao() {
                       </div>
                     )}
 
-                    {/* BANNER DE CAÇADA EXCLUSIVO DO 4º LUGAR INJETADO AQUI */}
                     {bannerCacada}
 
                     <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
