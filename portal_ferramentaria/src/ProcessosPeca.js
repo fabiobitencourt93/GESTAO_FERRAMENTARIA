@@ -79,7 +79,6 @@ function ProcessosPeca() {
     // AÇÃO 3: CONCLUIR 100%
     // ==========================================
     else if (tipoAcao === 'finalizar-100') {
-      // Confirmação extra pedindo a certeza do aluno
       const certeza = window.confirm("ATENÇÃO: Você está marcando esta operação como 100% CONCLUÍDA. Confirma esta ação?");
       if (!certeza) return; 
 
@@ -89,8 +88,16 @@ function ProcessosPeca() {
           operador_id: operadorId,
           ocorrencia: ocorrencia
         });
+        
+        // MÁGICA VISUAL AQUI: Altera o status da operação na mesma hora no Front-end
+        setProcessos(processosAnteriores => 
+          processosAnteriores.map(proc => 
+            proc.id === processoSelecionado.id ? { ...proc, concluido: true, data_hora_inicio: null } : proc
+          )
+        );
+
         fecharModal();
-        carregarProcessos(); 
+        // Não precisamos mais do carregarProcessos() aqui porque a tela já se atualizou lindamente!
         alert('✅ Sucesso! Operação concluída em 100%!');
       } catch (error) {
         alert('❌ ACESSO NEGADO: O número do crachá está incorreto ou a operação não está aberta.');
@@ -141,22 +148,33 @@ function ProcessosPeca() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {processos.map((proc) => {
-            const emAndamento = !!proc.data_hora_inicio;
+            // LÓGICA DE ESTADO VISUAL
+            // Considera o status local que injetamos, ou o status que possa vir do banco
+            const isConcluido = proc.concluido || proc.status === 'Concluído' || proc.status === 'concluido';
+            const emAndamento = !!proc.data_hora_inicio && !isConcluido;
             
             return (
               <div key={proc.id} style={{ 
-                backgroundColor: emAndamento ? '#F0FDF4' : '#FFFFFF', 
-                border: emAndamento ? '2px solid #22C55E' : '2px solid transparent',
+                // Se concluído: verde claro, Se em andamento: verde vivo, Se livre: branco
+                backgroundColor: isConcluido ? '#ECFDF5' : (emAndamento ? '#F0FDF4' : '#FFFFFF'), 
+                border: isConcluido ? '2px solid #D1FAE5' : (emAndamento ? '2px solid #22C55E' : '2px solid transparent'),
                 borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)', transition: 'all 0.3s ease'
+                boxShadow: isConcluido ? 'none' : '0 4px 20px rgba(0,0,0,0.03)', 
+                transition: 'all 0.3s ease',
+                opacity: isConcluido ? 0.6 : 1 // Deixa desbotadinho se já terminou!
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ backgroundColor: emAndamento ? '#DCFCE7' : '#FFF4ED', color: emAndamento ? '#166534' : '#C2410C', minWidth: '48px', height: '48px', borderRadius: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <div style={{ backgroundColor: isConcluido ? '#D1FAE5' : (emAndamento ? '#DCFCE7' : '#FFF4ED'), color: isConcluido ? '#059669' : (emAndamento ? '#166534' : '#C2410C'), minWidth: '48px', height: '48px', borderRadius: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                     <span style={{ fontSize: '10px', fontWeight: '700' }}>OP</span>
                     <span style={{ fontSize: '16px', fontWeight: '800' }}>{proc.ordem_execucao}</span>
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827' }}>{proc.nome_operacao}</h3>
+                    <h3 style={{ 
+                      margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827',
+                      textDecoration: isConcluido ? 'line-through' : 'none' // Risco no texto!
+                    }}>
+                      {proc.nome_operacao}
+                    </h3>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
                       <p style={{ margin: 0, fontSize: '13px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '4px' }}><Activity size={14} /> {proc.maquina_sugerida}</p>
                     </div>
@@ -169,9 +187,19 @@ function ProcessosPeca() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => abrirModal(proc, 'iniciar')} style={{ backgroundColor: '#007A33', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: emAndamento ? 0.5 : 1 }} disabled={emAndamento}><Play size={20} fill="currentColor" /></button>
-                  <button onClick={() => abrirModal(proc, 'finalizar')} style={{ backgroundColor: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: !emAndamento ? 0.5 : 1 }} disabled={!emAndamento}><Square size={18} fill="currentColor" /></button>
-                  <button onClick={() => abrirModal(proc, 'finalizar-100')} style={{ backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)' }}>100%</button>
+                  {/* ESCONDE OS BOTÕES SE JÁ ESTIVER CONCLUÍDO */}
+                  {!isConcluido ? (
+                    <>
+                      <button onClick={() => abrirModal(proc, 'iniciar')} style={{ backgroundColor: '#007A33', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: emAndamento ? 0.5 : 1 }} disabled={emAndamento}><Play size={20} fill="currentColor" /></button>
+                      <button onClick={() => abrirModal(proc, 'finalizar')} style={{ backgroundColor: '#DC2626', color: '#FFFFFF', border: 'none', borderRadius: '14px', width: '44px', height: '44px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', opacity: !emAndamento ? 0.5 : 1 }} disabled={!emAndamento}><Square size={18} fill="currentColor" /></button>
+                      <button onClick={() => abrirModal(proc, 'finalizar-100')} style={{ backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)' }}>100%</button>
+                    </>
+                  ) : (
+                    // MOSTRA O SELO DE CONCLUÍDO
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#059669', fontWeight: '800', fontSize: '14px', backgroundColor: '#D1FAE5', padding: '8px 12px', borderRadius: '10px' }}>
+                      <CheckCircle size={18} color="#059669" /> Concluído
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -183,7 +211,6 @@ function ProcessosPeca() {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', width: '90%', maxWidth: '360px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
             
-            {/* CABEÇALHO DO MODAL DINÂMICO */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {tipoAcao === 'iniciar' ? <Play size={20} color="#007A33"/> : tipoAcao === 'finalizar-100' ? <CheckCircle size={20} color="#16A34A"/> : <Lock size={20} color="#DC2626" />} 
@@ -200,7 +227,6 @@ function ProcessosPeca() {
               </div>
             </div>
 
-            {/* SE FOR INICIAR: INPUT NORMAL / SE FOR ENCERRAR: INPUT DE SEGURANÇA VERMELHO */}
             {tipoAcao === 'iniciar' ? (
               <>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Seu ID (Crachá)</label>
@@ -242,26 +268,26 @@ function ProcessosPeca() {
       )}
 
       {/* MENU INFERIOR PADRONIZADO COM 4 BOTÕES */}
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
-              <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
-                <LayoutGrid size={24} />
-                <span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span>
-              </div>
-              <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
-                <BarChart2 size={24} />
-                <span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span>
-              </div>
-              <div onClick={() => navigate('/dashboard')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
-                <Monitor size={24} />
-                <span style={{ fontSize: '10px', fontWeight: '700' }}>DASHBOARD</span>
-              </div>
-              <div onClick={() => navigate('/ajustes')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
-                <Settings size={24} />
-                <span style={{ fontSize: '10px', fontWeight: '600' }}>AJUSTES</span>
-              </div>
-            </div>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
+        <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
+          <LayoutGrid size={24} />
+          <span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span>
         </div>
-        );
-      }
+        <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
+          <BarChart2 size={24} />
+          <span style={{ fontSize: '10px', fontWeight: '600' }}>PRODUÇÃO</span>
+        </div>
+        <div onClick={() => navigate('/dashboard')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
+          <Monitor size={24} />
+          <span style={{ fontSize: '10px', fontWeight: '700' }}>DASHBOARD</span>
+        </div>
+        <div onClick={() => navigate('/ajustes')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}>
+          <Settings size={24} />
+          <span style={{ fontSize: '10px', fontWeight: '600' }}>AJUSTES</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default ProcessosPeca;
