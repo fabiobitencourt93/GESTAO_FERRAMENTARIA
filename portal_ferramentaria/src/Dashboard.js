@@ -1,13 +1,12 @@
 /* =========================================================================
    ARQUIVO: Producao.js (FRONT-END / REACT)
-   Ajuste Fino: Altura da imagem dinâmica (12vh) e paddings menores no Modo TV
-   para garantir que a barra de XP e as medalhas não sejam empurradas para fora.
+   Versão Final Boss (Nível 999+ com Arte Especial)
    ========================================================================= */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame, ChevronDown, ChevronUp } from 'lucide-react';
+import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame, ChevronDown, ChevronUp, Skull, Crown } from 'lucide-react';
 
 function Producao() {
   const navigate = useNavigate();
@@ -96,7 +95,7 @@ function Producao() {
   };
 
   return (
-    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', height: modoTV ? '100vh' : 'auto', overflow: modoTV ? 'hidden' : 'auto', fontFamily: "'Inter', sans-serif", paddingBottom: modoTV ? '0px' : '120px' }}>
+    <div style={{ backgroundColor: '#0F172A', minHeight: '100vh', height: modoTV ? '100vh' : 'auto', overflow: modoTV ? 'hidden' : 'auto', fontFamily: "'Inter', sans-serif", paddingBottom: modoTV ? '0px' : '120px', color: '#F8FAFC' }}>
       <style>{`
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .medalha-hover:hover { transform: scale(1.1); transition: transform 0.2s; }
@@ -104,27 +103,37 @@ function Producao() {
           0% { filter: drop-shadow(0 0 2px #EF4444); transform: scale(1); } 
           100% { filter: drop-shadow(0 0 8px #DC2626); transform: scale(1.15); } 
         }
+        @keyframes bossGlow {
+          0% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.6), inset 0 0 15px rgba(234, 179, 8, 0.4); border-color: #DC2626; }
+          50% { box-shadow: 0 0 35px rgba(234, 179, 8, 0.9), inset 0 0 25px rgba(220, 38, 38, 0.8); border-color: #EAB308; }
+          100% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.6), inset 0 0 15px rgba(234, 179, 8, 0.4); border-color: #DC2626; }
+        }
+        .boss-card {
+          animation: bossGlow 3s infinite ease-in-out;
+          background: linear-gradient(145deg, #1E293B = 0%, #0F172A = 100%) !important;
+          border: 3px solid #DC2626 !important;
+        }
       `}</style>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: modoTV ? '12px 32px' : '24px 32px', backgroundColor: modoTV ? '#111827' : 'transparent', color: modoTV ? '#FFFFFF' : '#111827', transition: 'all 0.3s' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: modoTV ? '12px 32px' : '24px 32px', backgroundColor: modoTV ? '#090D16' : 'transparent', color: '#FFFFFF', transition: 'all 0.3s' }}>
         <div>
           <h1 style={{ fontSize: modoTV ? '24px' : '22px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Activity size={modoTV ? 28 : 24} color={modoTV ? '#22C55E' : '#111827'} /> 
-            Dashboard de Produção
+            <Activity size={modoTV ? 28 : 24} color="#22C55E" /> 
+            Dashboard de Produção — Chão de Fábrica
           </h1>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: modoTV ? '#9CA3AF' : '#6B7280' }}>
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#94A3B8' }}>
             Atualização automática. Status ao vivo do chão de fábrica.
           </p>
         </div>
         
-        <button onClick={toggleModoTV} style={{ backgroundColor: modoTV ? '#374151' : '#111827', color: '#FFFFFF', border: 'none', padding: '10px 16px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+        <button onClick={toggleModoTV} style={{ backgroundColor: modoTV ? '#334155' : '#1E293B', color: '#FFFFFF', border: '1px solid #475569', padding: '10px 16px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}>
           {modoTV ? <><Minimize size={18} /> Sair da TV</> : <><Monitor size={18} /> Modo TV</>}
         </button>
       </div>
 
       <div style={{ padding: '0 32px', height: modoTV ? 'calc(100vh - 75px)' : 'auto' }}>
         {operadores.length === 0 ? (
-          <p style={{ color: '#6B7280', textAlign: 'center', marginTop: '40px' }}>Carregando dados da fábrica...</p>
+          <p style={{ color: '#94A3B8', textAlign: 'center', marginTop: '40px' }}>Carregando dados da fábrica...</p>
         ) : (
           
           <div style={{ 
@@ -138,6 +147,9 @@ function Producao() {
           }}>
             {operadores.map((op, idx) => {
               
+              // IDENTIFICAÇÃO DO FINAL BOSS (Você pode mudar o nome ou ID se preferir)
+              const isFinalBoss = op.operador_nome.toLowerCase().includes('fabio') || idx === 0;
+
               const rodando = op.tarefas && op.tarefas.length > 0;
               const ocioso = op.ocioso_minutos ? Number(op.ocioso_minutos) : 0;
               const isExpandido = cardsExpandidos[op.operador_id];
@@ -163,15 +175,15 @@ function Producao() {
                 IconeCentro = Clock;
               }
 
-              const xp = op.xp_acumulado || 0;
-              const nivel = op.nivel || 1;
-              const progresso = xp % 100; 
+              const xp = isFinalBoss ? 99999 : (op.xp_acumulado || 0);
+              const nivel = isFinalBoss ? '999+' : (op.nivel || 1);
+              const progresso = isFinalBoss ? 100 : (xp % 100); 
 
-              let corBordaAvatar = '#E5E7EB'; 
-              let sombraAvatar = 'none';
-              let iconePodio = null;
+              let corBordaAvatar = isFinalBoss ? '#EF4444' : '#E5E7EB'; 
+              let sombraAvatar = isFinalBoss ? '0 0 25px rgba(239, 68, 68, 0.8)' : 'none';
+              let iconePodio = isFinalBoss ? <Skull size={modoTV ? 16 : 22} color="#DC2626" /> : null;
 
-              if (xp > 0) {
+              if (!isFinalBoss && xp > 0) {
                 if (idx === 0) {
                   corBordaAvatar = '#EAB308'; 
                   sombraAvatar = '0 0 15px rgba(234, 179, 8, 0.4)';
@@ -191,50 +203,34 @@ function Producao() {
               }
 
               const medalhas = [];
-              if (nivel >= 2) medalhas.push({ id: 'mestre-5s', nome: 'Mestre do 5S', cor: '#EAB308', fallback: <Shield size={18} color="#FDE047" /> });
-              if (nivel >= 5) medalhas.push({ id: 'operador-ferro', nome: 'Operador de Ferro', cor: '#9CA3AF', fallback: <Wrench size={18} color="#E5E7EB" /> });
-              if (nivel >= 10) medalhas.push({ id: 'lenda-cnc', nome: 'Lenda CNC', cor: '#8B5CF6', fallback: <Zap size={18} color="#C4B5FD" /> });
-
-              let bannerCacada = null;
-              if (isExpandido && idx === 3 && xp > 0 && operadores[2]) {
-                const xpTerceiro = operadores[2].xp_acumulado || 0;
-                const diferenca = xpTerceiro - xp;
-                const nomeTerceiro = operadores[2].operador_nome.split(' ')[0]; 
-                if (diferenca > 0) {
-                  bannerCacada = (
-                    <div style={{ backgroundColor: '#FEF2F2', padding: '6px', borderRadius: '6px', border: '1px dashed #FCA5A5', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Flame size={14} color="#DC2626" style={{ animation: 'fire 0.6s infinite alternate' }} />
-                      <span style={{ fontSize: '11px', color: '#991B1B', fontWeight: '700' }}>
-                        Faltam {diferenca} XP para bater {nomeTerceiro}!
-                      </span>
-                    </div>
-                  );
-                }
-              }
+              if (isFinalBoss || nivel >= 2) medalhas.push({ id: 'mestre-5s', nome: 'Mestre do 5S', cor: '#EAB308', fallback: <Shield size={18} color="#FDE047" /> });
+              if (isFinalBoss || nivel >= 5) medalhas.push({ id: 'operador-ferro', nome: 'Operador de Ferro', cor: '#9CA3AF', fallback: <Wrench size={18} color="#E5E7EB" /> });
+              if (isFinalBoss || nivel >= 10) medalhas.push({ id: 'lenda-cnc', nome: 'Lenda CNC', cor: '#8B5CF6', fallback: <Zap size={18} color="#C4B5FD" /> });
 
               return (
-                <div key={op.operador_id} style={{ 
-                  backgroundColor: '#FFFFFF', 
+                <div key={op.operador_id} className={isFinalBoss ? 'boss-card' : ''} style={{ 
+                  backgroundColor: isFinalBoss ? '#1E293B' : '#FFFFFF', 
                   borderRadius: '16px', 
                   overflow: 'hidden', 
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.04)', 
-                  border: `2px solid ${rodando ? '#22C55E' : corFundo}`, 
+                  boxShadow: isFinalBoss ? '0 0 30px rgba(220, 38, 38, 0.4)' : '0 4px 20px rgba(0,0,0,0.04)', 
+                  border: isFinalBoss ? '3px solid #DC2626' : `2px solid ${rodando ? '#22C55E' : corFundo}`, 
                   display: 'flex', 
                   flexDirection: 'column', 
                   transition: 'all 0.3s ease',
                   height: '100%',
-                  minHeight: 0 // <--- Regra de Ouro do Flexbox
+                  minHeight: 0,
+                  color: isFinalBoss ? '#F8FAFC' : '#111827'
                 }}>
                   
                   <div onClick={() => toggleCard(op.operador_id)} style={{ cursor: 'pointer', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                     
-                    <div style={{ backgroundColor: corFundo, color: rodando ? '#FFFFFF' : corForte, padding: modoTV ? '8px 12px' : '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-                      <span style={{ fontWeight: '800', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        {textoStatus}
+                    <div style={{ backgroundColor: isFinalBoss ? '#7F1D1D' : corFundo, color: isFinalBoss ? '#FEF2F2' : (rodando ? '#FFFFFF' : corForte), padding: modoTV ? '8px 12px' : '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                      <span style={{ fontWeight: '800', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {isFinalBoss ? '🔥 FINAL BOSS DA FÁBRICA 🔥' : textoStatus}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {rodando && <Activity size={14} style={{ animation: 'pulse 1.5s infinite' }} />}
-                        {isExpandido ? <ChevronUp size={16} color={rodando ? '#FFFFFF' : corForte} /> : <ChevronDown size={16} color={rodando ? '#FFFFFF' : corForte} />}
+                        {isExpandido ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </div>
                     </div>
 
@@ -243,29 +239,28 @@ function Producao() {
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <img 
                           src={imagensComErro[op.operador_id] 
-                            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=E5E7EB&color=374151&size=300&bold=true` 
+                            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=1E293B&color=EF4444&size=300&bold=true` 
                             : `/avatares/${op.operador_id}.jpg`} 
                           alt={`Avatar de ${op.operador_nome}`}
                           onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
                           style={{ 
-                            // Altura de 12vh no TV Mode dá espaço de sobra pro XP Bar em 1080p
                             width: modoTV ? '12vh' : '300px', 
                             height: modoTV ? '12vh' : '300px', 
-                            borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' 
+                            borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#334155' 
                           }} 
                         />
                         {iconePodio && (
-                          <div style={{ position: 'absolute', bottom: modoTV ? '5px' : '25px', right: modoTV ? '5px' : '25px', backgroundColor: '#FFFFFF', borderRadius: '50%', width: modoTV ? '26px' : '40px', height: modoTV ? '26px' : '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: modoTV ? '14px' : '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+                          <div style={{ position: 'absolute', bottom: modoTV ? '5px' : '25px', right: modoTV ? '5px' : '25px', backgroundColor: isFinalBoss ? '#7F1D1D' : '#FFFFFF', borderRadius: '50%', width: modoTV ? '26px' : '40px', height: modoTV ? '26px' : '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: modoTV ? '14px' : '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.3)', border: '2px solid #EF4444' }}>
                             {iconePodio}
                           </div>
                         )}
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                          Nível {nivel}
+                        <span style={{ display: 'block', fontSize: isFinalBoss ? '12px' : '11px', color: isFinalBoss ? '#FCA5A5' : '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          {isFinalBoss ? '⚡ NÍVEL 999+ (FINAL BOSS) ⚡' : `Nível ${nivel}`}
                         </span>
-                        <span style={{ display: 'block', fontSize: modoTV ? '14px' : '20px', color: '#111827', fontWeight: '700', marginBottom: '6px' }}>
+                        <span style={{ display: 'block', fontSize: modoTV ? '14px' : '20px', color: isFinalBoss ? '#FFFFFF' : '#111827', fontWeight: '800', marginBottom: '6px', textShadow: isFinalBoss ? '0 0 10px rgba(239,68,68,0.5)' : 'none' }}>
                           {op.operador_nome}
                         </span>
                         
@@ -296,21 +291,21 @@ function Producao() {
                     
                     {isExpandido && (
                       <div style={{ padding: modoTV ? '0 12px 8px 12px' : '0 20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%', marginBottom: '4px' }}></div>
+                        <div style={{ height: '1px', backgroundColor: isFinalBoss ? '#334155' : '#F3F4F6', width: '100%', marginBottom: '4px' }}></div>
                         
                         {rodando ? (
                           op.tarefas.map((tarefa, idxTarefa) => (
-                            <div key={idxTarefa} style={{ backgroundColor: '#F9FAFB', padding: '10px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                            <div key={idxTarefa} style={{ backgroundColor: isFinalBoss ? '#0F172A' : '#F9FAFB', padding: '10px', borderRadius: '8px', border: `1px solid ${isFinalBoss ? '#475569' : '#E5E7EB'}` }}>
                               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                                <Wrench size={14} color="#4B5563" style={{ marginTop: '2px' }} />
+                                <Wrench size={14} color={isFinalBoss ? '#FCA5A5' : '#4B5563'} style={{ marginTop: '2px' }} />
                                 <div>
-                                  <span style={{ display: 'block', fontSize: '12px', color: '#111827', fontWeight: '700' }}>{tarefa.nome_operacao}</span>
-                                  <span style={{ display: 'block', fontSize: '11px', color: '#6B7280' }}>Maq: {tarefa.maquina_sugerida} | Peça: {tarefa.nome_peca}</span>
+                                  <span style={{ display: 'block', fontSize: '12px', color: isFinalBoss ? '#F8FAFC' : '#111827', fontWeight: '700' }}>{tarefa.nome_operacao}</span>
+                                  <span style={{ display: 'block', fontSize: '11px', color: isFinalBoss ? '#94A3B8' : '#6B7280' }}>Maq: {tarefa.maquina_sugerida} | Peça: {tarefa.nome_peca}</span>
                                 </div>
                               </div>
-                              <div style={{ marginTop: '8px', backgroundColor: '#F0FDF4', padding: '6px', borderRadius: '6px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', border: '1px solid #BBF7D0' }}>
-                                <Clock size={14} color="#16A34A" />
-                                <span style={{ fontSize: '14px', fontWeight: '800', color: '#166534', fontFamily: 'monospace' }}>
+                              <div style={{ marginTop: '8px', backgroundColor: isFinalBoss ? '#14532D' : '#F0FDF4', padding: '6px', borderRadius: '6px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', border: `1px solid ${isFinalBoss ? '#22C55E' : '#BBF7D0'}` }}>
+                                <Clock size={14} color={isFinalBoss ? '#86EFAC' : '#16A34A'} />
+                                <span style={{ fontSize: '14px', fontWeight: '800', color: isFinalBoss ? '#DCFCE7' : '#166534', fontFamily: 'monospace' }}>
                                   {formatarTempo(tarefa.data_hora_inicio)}
                                 </span>
                               </div>
@@ -318,24 +313,22 @@ function Producao() {
                           ))
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '8px 0', opacity: 0.9 }}>
-                            <IconeCentro size={20} color={corForte} style={{ marginBottom: '6px' }} />
-                            <span style={{ fontSize: '12px', color: corForte, fontWeight: '700' }}>
-                              {textoStatus === 'LIVRE / SEM TAREFA' ? 'Aguardando 1ª tarefa' : 'Aluno Ocioso'}
+                            <IconeCentro size={20} color={isFinalBoss ? '#EF4444' : corForte} style={{ marginBottom: '6px' }} />
+                            <span style={{ fontSize: '12px', color: isFinalBoss ? '#FCA5A5' : corForte, fontWeight: '700' }}>
+                              {isFinalBoss ? 'DOMINANDO A FÁBRICA' : (textoStatus === 'LIVRE / SEM TAREFA' ? 'Aguardando 1ª tarefa' : 'Aluno Ocioso')}
                             </span>
                           </div>
                         )}
-
-                        {bannerCacada}
                       </div>
                     )}
 
-                    <div style={{ padding: modoTV ? '0 12px 10px 12px' : '0 20px 20px 20px', borderTop: isExpandido ? 'none' : '1px solid #F3F4F6', paddingTop: isExpandido ? '0' : (modoTV ? '8px' : '16px') }}>
+                    <div style={{ padding: modoTV ? '0 12px 10px 12px' : '0 20px 20px 20px', borderTop: isExpandido ? 'none' : `1px solid ${isFinalBoss ? '#334155' : '#F3F4F6'}`, paddingTop: isExpandido ? '0' : (modoTV ? '8px' : '16px') }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: '#6B7280' }}>Próximo: Nível {nivel + 1}</span>
-                        <span style={{ fontSize: '10px', fontWeight: '800', color: '#111827' }}>{progresso} / 100 XP</span>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: isFinalBoss ? '#FCA5A5' : '#6B7280' }}>{isFinalBoss ? 'STATUS: DEUS DA USINAGEM' : `Próximo: Nível ${nivel + 1}`}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '800', color: isFinalBoss ? '#F8FAFC' : '#111827' }}>{isFinalBoss ? 'MAX XP' : `${progresso} / 100 XP`}</span>
                       </div>
-                      <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${progresso}%`, height: '100%', backgroundColor: '#0284C7', transition: 'width 0.5s ease-out' }}></div>
+                      <div style={{ width: '100%', height: '6px', backgroundColor: isFinalBoss ? '#334155' : '#E5E7EB', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ width: `${progresso}%`, height: '100%', background: isFinalBoss ? 'linear-gradient(90deg, #DC2626, #EAB308)' : '#0284C7', transition: 'width 0.5s ease-out' }}></div>
                       </div>
                     </div>
 
@@ -348,10 +341,10 @@ function Producao() {
       </div>
 
       {!modoTV && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #F3F4F6', zIndex: 10 }}>
-          <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
-          <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#007A33', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>PRODUÇÃO</span></div>
-          <div onClick={() => navigate('/ajustes')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#9CA3AF', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>AJUSTES</span></div>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#1E293B', display: 'flex', justifyContent: 'space-around', padding: '16px 0 24px 0', borderTop: '1px solid #334155', zIndex: 10 }}>
+          <div onClick={() => navigate('/')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#94A3B8', cursor: 'pointer' }}><LayoutGrid size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>PAINEL</span></div>
+          <div onClick={() => navigate('/producao')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#22C55E', cursor: 'pointer' }}><BarChart2 size={24} /><span style={{ fontSize: '10px', fontWeight: '700' }}>PRODUÇÃO</span></div>
+          <div onClick={() => navigate('/ajustes')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#94A3B8', cursor: 'pointer' }}><Settings size={24} /><span style={{ fontSize: '10px', fontWeight: '600' }}>AJUSTES</span></div>
         </div>
       )}
     </div>
