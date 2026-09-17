@@ -4,7 +4,7 @@ import axios from 'axios';
 import { ChevronLeft, Lock, Users, Clock, Settings, AlertOctagon, 
   LayoutGrid, BarChart2, User, Wrench, Calendar,   ClipboardList, Key, 
   TrendingUp, Filter, AlertTriangle, Plus, Trash2, FolderPlus, Download, 
-  Edit2, X, BookOpen, Package, PlusCircle, MinusCircle, Archive, Search, } from 'lucide-react';
+  Edit2, X, BookOpen, Package, PlusCircle, MinusCircle, Archive, Search} from 'lucide-react';
 
 function Ajustes() {
   const navigate = useNavigate();
@@ -774,7 +774,8 @@ const baixarRelatorioEstoque = async () => {
                       return (
                         item.projeto?.toLowerCase().includes(buscaMinuscula) || 
                         item.peca?.toLowerCase().includes(buscaMinuscula) ||
-                        item.processo?.toLowerCase().includes(buscaMinuscula)
+                        item.processo?.toLowerCase().includes(buscaMinuscula) ||
+                        item.operador_nome?.toLowerCase().includes(buscaMinuscula) // Agora pesquisa por operador também!
                       );
                     });
 
@@ -786,13 +787,33 @@ const baixarRelatorioEstoque = async () => {
                         const planejado = Number(item.planejado) || 0;
                         const realizado = Number(item.realizado) || 0;
                         const atraso = realizado - planejado;
+                        
+                        // Tenta buscar o nome do operador, se não achar tenta o ID, senão avisa que não tem info
+                        const identificacaoOperador = item.operador_nome || item.operador || (item.operador_id ? `Crachá: ${item.operador_id}` : 'Múltiplos / Não informado');
+
                         return (
                           <div key={`atraso-${index}`} style={{ backgroundColor: '#FEF2F2', padding: '16px', borderRadius: '12px', border: '1px solid #FCA5A5' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <div><span style={{ fontSize: '11px', color: '#991B1B', textTransform: 'uppercase' }}>{item.projeto} / {item.peca}</span><h4 style={{ margin: '4px 0 0 0', fontSize: '15px', color: '#7F1D1D' }}>{item.processo} <span style={{ fontSize: '12px', fontWeight: 'normal' }}>({item.maquina})</span></h4></div>
-                              <div style={{ textAlign: 'right', backgroundColor: '#DC2626', color: '#FFF', padding: '6px 12px', borderRadius: '8px', fontWeight: '700' }}>+ {atraso.toFixed(1)} min</div>
+                              <div>
+                                <span style={{ fontSize: '11px', color: '#991B1B', textTransform: 'uppercase' }}>{item.projeto} / {item.peca}</span>
+                                <h4 style={{ margin: '4px 0 0 0', fontSize: '15px', color: '#7F1D1D' }}>{item.processo} <span style={{ fontSize: '12px', fontWeight: 'normal' }}>({item.maquina})</span></h4>
+                              </div>
+                              <div style={{ textAlign: 'right', backgroundColor: '#DC2626', color: '#FFF', padding: '6px 12px', borderRadius: '8px', fontWeight: '700', height: 'fit-content' }}>
+                                + {atraso.toFixed(1)} min
+                              </div>
                             </div>
-                            <p style={{ margin: '12px 0 0 0', fontSize: '13px', color: '#991B1B' }}>Planejado: <strong>{planejado.toFixed(1)}m</strong> | Realizado: <strong>{realizado.toFixed(1)}m</strong></p>
+                            
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                              <p style={{ margin: 0, fontSize: '13px', color: '#991B1B' }}>Planejado: <strong>{planejado.toFixed(1)}m</strong> | Realizado: <strong>{realizado.toFixed(1)}m</strong></p>
+                              
+                              {/* NOVO SELO DO OPERADOR */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FEE2E2', padding: '4px 10px', borderRadius: '6px', border: '1px solid #F87171' }}>
+                                <User size={14} color="#991B1B" />
+                                <span style={{ fontSize: '12px', color: '#991B1B', fontWeight: '700' }}>
+                                  {identificacaoOperador}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         );
                     });
