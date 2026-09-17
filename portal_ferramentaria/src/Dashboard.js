@@ -148,7 +148,7 @@ function Producao() {
             {operadores.map((op, idx) => {
               
               // IDENTIFICAÇÃO DO FINAL BOSS (Você pode mudar o nome ou ID se preferir)
-              const isFinalBoss = op.operador_nome.toLowerCase().includes('fabio') || idx === 0;
+              const isFinalBoss = op.operador_nome.toLowerCase().includes('professor') || idx === 0;
 
               const rodando = op.tarefas && op.tarefas.length > 0;
               const ocioso = op.ocioso_minutos ? Number(op.ocioso_minutos) : 0;
