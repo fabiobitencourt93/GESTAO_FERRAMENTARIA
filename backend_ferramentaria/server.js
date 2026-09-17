@@ -245,17 +245,19 @@ app.get('/api/relatorios/desempenho', async (req, res) => {
 app.get('/api/relatorios/processos', async (req, res) => {
     try {
         const turma_id = req.query.turma_id || await getTurmaAtiva();
-        const query = `
+        const operador_id = req.query.operador_id; // Novo parâmetro opcional
+        
+        let query = `
             WITH tempo_real_processo AS (
                 SELECT 
                     a.processo_id, 
                     SUM(EXTRACT(EPOCH FROM (a.data_hora_fim - a.data_hora_inicio))/60.0) AS total_realizado,
-                    MAX(op.nome) AS operador_nome
+                    MAX(op.nome) AS operador_nome,
+                    MAX(op.id) AS operador_id_reg
                 FROM apontamentos a
                 LEFT JOIN operadores op ON a.operador_id = op.id
                 WHERE a.data_hora_fim IS NOT NULL 
                   AND a.data_hora_fim >= a.data_hora_inicio
-                  AND EXTRACT(EPOCH FROM (a.data_hora_fim - a.data_hora_inicio))/60.0 <= 1440 -- ignora absurdos de mais de 24h
                 GROUP BY a.processo_id
             )
             SELECT 
@@ -265,16 +267,25 @@ app.get('/api/relatorios/processos', async (req, res) => {
                 pr.maquina_sugerida AS maquina, 
                 pr.tempo_planejado_min AS planejado, 
                 COALESCE(tr.total_realizado, 0) AS realizado,
-                COALESCE(tr.operador_nome, 'Não informado') AS operador_nome
+                COALESCE(tr.operador_nome, 'Não informado') AS operador_nome,
+                tr.operador_id_reg
             FROM processos pr 
             JOIN pecas pec ON pr.peca_id = pec.id 
             JOIN estampos est ON pec.estampo_id = est.id 
             JOIN projetos proj ON est.projeto_id = proj.id 
             LEFT JOIN tempo_real_processo tr ON tr.processo_id = pr.id
-            WHERE proj.turma_id = $1 
-            ORDER BY proj.nome, pec.nome, pr.ordem_execucao;
+            WHERE proj.turma_id = $1
         `;
-        const result = await pool.query(query, [turma_id]);
+        
+        const params = [turma_id];
+        if (operador_id && operador_id !== 'todos') {
+            query += ` AND tr.operador_id_reg = $2`;
+            params.push(operador_id);
+        }
+        
+        query += ` ORDER BY proj.nome, pec.nome, pr.ordem_execucao;`;
+
+        const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) { 
         console.error("Erro na rota de relatórios/processos:", err);

@@ -144,6 +144,35 @@ function Ajustes() {
     carregarEstoqueDoBanco(); carregarProjetosDoBanco(); carregarAlunosDoBanco(); 
   };
 
+  const [operadorSelecionado, setOperadorSelecionado] = useState('todos');
+  const [listaOperadores, setListaOperadores] = useState([]);
+
+  useEffect(() => {
+  axios.get('https://gestao-ferramentaria.onrender.com/api/operadores')
+    .then(res => setListaOperadores(res.data))
+    .catch(err => console.error("Erro ao carregar operadores:", err));
+    }, []);
+
+   const carregarRelatorios = () => {
+  setCarregandoRelatorio(true);
+  axios.get(`https://gestao-ferramentaria.onrender.com/api/relatorios/processos?operador_id=${operadorSelecionado}`)
+    .then(res => {
+      setDadosProcessos(res.data);
+      setCarregandoRelatorio(false);
+    })
+    .catch(err => {
+      console.error("Erro ao carregar relatórios:", err);
+      setCarregandoRelatorio(false);
+    });
+};
+
+// Chame carregarRelatorios() sempre que operadorSelecionado mudar
+useEffect(() => {
+  carregarRelatorios();
+}, [operadorSelecionado]); 
+
+
+
   // ==========================================
   // FUNÇÕES DE ESTOQUE E MATERIAIS
   // ==========================================
@@ -659,23 +688,32 @@ const baixarRelatorioEstoque = async () => {
           {telaAtual === 'relatorios' && (
             <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-                {/* BARRA DE PESQUISA ADICIONADA AQUI */}
-                <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
-                  <input 
-                    type="text" 
-                    placeholder="Pesquisar projeto, peça, processo..." 
-                    value={termoBusca}
-                    onChange={(e) => setTermoBusca(e.target.value)}
-                    style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                  <Search size={18} color="#9CA3AF" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-                </div>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+  {/* BARRA DE PESQUISA */}
+  <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+    <input 
+      type="text" 
+      placeholder="Pesquisar projeto, peça, processo..." 
+      value={termoBusca}
+      onChange={(e) => setTermoBusca(e.target.value)}
+      style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '8px', border: '1px solid #D1D5DB', boxSizing: 'border-box' }}
+    />
+  </div>
 
-                <button onClick={() => exportarParaExcel(dadosProcessos, 'Desempenho_Processos')} style={{ backgroundColor: '#10B981', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Download size={16} /> Baixar Planilha
-                </button>
-              </div>
+  {/* SELETOR DE OPERADOR */}
+  <div style={{ minWidth: '180px' }}>
+    <select 
+      value={operadorSelecionado} 
+      onChange={(e) => setOperadorSelecionado(e.target.value)}
+      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D1D5DB', backgroundColor: '#FFF', fontWeight: '600', color: '#374151' }}
+    >
+      <option value="todos">👤 Todos os Operadores</option>
+      {listaOperadores.map(op => (
+        <option key={op.id} value={op.id}>{op.nome}</option>
+      ))}
+    </select>
+  </div>
+</div>
 
               <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: '#FFFFFF', padding: '8px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <button onClick={() => setFiltroUsinagem('pecas')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: filtroUsinagem === 'pecas' ? '#111827' : 'transparent', color: filtroUsinagem === 'pecas' ? '#FFFFFF' : '#6B7280' }}><LayoutGrid size={16} /> Por Peça</button>
