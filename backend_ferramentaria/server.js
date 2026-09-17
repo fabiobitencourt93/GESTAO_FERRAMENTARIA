@@ -261,7 +261,7 @@ app.get('/api/relatorios/processos', async (req, res) => {
             LEFT JOIN apontamentos a ON a.processo_id = pr.id AND a.data_hora_fim IS NOT NULL
             LEFT JOIN operadores op ON a.operador_id = op.id
             WHERE proj.turma_id = $1 
-            GROUP BY proj.nome, pec.nome, pr.nome_operacao, pr.maquina_sugerida, pr.tempo_planejado_min, pr.ordem_execucao 
+            GROUP BY pr.id, proj.nome, pec.nome, pr.nome_operacao, pr.maquina_sugerida, pr.tempo_planejado_min, pr.ordem_execucao 
             ORDER BY proj.nome, pec.nome, pr.ordem_execucao;
         `;
         const result = await pool.query(query, [turma_id]);
