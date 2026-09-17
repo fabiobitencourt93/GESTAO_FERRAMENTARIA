@@ -193,7 +193,7 @@ app.put('/api/apontamentos/finalizar-100', async (req, res) => {
         // ==========================================
         // 4. GAMIFICAÇÃO: INJEÇÃO DE XP NO ALUNO
         // ==========================================
-        const xpGanho = tempoPlanejado * 5; // Regra: 5 XP por cada minuto trabalhado/planejado
+        const xpGanho = 10; // NOVA REGRA: Fixo 10 XP por cada operação concluída
         
         await pool.query(`
             UPDATE operadores 
