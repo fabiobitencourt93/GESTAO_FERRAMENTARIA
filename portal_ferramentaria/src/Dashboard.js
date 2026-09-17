@@ -195,7 +195,7 @@ function Producao() {
                             : `/avatares/${op.operador_id}.jpg`} 
                           alt={`Avatar de ${op.operador_nome}`}
                           onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
-                          style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' }} 
+                          style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' }} 
                         />
                         {iconePodio && (
                           <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', backgroundColor: '#FFFFFF', borderRadius: '50%', width: '26px', height: '26px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
