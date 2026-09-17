@@ -20,6 +20,12 @@ function GerenciarEngenharia() {
   const [adicionandoProcessoNaPeca, setAdicionandoProcessoNaPeca] = useState(null);
   const [novoProcesso, setNovoProcesso] = useState({ ordem_execucao: '', nome_operacao: '', tempo_planejado_horas: '', maquina_sugerida: '' });
 
+  // ==========================================
+  // NOVO ESTADO: EDIÇÃO DE PEÇA
+  // ==========================================
+  const [editandoPeca, setEditandoPeca] = useState(null);
+  const [formPeca, setFormPeca] = useState({ pos: '', nome: '' });
+
   useEffect(() => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/projetos')
       .then(res => setProjetos(res.data))
@@ -38,21 +44,17 @@ function GerenciarEngenharia() {
       .catch(err => console.error(err));
   };
 
-  // ==========================================
-  // FUNÇÃO SALVAR PEÇA (CORRIGIDA)
-  // ==========================================
   const salvarNovaPeca = async () => {
     if (!novaPeca.pos || !novaPeca.nome) return alert("Preencha a Posição e o Nome da Peça.");
     if (!projetoSelecionado) return alert("Selecione um projeto antes de salvar a peça.");
 
-    // MÁGICA: Procura o projeto completo na lista para garantir que mandamos o ID do Estampo correto!
     const projetoEncontrado = projetos.find(p => String(p.projeto_id) === String(projetoSelecionado));
     const estampoIdCorreto = projetoEncontrado ? (projetoEncontrado.estampo_id || projetoSelecionado) : projetoSelecionado;
 
     try {
       await axios.post('https://gestao-ferramentaria.onrender.com/api/pecas', {
-        estampo_id: estampoIdCorreto, // Envia o ID original do estampo
-        projeto_id: projetoSelecionado, // Envia o ID do projeto por segurança
+        estampo_id: estampoIdCorreto, 
+        projeto_id: projetoSelecionado, 
         pos: novaPeca.pos, 
         nome: novaPeca.nome
       });
@@ -67,8 +69,24 @@ function GerenciarEngenharia() {
   };
 
   // ==========================================
-  // OUTRAS FUNÇÕES INALTERADAS
+  // NOVA FUNÇÃO: SALVAR EDIÇÃO DA PEÇA
   // ==========================================
+  const salvarEdicaoPeca = async () => {
+    if (!formPeca.pos || !formPeca.nome) return alert("A peça precisa ter Posição e Nome.");
+    
+    try {
+      await axios.put(`https://gestao-ferramentaria.onrender.com/api/pecas/${editandoPeca}`, {
+        pos: formPeca.pos,
+        nome: formPeca.nome
+      });
+      setEditandoPeca(null);
+      carregarPecasEProcessos();
+    } catch (error) {
+      console.error("Erro ao editar peça:", error);
+      alert("Erro ao salvar as alterações da peça.");
+    }
+  };
+
   const salvarNovoProcesso = async (pecaId) => {
     if (!novoProcesso.ordem_execucao || !novoProcesso.nome_operacao) return alert("Preencha ao menos a Sequência e o Nome.");
     try {
@@ -149,7 +167,7 @@ function GerenciarEngenharia() {
 
             {exibirFormPeca && (
               <div style={{ backgroundColor: '#E0F2FE', padding: '16px', borderRadius: '12px', display: 'flex', gap: '12px', border: '1px solid #BAE6FD', flexWrap: 'wrap', alignItems: 'center' }}>
-                <input type="number" placeholder="POS (ex: 01)" value={novaPeca.pos} onChange={e => setNovaPeca({...novaPeca, pos: e.target.value})} style={{ width: '100px', padding: '10px', borderRadius: '6px', border: '1px solid #7DD3FC', outline: 'none' }} />
+                <input type="text" placeholder="POS (ex: 01)" value={novaPeca.pos} onChange={e => setNovaPeca({...novaPeca, pos: e.target.value})} style={{ width: '100px', padding: '10px', borderRadius: '6px', border: '1px solid #7DD3FC', outline: 'none' }} />
                 <input type="text" placeholder="Nome da Peça (ex: Matriz)" value={novaPeca.nome} onChange={e => setNovaPeca({...novaPeca, nome: e.target.value})} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #7DD3FC', outline: 'none' }} />
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => { setExibirFormPeca(false); setNovaPeca({pos:'', nome:''}); }} style={{ backgroundColor: '#9CA3AF', color: '#FFF', border: 'none', borderRadius: '6px', padding: '10px 16px', cursor: 'pointer', fontWeight: '600' }}>Cancelar</button>
@@ -160,17 +178,45 @@ function GerenciarEngenharia() {
 
             {pecas.map(peca => (
               <div key={peca.id} style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', overflow: 'hidden' }}>
-                <div onClick={() => setPecaExpandida(pecaExpandida === peca.id ? null : peca.id)} style={{ padding: '16px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                  <div>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#0284C7', backgroundColor: '#E0F2FE', padding: '4px 8px', borderRadius: '4px', marginRight: '8px' }}>POS {peca.pos}</span>
-                    <span style={{ fontWeight: '600', color: '#111827' }}>{peca.nome}</span>
+                
+                {/* ======================================================= */}
+                {/* SE ESTIVER EDITANDO A PEÇA, MOSTRA O FORMULÁRIO DE EDIÇÃO */}
+                {/* ======================================================= */}
+                {editandoPeca === peca.id ? (
+                  <div style={{ backgroundColor: '#F0FDF4', padding: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#166534' }}>Editando Peça:</span>
+                    <input type="text" placeholder="POS" value={formPeca.pos} onChange={e => setFormPeca({...formPeca, pos: e.target.value})} style={{ width: '80px', padding: '8px', borderRadius: '6px', border: '1px solid #86EFAC', outline: 'none' }} />
+                    <input type="text" placeholder="Nome da Peça" value={formPeca.nome} onChange={e => setFormPeca({...formPeca, nome: e.target.value})} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #86EFAC', outline: 'none' }} />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); setEditandoPeca(null); }} style={{ backgroundColor: '#9CA3AF', color: '#FFF', border: 'none', borderRadius: '6px', padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Cancelar"><X size={18} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); salvarEdicaoPeca(); }} style={{ backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}><Save size={16}/> Salvar</button>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '13px', color: '#6B7280' }}>{peca.processos.length} operações</span>
-                    <button onClick={(e) => { e.stopPropagation(); excluirPeca(peca.id, peca.nome); }} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Excluir Peça"><Trash2 size={18} /></button>
+                ) : (
+                  // SE NÃO ESTIVER EDITANDO, MOSTRA O CABEÇALHO NORMAL
+                  <div onClick={() => setPecaExpandida(pecaExpandida === peca.id ? null : peca.id)} style={{ padding: '16px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#0284C7', backgroundColor: '#E0F2FE', padding: '4px 8px', borderRadius: '4px', marginRight: '8px' }}>POS {peca.pos}</span>
+                      <span style={{ fontWeight: '600', color: '#111827' }}>{peca.nome}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <span style={{ fontSize: '13px', color: '#6B7280' }}>{peca.processos.length} operações</span>
+                      
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {/* NOVO BOTÃO DE EDITAR A PEÇA */}
+                        <button onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setEditandoPeca(peca.id); 
+                          setFormPeca({ pos: peca.pos, nome: peca.nome }); 
+                        }} style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Editar Peça"><Edit size={18} /></button>
+                        
+                        <button onClick={(e) => { e.stopPropagation(); excluirPeca(peca.id, peca.nome); }} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} title="Excluir Peça"><Trash2 size={18} /></button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
 
+                {/* AREA DE OPERAÇÕES/PROCESSOS DA PEÇA */}
                 {pecaExpandida === peca.id && (
                   <div style={{ padding: '16px', borderTop: '1px solid #E5E7EB' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
