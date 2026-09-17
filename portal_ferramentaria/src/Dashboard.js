@@ -1,15 +1,14 @@
 /* =========================================================================
    ARQUIVO: Producao.js (FRONT-END / REACT)
    O que mudou?
-   Adicionamos a lógica de "Acordeão" (Expandir/Minimizar).
-   O card agora é clicável. As tarefas (cronômetros) ficam ocultas por 
-   padrão e só aparecem quando você clica no card do aluno.
+   Adicionamos a responsividade perfeita para 15 Cards no Modo TV.
+   Usamos 'vh' (Viewport Height) e 'repeat(5, 1fr)' no CSS Grid para garantir
+   que a tela se divida exatamente em 5 colunas x 3 linhas sem barra de rolagem!
    ========================================================================= */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// IMPORTANTE: Adicionamos ChevronDown e ChevronUp para as setinhas de expandir
 import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame, ChevronDown, ChevronUp } from 'lucide-react';
 
 function Producao() {
@@ -18,14 +17,8 @@ function Producao() {
   const [modoTV, setModoTV] = useState(false);
   const [agora, setAgora] = useState(new Date());
   const [imagensComErro, setImagensComErro] = useState({});
-  
-  // ==========================================
-  // NOVO ESTADO: CONTROLE DE CARDS EXPANDIDOS
-  // ==========================================
-  // Guarda um "dicionário" de quem está aberto. Ex: { "101": true, "105": false }
   const [cardsExpandidos, setCardsExpandidos] = useState({});
 
-  // Função que inverte o estado do card clicado (se tá aberto, fecha; se tá fechado, abre)
   const toggleCard = (operadorId) => {
     setCardsExpandidos(prev => ({
       ...prev,
@@ -36,7 +29,6 @@ function Producao() {
   const carregarDadosAoVivo = () => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/ao-vivo')
       .then(response => {
-        // MÁGICA DE AGRUPAMENTO (Múltiplas tarefas no mesmo aluno)
         const alunosAgrupados = [];
         const mapa = {};
 
@@ -79,6 +71,7 @@ function Producao() {
     if (!modoTV) {
       if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
       setModoTV(true);
+      window.scrollTo(0, 0); // Garante que a tela vai pro topo no modo TV
     } else {
       if (document.exitFullscreen) document.exitFullscreen();
       setModoTV(false);
@@ -105,44 +98,53 @@ function Producao() {
   };
 
   return (
-    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', fontFamily: "'Inter', sans-serif", paddingBottom: modoTV ? '24px' : '120px' }}>
+    // Se Modo TV = Corta rolagem extra (overflow hidden na página inteira)
+    <div style={{ backgroundColor: '#F8F9FA', minHeight: '100vh', height: modoTV ? '100vh' : 'auto', overflow: modoTV ? 'hidden' : 'auto', fontFamily: "'Inter', sans-serif", paddingBottom: modoTV ? '0px' : '120px' }}>
       <style>{`
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .medalha-hover:hover { transform: scale(1.1); transition: transform 0.2s; }
-        
         @keyframes fire { 
           0% { filter: drop-shadow(0 0 2px #EF4444); transform: scale(1); } 
           100% { filter: drop-shadow(0 0 8px #DC2626); transform: scale(1.15); } 
         }
       `}</style>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', backgroundColor: modoTV ? '#111827' : 'transparent', color: modoTV ? '#FFFFFF' : '#111827', transition: 'all 0.3s' }}>
+      {/* CABEÇALHO */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: modoTV ? '16px 32px' : '24px 32px', backgroundColor: modoTV ? '#111827' : 'transparent', color: modoTV ? '#FFFFFF' : '#111827', transition: 'all 0.3s' }}>
         <div>
-          <h1 style={{ fontSize: modoTV ? '28px' : '22px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Activity size={modoTV ? 32 : 24} color={modoTV ? '#22C55E' : '#111827'} /> 
+          <h1 style={{ fontSize: modoTV ? '24px' : '22px', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Activity size={modoTV ? 28 : 24} color={modoTV ? '#22C55E' : '#111827'} /> 
             Dashboard de Produção
           </h1>
-          <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: modoTV ? '#9CA3AF' : '#6B7280' }}>
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: modoTV ? '#9CA3AF' : '#6B7280' }}>
             Atualização automática. Status ao vivo do chão de fábrica.
           </p>
         </div>
         
-        <button onClick={toggleModoTV} style={{ backgroundColor: modoTV ? '#374151' : '#111827', color: '#FFFFFF', border: 'none', padding: '12px 20px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+        <button onClick={toggleModoTV} style={{ backgroundColor: modoTV ? '#374151' : '#111827', color: '#FFFFFF', border: 'none', padding: '10px 16px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
           {modoTV ? <><Minimize size={18} /> Sair da TV</> : <><Monitor size={18} /> Modo TV</>}
         </button>
       </div>
 
-      <div style={{ padding: '0 32px' }}>
+      <div style={{ padding: '0 32px', height: modoTV ? 'calc(100vh - 85px)' : 'auto' }}>
         {operadores.length === 0 ? (
           <p style={{ color: '#6B7280', textAlign: 'center', marginTop: '40px' }}>Carregando dados da fábrica...</p>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', marginTop: '16px' }}>
+          
+          /* GRID MÁGICA: Força 5 colunas e ocupa 100% da altura restante no modo TV */
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: modoTV ? 'repeat(5, 1fr)' : 'repeat(auto-fill, minmax(320px, 1fr))',
+            gridAutoRows: modoTV ? '1fr' : 'auto', 
+            gap: modoTV ? '12px' : '20px', 
+            marginTop: '12px',
+            height: modoTV ? '100%' : 'auto',
+            paddingBottom: modoTV ? '12px' : '0'
+          }}>
             {operadores.map((op, idx) => {
               
               const rodando = op.tarefas && op.tarefas.length > 0;
               const ocioso = op.ocioso_minutos ? Number(op.ocioso_minutos) : 0;
-              
-              // Verifica no nosso dicionário se este card específico está aberto ou fechado
               const isExpandido = cardsExpandidos[op.operador_id];
               
               let corForte = '#6B7280'; 
@@ -199,17 +201,17 @@ function Producao() {
               if (nivel >= 10) medalhas.push({ id: 'lenda-cnc', nome: 'Lenda CNC', cor: '#8B5CF6', fallback: <Zap size={18} color="#C4B5FD" /> });
 
               let bannerCacada = null;
-              if (idx === 3 && xp > 0 && operadores[2]) {
+              // Se tiver expandido e for o 4º colocado, mostra a caçada
+              if (isExpandido && idx === 3 && xp > 0 && operadores[2]) {
                 const xpTerceiro = operadores[2].xp_acumulado || 0;
                 const diferenca = xpTerceiro - xp;
                 const nomeTerceiro = operadores[2].operador_nome.split(' ')[0]; 
-                
                 if (diferenca > 0) {
                   bannerCacada = (
-                    <div style={{ backgroundColor: '#FEF2F2', padding: '8px 12px', borderRadius: '6px', border: '1px dashed #FCA5A5', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Flame size={16} color="#DC2626" style={{ animation: 'fire 0.6s infinite alternate' }} />
-                      <span style={{ fontSize: '11.5px', color: '#991B1B', fontWeight: '700' }}>
-                        Na caçada! Faltam {diferenca} XP para roubar o pódio de {nomeTerceiro}!
+                    <div style={{ backgroundColor: '#FEF2F2', padding: '6px', borderRadius: '6px', border: '1px dashed #FCA5A5', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Flame size={14} color="#DC2626" style={{ animation: 'fire 0.6s infinite alternate' }} />
+                      <span style={{ fontSize: '11px', color: '#991B1B', fontWeight: '700' }}>
+                        Faltam {diferenca} XP para bater {nomeTerceiro}!
                       </span>
                     </div>
                   );
@@ -217,25 +219,34 @@ function Producao() {
               }
 
               return (
-                <div key={op.operador_id} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: `2px solid ${rodando ? '#22C55E' : corFundo}`, display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease' }}>
+                <div key={op.operador_id} style={{ 
+                  backgroundColor: '#FFFFFF', 
+                  borderRadius: '16px', 
+                  overflow: 'hidden', 
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.04)', 
+                  border: `2px solid ${rodando ? '#22C55E' : corFundo}`, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  transition: 'all 0.3s ease',
+                  height: '100%' // Faz o card preencher toda a grade no Modo TV
+                }}>
                   
-                  {/* ======================================================== */}
-                  {/* ÁREA CLICÁVEL DO CARD (Cabeçalho + Foto gigante)         */}
-                  {/* ======================================================== */}
-                  <div onClick={() => toggleCard(op.operador_id)} style={{ cursor: 'pointer' }}>
+                  {/* ÁREA CLICÁVEL DO CARD (Cabeçalho + Foto) */}
+                  <div onClick={() => toggleCard(op.operador_id)} style={{ cursor: 'pointer', flex: 1, display: 'flex', flexDirection: 'column' }}>
                     
-                    <div style={{ backgroundColor: corFundo, color: rodando ? '#FFFFFF' : corForte, padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: '800', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    {/* FAIXA SUPERIOR DO STATUS */}
+                    <div style={{ backgroundColor: corFundo, color: rodando ? '#FFFFFF' : corForte, padding: modoTV ? '8px 12px' : '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: '800', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         {textoStatus}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {rodando && <Activity size={16} style={{ animation: 'pulse 1.5s infinite' }} />}
-                        {/* SETINHA QUE MUDA SE O CARD TIVER ABERTO/FECHADO */}
-                        {isExpandido ? <ChevronUp size={20} color={rodando ? '#FFFFFF' : corForte} /> : <ChevronDown size={20} color={rodando ? '#FFFFFF' : corForte} />}
+                        {rodando && <Activity size={14} style={{ animation: 'pulse 1.5s infinite' }} />}
+                        {isExpandido ? <ChevronUp size={18} color={rodando ? '#FFFFFF' : corForte} /> : <ChevronDown size={18} color={rodando ? '#FFFFFF' : corForte} />}
                       </div>
                     </div>
 
-                    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+                    <div style={{ padding: modoTV ? '12px' : '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', textAlign: 'center', flex: 1 }}>
+                      
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <img 
                           src={imagensComErro[op.operador_id] 
@@ -243,28 +254,33 @@ function Producao() {
                             : `/avatares/${op.operador_id}.jpg`} 
                           alt={`Avatar de ${op.operador_nome}`}
                           onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
-                          style={{ width: '300px', height: '300px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' }} 
+                          style={{ 
+                            // MEDIDA MÁGICA: Em modo TV a altura da foto se baseia em % da altura da tela (vh) para garantir que cabem 3 linhas exatas!
+                            width: modoTV ? '15vh' : '300px', 
+                            height: modoTV ? '15vh' : '300px', 
+                            borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' 
+                          }} 
                         />
                         {iconePodio && (
-                          <div style={{ position: 'absolute', bottom: '25px', right: '25px', backgroundColor: '#FFFFFF', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+                          <div style={{ position: 'absolute', bottom: modoTV ? '5px' : '25px', right: modoTV ? '5px' : '25px', backgroundColor: '#FFFFFF', borderRadius: '50%', width: modoTV ? '30px' : '40px', height: modoTV ? '30px' : '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: modoTV ? '16px' : '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
                             {iconePodio}
                           </div>
                         )}
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <span style={{ display: 'block', fontSize: '14px', color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <span style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           Nível {nivel}
                         </span>
-                        <span style={{ display: 'block', fontSize: '20px', color: '#111827', fontWeight: '700', marginBottom: '12px' }}>
+                        <span style={{ display: 'block', fontSize: modoTV ? '16px' : '20px', color: '#111827', fontWeight: '700', marginBottom: '8px' }}>
                           {op.operador_nome}
                         </span>
                         
                         {medalhas.length > 0 && (
-                          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
                             {medalhas.map(m => (
                               <div key={m.id} title={m.nome} className="medalha-hover" style={{
-                                width: '36px', height: '36px', borderRadius: '10px',
+                                width: modoTV ? '28px' : '36px', height: modoTV ? '28px' : '36px', borderRadius: '8px',
                                 backgroundColor: '#1F2937', border: `2px solid ${m.cor}`,
                                 display: 'flex', justifyContent: 'center', alignItems: 'center',
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)', position: 'relative', overflow: 'hidden'
@@ -283,29 +299,26 @@ function Producao() {
                     </div>
                   </div>
 
-                  {/* ======================================================== */}
-                  {/* ÁREA EXPANSÍVEL (Só renderiza se isExpandido for TRUE)   */}
-                  {/* ======================================================== */}
-                  <div style={{ padding: '0 20px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  {/* ÁREA EXPANSÍVEL: Só mostra os detalhes se estiver aberto */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
                     
                     {isExpandido && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                      <div style={{ padding: modoTV ? '0 12px 12px 12px' : '0 20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%', marginBottom: '4px' }}></div>
                         
                         {rodando ? (
                           op.tarefas.map((tarefa, idxTarefa) => (
-                            <div key={idxTarefa} style={{ backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
-                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                                <Wrench size={18} color="#4B5563" style={{ marginTop: '2px' }} />
+                            <div key={idxTarefa} style={{ backgroundColor: '#F9FAFB', padding: '12px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                <Wrench size={16} color="#4B5563" style={{ marginTop: '2px' }} />
                                 <div>
-                                  <span style={{ display: 'block', fontSize: '14px', color: '#111827', fontWeight: '700' }}>{tarefa.nome_operacao}</span>
-                                  <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Máquina: {tarefa.maquina_sugerida}</span>
-                                  <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Peça: {tarefa.nome_peca}</span>
+                                  <span style={{ display: 'block', fontSize: '13px', color: '#111827', fontWeight: '700' }}>{tarefa.nome_operacao}</span>
+                                  <span style={{ display: 'block', fontSize: '12px', color: '#6B7280' }}>Maq: {tarefa.maquina_sugerida} | Peça: {tarefa.nome_peca}</span>
                                 </div>
                               </div>
-                              <div style={{ marginTop: '12px', backgroundColor: '#F0FDF4', padding: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: '1px solid #BBF7D0' }}>
-                                <Clock size={18} color="#16A34A" />
-                                <span style={{ fontSize: '18px', fontWeight: '800', color: '#166534', fontFamily: 'monospace' }}>
+                              <div style={{ marginTop: '8px', backgroundColor: '#F0FDF4', padding: '8px', borderRadius: '6px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', border: '1px solid #BBF7D0' }}>
+                                <Clock size={16} color="#16A34A" />
+                                <span style={{ fontSize: '16px', fontWeight: '800', color: '#166534', fontFamily: 'monospace' }}>
                                   {formatarTempo(tarefa.data_hora_inicio)}
                                 </span>
                               </div>
@@ -313,15 +326,10 @@ function Producao() {
                           ))
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '10px 0', opacity: 0.9 }}>
-                            <IconeCentro size={32} color={corForte} style={{ marginBottom: '8px' }} />
-                            <span style={{ fontSize: '14px', color: corForte, fontWeight: '700' }}>
+                            <IconeCentro size={24} color={corForte} style={{ marginBottom: '8px' }} />
+                            <span style={{ fontSize: '13px', color: corForte, fontWeight: '700' }}>
                               {textoStatus === 'LIVRE / SEM TAREFA' ? 'Aguardando 1ª tarefa' : 'Aluno Ocioso'}
                             </span>
-                            {ocioso > 0 && (
-                              <span style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '6px', fontWeight: '500' }}>
-                                Inativo há {Math.floor(ocioso)} minutos
-                              </span>
-                            )}
                           </div>
                         )}
 
@@ -330,12 +338,12 @@ function Producao() {
                     )}
 
                     {/* BARRA DE PROGRESSO DE XP NO RODAPÉ DO CARD (SEMPRE VISÍVEL) */}
-                    <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
+                    <div style={{ padding: modoTV ? '0 12px 12px 12px' : '0 20px 20px 20px', borderTop: isExpandido ? 'none' : '1px solid #F3F4F6', paddingTop: isExpandido ? '0' : (modoTV ? '12px' : '16px') }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: '600', color: '#6B7280' }}>Próximo: Nível {nivel + 1}</span>
-                        <span style={{ fontSize: '11px', fontWeight: '800', color: '#111827' }}>{progresso} / 100 XP</span>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: '#6B7280' }}>Próximo: Nível {nivel + 1}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '800', color: '#111827' }}>{progresso} / 100 XP</span>
                       </div>
-                      <div style={{ width: '100%', height: '8px', backgroundColor: '#E5E7EB', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: '100%', height: '6px', backgroundColor: '#E5E7EB', borderRadius: '4px', overflow: 'hidden' }}>
                         <div style={{ width: `${progresso}%`, height: '100%', backgroundColor: '#0284C7', transition: 'width 0.5s ease-out' }}></div>
                       </div>
                     </div>
