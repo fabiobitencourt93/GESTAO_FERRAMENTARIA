@@ -50,10 +50,10 @@ function Producao() {
 
         // ORDENAÇÃO: Joga o Fabio Bitencourt Ribeiro SEMPRE para a primeira posição (Índice 0)
         alunosAgrupados.sort((a, b) => {
-          const isFabioA = a.operador_nome.toLowerCase().includes('professor');
-          const isFabioB = b.operador_nome.toLowerCase().includes('professor');
-          if (isFabioA) return -1;
-          if (isFabioB) return 1;
+          const isprofessorA = a.operador_nome.toLowerCase().includes('professor');
+          const isprofessorB = b.operador_nome.toLowerCase().includes('professor');
+          if (isprofessorA) return -1;
+          if (isprofessorB) return 1;
           return (b.xp_acumulado || 0) - (a.xp_acumulado || 0);
         });
 
