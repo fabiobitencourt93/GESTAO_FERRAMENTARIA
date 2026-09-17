@@ -385,9 +385,16 @@ app.delete('/api/pecas/:id', async (req, res) => {
 
 app.delete('/api/processos/:id', async (req, res) => {
     try {
-        await pool.query('DELETE FROM processos WHERE id = $1', [req.params.id]);
-        res.json({ message: 'Processo removido' });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+        // 1º PASSO: Apaga todos os apontamentos (horas/xp) vinculados a esse processo
+        await pool.query("DELETE FROM apontamentos WHERE processo_id = $1", [req.params.id]);
+        
+        // 2º PASSO: Agora sim, apaga o processo com segurança
+        await pool.query("DELETE FROM processos WHERE id = $1", [req.params.id]);
+        
+        res.json({ message: "Processo e seus apontamentos excluídos com sucesso!" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 cron.schedule('0 16 * * *', async () => {
