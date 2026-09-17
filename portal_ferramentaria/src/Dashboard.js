@@ -1,12 +1,12 @@
 /* =========================================================================
    ARQUIVO: Producao.js (FRONT-END / REACT)
-   Versão Final Boss (Nível 999+ com Arte Especial)
+   Versão Final Boss no Topo + Pódio para a Turma
    ========================================================================= */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame, ChevronDown, ChevronUp, Skull, Crown } from 'lucide-react';
+import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame, ChevronDown, ChevronUp, Skull } from 'lucide-react';
 
 function Producao() {
   const navigate = useNavigate();
@@ -46,6 +46,15 @@ function Producao() {
               data_hora_inicio: item.data_hora_inicio
             });
           }
+        });
+
+        // ORDENAÇÃO: Joga o Fabio Bitencourt Ribeiro SEMPRE para a primeira posição (Índice 0)
+        alunosAgrupados.sort((a, b) => {
+          const isFabioA = a.operador_nome.toLowerCase().includes('fabio');
+          const isFabioB = b.operador_nome.toLowerCase().includes('fabio');
+          if (isFabioA) return -1;
+          if (isFabioB) return 1;
+          return (b.xp_acumulado || 0) - (a.xp_acumulado || 0);
         });
 
         setOperadores(alunosAgrupados);
@@ -110,7 +119,7 @@ function Producao() {
         }
         .boss-card {
           animation: bossGlow 3s infinite ease-in-out;
-          background: linear-gradient(145deg, #1E293B = 0%, #0F172A = 100%) !important;
+          background: linear-gradient(145deg, #1E293B 0%, #0F172A 100%) !important;
           border: 3px solid #DC2626 !important;
         }
       `}</style>
@@ -147,8 +156,8 @@ function Producao() {
           }}>
             {operadores.map((op, idx) => {
               
-              // IDENTIFICAÇÃO DO FINAL BOSS (Você pode mudar o nome ou ID se preferir)
-              const isFinalBoss = op.operador_nome.toLowerCase().includes('professor') || idx === 0;
+              // IDENTIFICAÇÃO DO FINAL BOSS (Seu usuário fica sempre fixo no topo)
+              const isFinalBoss = op.operador_nome.toLowerCase().includes('fabio');
 
               const rodando = op.tarefas && op.tarefas.length > 0;
               const ocioso = op.ocioso_minutos ? Number(op.ocioso_minutos) : 0;
@@ -183,19 +192,20 @@ function Producao() {
               let sombraAvatar = isFinalBoss ? '0 0 25px rgba(239, 68, 68, 0.8)' : 'none';
               let iconePodio = isFinalBoss ? <Skull size={modoTV ? 16 : 22} color="#DC2626" /> : null;
 
+              // Pódio para os alunos começa a partir do índice 1 (já que o Boss ocupa o 0)
               if (!isFinalBoss && xp > 0) {
-                if (idx === 0) {
+                if (idx === 1) {
                   corBordaAvatar = '#EAB308'; 
                   sombraAvatar = '0 0 15px rgba(234, 179, 8, 0.4)';
                   iconePodio = '👑';
-                } else if (idx === 1) {
+                } else if (idx === 2) {
                   corBordaAvatar = '#9CA3AF'; 
                   iconePodio = '🥈';
-                } else if (idx === 2) {
+                } else if (idx === 3) {
                   corBordaAvatar = '#B45309'; 
                   iconePodio = '🥉';
                 } 
-                else if (idx === 3) {
+                else if (idx === 4) {
                   corBordaAvatar = '#EF4444'; 
                   sombraAvatar = '0 0 10px rgba(239, 68, 68, 0.3)';
                   iconePodio = <Flame size={16} color="#DC2626" style={{ animation: 'fire 0.6s infinite alternate' }} />;
