@@ -334,7 +334,7 @@ function Producao() {
 
                     <div style={{ padding: modoTV ? '0 12px 10px 12px' : '0 20px 20px 20px', borderTop: isExpandido ? 'none' : `1px solid ${isFinalBoss ? '#334155' : '#F3F4F6'}`, paddingTop: isExpandido ? '0' : (modoTV ? '8px' : '16px') }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: '600', color: isFinalBoss ? '#FCA5A5' : '#6B7280' }}>{isFinalBoss ? 'STATUS: DEUS DA USINAGEM' : `Próximo: Nível ${nivel + 1}`}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: isFinalBoss ? '#FCA5A5' : '#6B7280' }}>{isFinalBoss ? 'FERRAMENTEIRO NÍVEL ÔMEGA' : `Próximo: Nível ${nivel + 1}`}</span>
                         <span style={{ fontSize: '10px', fontWeight: '800', color: isFinalBoss ? '#F8FAFC' : '#111827' }}>{isFinalBoss ? 'MAX XP' : `${progresso} / 100 XP`}</span>
                       </div>
                       <div style={{ width: '100%', height: '6px', backgroundColor: isFinalBoss ? '#334155' : '#E5E7EB', borderRadius: '4px', overflow: 'hidden' }}>
