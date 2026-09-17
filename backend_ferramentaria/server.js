@@ -246,9 +246,23 @@ app.get('/api/relatorios/processos', async (req, res) => {
     try {
         const turma_id = req.query.turma_id || await getTurmaAtiva();
         const query = `
-            SELECT proj.nome AS projeto, pec.nome AS peca, pr.nome_operacao AS processo, pr.maquina_sugerida AS maquina, pr.tempo_planejado_min AS planejado, COALESCE(SUM(EXTRACT(EPOCH FROM (a.data_hora_fim - a.data_hora_inicio))/60), 0) AS realizado
-            FROM processos pr JOIN pecas pec ON pr.peca_id = pec.id JOIN estampos est ON pec.estampo_id = est.id JOIN projetos proj ON est.projeto_id = proj.id LEFT JOIN apontamentos a ON a.processo_id = pr.id
-            WHERE proj.turma_id = $1 GROUP BY proj.nome, pec.nome, pr.nome_operacao, pr.maquina_sugerida, pr.tempo_planejado_min, pr.ordem_execucao ORDER BY proj.nome, pec.nome, pr.ordem_execucao;
+            SELECT 
+                proj.nome AS projeto, 
+                pec.nome AS peca, 
+                pr.nome_operacao AS processo, 
+                pr.maquina_sugerida AS maquina, 
+                pr.tempo_planejado_min AS planejado, 
+                COALESCE(SUM(EXTRACT(EPOCH FROM (a.data_hora_fim - a.data_hora_inicio))/60), 0) AS realizado,
+                MAX(op.nome) AS operador_nome
+            FROM processos pr 
+            JOIN pecas pec ON pr.peca_id = pec.id 
+            JOIN estampos est ON pec.estampo_id = est.id 
+            JOIN projetos proj ON est.projeto_id = proj.id 
+            LEFT JOIN apontamentos a ON a.processo_id = pr.id AND a.data_hora_fim IS NOT NULL
+            LEFT JOIN operadores op ON a.operador_id = op.id
+            WHERE proj.turma_id = $1 
+            GROUP BY proj.nome, pec.nome, pr.nome_operacao, pr.maquina_sugerida, pr.tempo_planejado_min, pr.ordem_execucao 
+            ORDER BY proj.nome, pec.nome, pr.ordem_execucao;
         `;
         const result = await pool.query(query, [turma_id]);
         res.json(result.rows);
@@ -267,7 +281,6 @@ app.get('/api/ocorrencias', async (req, res) => {
         res.json(result.rows);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
-
 // ==========================================
 // ROTA 8: Status Ao Vivo dos Alunos (AGORA ORDENADO POR XP!)
 // ==========================================
