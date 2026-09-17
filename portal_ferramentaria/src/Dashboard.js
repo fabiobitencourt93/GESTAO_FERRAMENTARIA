@@ -1,7 +1,16 @@
+/* =========================================================================
+   ARQUIVO: Producao.js (FRONT-END / REACT)
+   O que mudou?
+   Adicionamos a lógica de "Acordeão" (Expandir/Minimizar).
+   O card agora é clicável. As tarefas (cronômetros) ficam ocultas por 
+   padrão e só aparecem quando você clica no card do aluno.
+   ========================================================================= */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame } from 'lucide-react';
+// IMPORTANTE: Adicionamos ChevronDown e ChevronUp para as setinhas de expandir
+import { LayoutGrid, BarChart2, Settings, Monitor, Minimize, User, Wrench, Clock, Activity, CheckCircle, AlertTriangle, Shield, Zap, Flame, ChevronDown, ChevronUp } from 'lucide-react';
 
 function Producao() {
   const navigate = useNavigate();
@@ -9,25 +18,37 @@ function Producao() {
   const [modoTV, setModoTV] = useState(false);
   const [agora, setAgora] = useState(new Date());
   const [imagensComErro, setImagensComErro] = useState({});
+  
+  // ==========================================
+  // NOVO ESTADO: CONTROLE DE CARDS EXPANDIDOS
+  // ==========================================
+  // Guarda um "dicionário" de quem está aberto. Ex: { "101": true, "105": false }
+  const [cardsExpandidos, setCardsExpandidos] = useState({});
+
+  // Função que inverte o estado do card clicado (se tá aberto, fecha; se tá fechado, abre)
+  const toggleCard = (operadorId) => {
+    setCardsExpandidos(prev => ({
+      ...prev,
+      [operadorId]: !prev[operadorId]
+    }));
+  };
 
   const carregarDadosAoVivo = () => {
     axios.get('https://gestao-ferramentaria.onrender.com/api/relatorios/ao-vivo')
       .then(response => {
-        // MÁGICA DE AGRUPAMENTO: Transforma várias linhas em uma ficha única por aluno
+        // MÁGICA DE AGRUPAMENTO (Múltiplas tarefas no mesmo aluno)
         const alunosAgrupados = [];
         const mapa = {};
 
         response.data.forEach(item => {
           if (!mapa[item.operador_id]) {
-            // Se é a primeira vez que vemos esse aluno, criamos a "ficha" dele
             mapa[item.operador_id] = {
               ...item,
-              tarefas: [] // Criamos uma gaveta vazia para as tarefas
+              tarefas: [] 
             };
             alunosAgrupados.push(mapa[item.operador_id]);
           }
           
-          // Se essa linha do banco tem uma operação rodando, guarda na gaveta do aluno
           if (item.data_hora_inicio) {
             mapa[item.operador_id].tarefas.push({
               nome_operacao: item.nome_operacao,
@@ -38,7 +59,6 @@ function Producao() {
           }
         });
 
-        // Atualiza a tela com os alunos agrupados!
         setOperadores(alunosAgrupados);
       })
       .catch(error => console.error("Erro ao carregar Dashboard:", error));
@@ -90,7 +110,6 @@ function Producao() {
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .medalha-hover:hover { transform: scale(1.1); transition: transform 0.2s; }
         
-        /* NOVA ANIMAÇÃO DA CHAMA DO 4º LUGAR */
         @keyframes fire { 
           0% { filter: drop-shadow(0 0 2px #EF4444); transform: scale(1); } 
           100% { filter: drop-shadow(0 0 8px #DC2626); transform: scale(1.15); } 
@@ -120,9 +139,11 @@ function Producao() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', marginTop: '16px' }}>
             {operadores.map((op, idx) => {
               
-              // AGORA OLHAMOS PARA A NOSSA GAVETA DE TAREFAS
               const rodando = op.tarefas && op.tarefas.length > 0;
               const ocioso = op.ocioso_minutos ? Number(op.ocioso_minutos) : 0;
+              
+              // Verifica no nosso dicionário se este card específico está aberto ou fechado
+              const isExpandido = cardsExpandidos[op.operador_id];
               
               let corForte = '#6B7280'; 
               let corFundo = '#F3F4F6';
@@ -145,7 +166,6 @@ function Producao() {
                 IconeCentro = Clock;
               }
 
-              // SISTEMA DE NÍVEIS E MEDALHAS
               const xp = op.xp_acumulado || 0;
               const nivel = op.nivel || 1;
               const progresso = xp % 100; 
@@ -197,18 +217,25 @@ function Producao() {
               }
 
               return (
-                <div key={op.operador_id} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: `2px solid ${rodando ? '#22C55E' : corFundo}`, display: 'flex', flexDirection: 'column' }}>
+                <div key={op.operador_id} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: `2px solid ${rodando ? '#22C55E' : corFundo}`, display: 'flex', flexDirection: 'column', transition: 'all 0.3s ease' }}>
                   
-                  <div style={{ backgroundColor: corFundo, color: rodando ? '#FFFFFF' : corForte, padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: '800', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                      {textoStatus}
-                    </span>
-                    {rodando && <Activity size={16} style={{ animation: 'pulse 1.5s infinite' }} />}
-                  </div>
-
-                  <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  {/* ======================================================== */}
+                  {/* ÁREA CLICÁVEL DO CARD (Cabeçalho + Foto gigante)         */}
+                  {/* ======================================================== */}
+                  <div onClick={() => toggleCard(op.operador_id)} style={{ cursor: 'pointer' }}>
                     
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', marginBottom: '16px', textAlign: 'center' }}>
+                    <div style={{ backgroundColor: corFundo, color: rodando ? '#FFFFFF' : corForte, padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: '800', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        {textoStatus}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {rodando && <Activity size={16} style={{ animation: 'pulse 1.5s infinite' }} />}
+                        {/* SETINHA QUE MUDA SE O CARD TIVER ABERTO/FECHADO */}
+                        {isExpandido ? <ChevronUp size={20} color={rodando ? '#FFFFFF' : corForte} /> : <ChevronDown size={20} color={rodando ? '#FFFFFF' : corForte} />}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <img 
                           src={imagensComErro[op.operador_id] 
@@ -254,51 +281,55 @@ function Producao() {
                         )}
                       </div>
                     </div>
+                  </div>
 
-                    {/* ======================================================== */}
-                    {/* NOVA ÁREA DA USINAGEM (Mostra Múltiplos Processos)       */}
-                    {/* ======================================================== */}
-                    {rodando ? (
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%', marginBottom: '8px' }}></div>
+                  {/* ======================================================== */}
+                  {/* ÁREA EXPANSÍVEL (Só renderiza se isExpandido for TRUE)   */}
+                  {/* ======================================================== */}
+                  <div style={{ padding: '0 20px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    
+                    {isExpandido && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{ height: '1px', backgroundColor: '#F3F4F6', width: '100%', marginBottom: '4px' }}></div>
                         
-                        {/* Loop apenas para os cronômetros (tarefas do aluno) */}
-                        {op.tarefas.map((tarefa, idxTarefa) => (
-                          <div key={idxTarefa} style={{ backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                              <Wrench size={18} color="#4B5563" style={{ marginTop: '2px' }} />
-                              <div>
-                                <span style={{ display: 'block', fontSize: '14px', color: '#111827', fontWeight: '700' }}>{tarefa.nome_operacao}</span>
-                                <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Máquina: {tarefa.maquina_sugerida}</span>
-                                <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Peça: {tarefa.nome_peca}</span>
+                        {rodando ? (
+                          op.tarefas.map((tarefa, idxTarefa) => (
+                            <div key={idxTarefa} style={{ backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                                <Wrench size={18} color="#4B5563" style={{ marginTop: '2px' }} />
+                                <div>
+                                  <span style={{ display: 'block', fontSize: '14px', color: '#111827', fontWeight: '700' }}>{tarefa.nome_operacao}</span>
+                                  <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Máquina: {tarefa.maquina_sugerida}</span>
+                                  <span style={{ display: 'block', fontSize: '13px', color: '#6B7280' }}>Peça: {tarefa.nome_peca}</span>
+                                </div>
+                              </div>
+                              <div style={{ marginTop: '12px', backgroundColor: '#F0FDF4', padding: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: '1px solid #BBF7D0' }}>
+                                <Clock size={18} color="#16A34A" />
+                                <span style={{ fontSize: '18px', fontWeight: '800', color: '#166534', fontFamily: 'monospace' }}>
+                                  {formatarTempo(tarefa.data_hora_inicio)}
+                                </span>
                               </div>
                             </div>
-                            <div style={{ marginTop: '12px', backgroundColor: '#F0FDF4', padding: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', border: '1px solid #BBF7D0' }}>
-                              <Clock size={18} color="#16A34A" />
-                              <span style={{ fontSize: '18px', fontWeight: '800', color: '#166534', fontFamily: 'monospace' }}>
-                                {formatarTempo(tarefa.data_hora_inicio)}
+                          ))
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '10px 0', opacity: 0.9 }}>
+                            <IconeCentro size={32} color={corForte} style={{ marginBottom: '8px' }} />
+                            <span style={{ fontSize: '14px', color: corForte, fontWeight: '700' }}>
+                              {textoStatus === 'LIVRE / SEM TAREFA' ? 'Aguardando 1ª tarefa' : 'Aluno Ocioso'}
+                            </span>
+                            {ocioso > 0 && (
+                              <span style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '6px', fontWeight: '500' }}>
+                                Inativo há {Math.floor(ocioso)} minutos
                               </span>
-                            </div>
+                            )}
                           </div>
-                        ))}
-
-                      </div>
-                    ) : (
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '10px 0', opacity: 0.9 }}>
-                        <IconeCentro size={32} color={corForte} style={{ marginBottom: '8px' }} />
-                        <span style={{ fontSize: '14px', color: corForte, fontWeight: '700' }}>
-                          {textoStatus === 'LIVRE / SEM TAREFA' ? 'Aguardando 1ª tarefa' : 'Aluno Ocioso'}
-                        </span>
-                        {ocioso > 0 && (
-                          <span style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '6px', fontWeight: '500' }}>
-                            Inativo há {Math.floor(ocioso)} minutos
-                          </span>
                         )}
+
+                        {bannerCacada}
                       </div>
                     )}
 
-                    {bannerCacada}
-
+                    {/* BARRA DE PROGRESSO DE XP NO RODAPÉ DO CARD (SEMPRE VISÍVEL) */}
                     <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #F3F4F6' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                         <span style={{ fontSize: '11px', fontWeight: '600', color: '#6B7280' }}>Próximo: Nível {nivel + 1}</span>
