@@ -4,7 +4,7 @@ import axios from 'axios';
 import { ChevronLeft, Lock, Users, Clock, Settings, AlertOctagon, 
   LayoutGrid, BarChart2, User, Wrench, Calendar,   ClipboardList, Key, 
   TrendingUp, Filter, AlertTriangle, Plus, Trash2, FolderPlus, Download, 
-  Edit2, X, BookOpen, Package, PlusCircle, MinusCircle, Archive } from 'lucide-react';
+  Edit2, X, BookOpen, Package, PlusCircle, MinusCircle, Archive, Search, } from 'lucide-react';
 
 function Ajustes() {
   const navigate = useNavigate();
@@ -35,7 +35,8 @@ function Ajustes() {
   const [dadosProcessos, setDadosProcessos] = useState([]);
   const [carregandoRelatorio, setCarregandoRelatorio] = useState(false);
   const [filtroUsinagem, setFiltroUsinagem] = useState('pecas'); 
-  const [agrupamento, setAgrupamento] = useState('maquina'); 
+  const [agrupamento, setAgrupamento] = useState('maquina');
+  const [termoBusca, setTermoBusca] = useState(''); 
 
   // ==========================================
   // 4. ESTADOS: ALUNOS E PROJETOS
@@ -653,23 +654,48 @@ const baixarRelatorioEstoque = async () => {
           )}
 
           {/* ============================================== */}
-          {/* TELA DE RELATÓRIOS                           */}
+          {/* TELA DE RELATÓRIOS                             */}
           {/* ============================================== */}
           {telaAtual === 'relatorios' && (
             <div style={{ maxWidth: '700px', margin: '0 auto', marginTop: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-                 <button onClick={() => exportarParaExcel(dadosProcessos, 'Desempenho_Processos')} style={{ backgroundColor: '#10B981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}><Download size={16} /> Baixar Planilha</button>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                {/* BARRA DE PESQUISA ADICIONADA AQUI */}
+                <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Pesquisar projeto, peça, processo..." 
+                    value={termoBusca}
+                    onChange={(e) => setTermoBusca(e.target.value)}
+                    style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '8px', border: '1px solid #D1D5DB', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  <Search size={18} color="#9CA3AF" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                </div>
+
+                <button onClick={() => exportarParaExcel(dadosProcessos, 'Desempenho_Processos')} style={{ backgroundColor: '#10B981', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Download size={16} /> Baixar Planilha
+                </button>
               </div>
+
               <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', backgroundColor: '#FFFFFF', padding: '8px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <button onClick={() => setFiltroUsinagem('pecas')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: filtroUsinagem === 'pecas' ? '#111827' : 'transparent', color: filtroUsinagem === 'pecas' ? '#FFFFFF' : '#6B7280' }}><LayoutGrid size={16} /> Por Peça</button>
                 <button onClick={() => setFiltroUsinagem('processos')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: filtroUsinagem === 'processos' ? '#111827' : 'transparent', color: filtroUsinagem === 'processos' ? '#FFFFFF' : '#6B7280' }}><Filter size={16} /> Por Processo</button>
                 <button onClick={() => setFiltroUsinagem('atrasos')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: filtroUsinagem === 'atrasos' ? '#DC2626' : 'transparent', color: filtroUsinagem === 'atrasos' ? '#FFFFFF' : '#6B7280' }}><AlertTriangle size={16} /> Atrasos</button>
               </div>
+              
               {carregandoRelatorio ? (
                 <p style={{ color: '#6B7280', textAlign: 'center', marginTop: '40px' }}>Processando relatórios de usinagem...</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {filtroUsinagem === 'pecas' && dadosPecas.map((item, index) => {
+                  
+                  {/* FILTRAGEM NA ABA 'POR PEÇAS' */}
+                  {filtroUsinagem === 'pecas' && dadosPecas
+                    .filter(item => {
+                      if (!termoBusca) return true;
+                      const buscaMinuscula = termoBusca.toLowerCase();
+                      return (item.projeto?.toLowerCase().includes(buscaMinuscula) || item.peca?.toLowerCase().includes(buscaMinuscula));
+                    })
+                    .map((item, index) => {
                     const planejadoMin = Number(item.total_planejado) || 0;
                     const realizadoMin = Number(item.total_realizado) || 0;
                     const progresso = planejadoMin > 0 ? Math.round((realizadoMin / planejadoMin) * 100) : 0;
@@ -687,6 +713,8 @@ const baixarRelatorioEstoque = async () => {
                       </div>
                     );
                   })}
+                  
+                  {/* FILTRAGEM NA ABA 'POR PROCESSOS' */}
                   {filtroUsinagem === 'processos' && (
                     <>
                       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', paddingBottom: '8px', overflowX: 'auto' }}>
@@ -695,32 +723,66 @@ const baixarRelatorioEstoque = async () => {
                           <button key={tipo.id} onClick={() => setAgrupamento(tipo.id)} style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid #E5E7EB', backgroundColor: agrupamento === tipo.id ? '#111827' : '#FFFFFF', color: agrupamento === tipo.id ? '#FFFFFF' : '#4B5563', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>{tipo.label}</button>
                         ))}
                       </div>
-                      {Object.entries(dadosAgrupados).map(([grupo, itens], idx) => (
-                        <div key={idx} style={{ marginBottom: '24px' }}>
-                          <h3 style={{ fontSize: '14px', color: '#111827', borderBottom: '2px solid #E5E7EB', paddingBottom: '8px', marginBottom: '16px', textTransform: 'uppercase' }}>{grupo} <span style={{ color: '#6B7280', fontSize: '12px', fontWeight: 'normal', textTransform: 'none' }}>({itens.length} registros)</span></h3>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {itens.map((item, i) => {
-                              const planejado = Number(item.planejado) || 0;
-                              const realizado = Number(item.realizado) || 0;
-                              const estourou = realizado > planejado && planejado > 0;
-                              return (
-                                <div key={i} style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', borderLeft: estourou ? '4px solid #DC2626' : '4px solid #22C55E' }}>
-                                  <span style={{ fontSize: '11px', color: '#6B7280', textTransform: 'uppercase' }}>{item.projeto} / {item.peca}</span>
-                                  <h4 style={{ margin: '4px 0 12px 0', fontSize: '15px', color: '#111827' }}>{item.processo} <span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>({item.maquina})</span></h4>
-                                  <div style={{ display: 'flex', gap: '24px' }}>
-                                    <div><span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>Planejado</span><span style={{ fontSize: '14px', fontWeight: '600' }}>{planejado.toFixed(1)} min</span></div>
-                                    <div><span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>Realizado</span><span style={{ fontSize: '14px', fontWeight: '600', color: estourou ? '#DC2626' : '#16A34A' }}>{realizado.toFixed(1)} min</span></div>
+                      
+                      {Object.entries(dadosAgrupados).map(([grupo, itensOriginal], idx) => {
+                        // Filtra os itens dentro de cada grupo
+                        const itens = itensOriginal.filter(item => {
+                          if (!termoBusca) return true;
+                          const buscaMinuscula = termoBusca.toLowerCase();
+                          return (
+                            item.projeto?.toLowerCase().includes(buscaMinuscula) || 
+                            item.peca?.toLowerCase().includes(buscaMinuscula) ||
+                            item.processo?.toLowerCase().includes(buscaMinuscula) ||
+                            item.maquina?.toLowerCase().includes(buscaMinuscula)
+                          );
+                        });
+
+                        // Se a busca esvaziou esse grupo, não desenha o grupo na tela
+                        if (itens.length === 0) return null;
+
+                        return (
+                          <div key={idx} style={{ marginBottom: '24px' }}>
+                            <h3 style={{ fontSize: '14px', color: '#111827', borderBottom: '2px solid #E5E7EB', paddingBottom: '8px', marginBottom: '16px', textTransform: 'uppercase' }}>{grupo} <span style={{ color: '#6B7280', fontSize: '12px', fontWeight: 'normal', textTransform: 'none' }}>({itens.length} registros)</span></h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              {itens.map((item, i) => {
+                                const planejado = Number(item.planejado) || 0;
+                                const realizado = Number(item.realizado) || 0;
+                                const estourou = realizado > planejado && planejado > 0;
+                                return (
+                                  <div key={i} style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', borderLeft: estourou ? '4px solid #DC2626' : '4px solid #22C55E' }}>
+                                    <span style={{ fontSize: '11px', color: '#6B7280', textTransform: 'uppercase' }}>{item.projeto} / {item.peca}</span>
+                                    <h4 style={{ margin: '4px 0 12px 0', fontSize: '15px', color: '#111827' }}>{item.processo} <span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}>({item.maquina})</span></h4>
+                                    <div style={{ display: 'flex', gap: '24px' }}>
+                                      <div><span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>Planejado</span><span style={{ fontSize: '14px', fontWeight: '600' }}>{planejado.toFixed(1)} min</span></div>
+                                      <div><span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>Realizado</span><span style={{ fontSize: '14px', fontWeight: '600', color: estourou ? '#DC2626' : '#16A34A' }}>{realizado.toFixed(1)} min</span></div>
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </>
                   )}
-                  {filtroUsinagem === 'atrasos' && (
-                    processosComAtraso.length === 0 ? <div style={{ textAlign: 'center', padding: '40px', color: '#16A34A' }}><strong>Excelente!</strong> Nenhuma operação estourou o tempo planejado.</div> : processosComAtraso.map((item, index) => {
+                  
+                  {/* FILTRAGEM NA ABA 'ATRASOS' */}
+                  {filtroUsinagem === 'atrasos' && (() => {
+                    const atrasosFiltrados = processosComAtraso.filter(item => {
+                      if (!termoBusca) return true;
+                      const buscaMinuscula = termoBusca.toLowerCase();
+                      return (
+                        item.projeto?.toLowerCase().includes(buscaMinuscula) || 
+                        item.peca?.toLowerCase().includes(buscaMinuscula) ||
+                        item.processo?.toLowerCase().includes(buscaMinuscula)
+                      );
+                    });
+
+                    if (atrasosFiltrados.length === 0) {
+                      return <div style={{ textAlign: 'center', padding: '40px', color: '#16A34A' }}><strong>Nenhum atraso encontrado!</strong> (Ou verifique sua busca).</div>;
+                    }
+
+                    return atrasosFiltrados.map((item, index) => {
                         const planejado = Number(item.planejado) || 0;
                         const realizado = Number(item.realizado) || 0;
                         const atraso = realizado - planejado;
@@ -733,8 +795,8 @@ const baixarRelatorioEstoque = async () => {
                             <p style={{ margin: '12px 0 0 0', fontSize: '13px', color: '#991B1B' }}>Planejado: <strong>{planejado.toFixed(1)}m</strong> | Realizado: <strong>{realizado.toFixed(1)}m</strong></p>
                           </div>
                         );
-                      })
-                  )}
+                    });
+                  })()}
                 </div>
               )}
             </div>
