@@ -157,7 +157,7 @@ function Producao() {
             {operadores.map((op, idx) => {
               
               // IDENTIFICAÇÃO DO FINAL BOSS (Seu usuário fica sempre fixo no topo)
-              const isFinalBoss = op.operador_nome.toLowerCase().includes('fabio');
+              const isFinalBoss = op.operador_nome.toLowerCase().includes('professor');
 
               const rodando = op.tarefas && op.tarefas.length > 0;
               const ocioso = op.ocioso_minutos ? Number(op.ocioso_minutos) : 0;
