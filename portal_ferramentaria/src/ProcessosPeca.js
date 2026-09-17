@@ -21,6 +21,21 @@ function ProcessosPeca() {
       .catch(error => console.error("Erro:", error));
   };
 
+  const formatarTempoAlvo = (minutos) => {
+  if (!minutos) return 'Tempo não definido';
+  
+  const horas = Math.floor(minutos / 60);
+  const minRestantes = minutos % 60;
+  
+  if (horas > 0 && minRestantes > 0) {
+    return `${horas}h ${minRestantes}m`;
+  } else if (horas > 0) {
+    return `${horas} Horas`;
+  } else {
+    return `${minRestantes} Minutos`;
+  }
+};
+
   useEffect(() => {
     carregarProcessos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,7 +238,7 @@ function ProcessosPeca() {
               <p style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#111827', fontWeight: '600' }}>{processoSelecionado?.nome_operacao}</p>
               <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500' }}>Tempo Alvo:</span>
-                <span style={{ fontSize: '14px', color: '#007A33', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={16} /> {processoSelecionado?.tempo_planejado_min || 0} min</span>
+                <span style={{ fontSize: '14px', color: '#007A33', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={16} /> {formatarTempoAlvo(processoSelecionado.tempo_planejado_min)} min</span>
               </div>
             </div>
 
