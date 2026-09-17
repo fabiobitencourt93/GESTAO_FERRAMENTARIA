@@ -187,52 +187,52 @@ function Producao() {
 
                   <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                     
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <img 
-                          src={imagensComErro[op.operador_id] 
-                            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=E5E7EB&color=374151&size=64&bold=true` 
-                            : `/avatares/${op.operador_id}.jpg`} 
-                          alt={`Avatar de ${op.operador_nome}`}
-                          onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
-                          style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' }} 
-                        />
-                        {iconePodio && (
-                          <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', backgroundColor: '#FFFFFF', borderRadius: '50%', width: '26px', height: '26px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
-                            {iconePodio}
-                          </div>
-                        )}
-                      </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
+  <div style={{ position: 'relative', flexShrink: 0 }}>
+    <img 
+      src={imagensComErro[op.operador_id] 
+        ? `https://ui-avatars.com/api/?name=${encodeURIComponent(op.operador_nome)}&background=E5E7EB&color=374151&size=300&bold=true` 
+        : `/avatares/${op.operador_id}.jpg`} 
+      alt={`Avatar de ${op.operador_nome}`}
+      onError={() => setImagensComErro(prev => ({ ...prev, [op.operador_id]: true }))}
+      style={{ width: '300px', height: '300px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${corBordaAvatar}`, boxShadow: sombraAvatar, backgroundColor: '#F3F4F6' }} 
+    />
+    {iconePodio && (
+      <div style={{ position: 'absolute', bottom: '15px', right: '5px', backgroundColor: '#FFFFFF', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+        {iconePodio}
+      </div>
+    )}
+  </div>
 
-                      <div>
-                        <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                          Nível {nivel}
-                        </span>
-                        <span style={{ display: 'block', fontSize: '16px', color: '#111827', fontWeight: '700', marginBottom: '8px' }}>
-                          {op.operador_nome}
-                        </span>
-                        
-                        {medalhas.length > 0 && (
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            {medalhas.map(m => (
-                              <div key={m.id} title={m.nome} className="medalha-hover" style={{
-                                width: '32px', height: '32px', borderRadius: '8px',
-                                backgroundColor: '#1F2937', border: `2px solid ${m.cor}`,
-                                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)', position: 'relative', overflow: 'hidden'
-                              }}>
-                                <img src={`/medalhas/${m.id}.jpg`} alt={m.nome}
-                                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                <div style={{ display: 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                                  {m.fallback}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+  <div>
+    <span style={{ display: 'block', fontSize: '12px', color: '#6B7280', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      Nível {nivel}
+    </span>
+    <span style={{ display: 'block', fontSize: '18px', color: '#111827', fontWeight: '700', marginBottom: '10px' }}>
+      {op.operador_nome}
+    </span>
+    
+    {medalhas.length > 0 && (
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {medalhas.map(m => (
+          <div key={m.id} title={m.nome} className="medalha-hover" style={{
+            width: '36px', height: '36px', borderRadius: '10px',
+            backgroundColor: '#1F2937', border: `2px solid ${m.cor}`,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)', position: 'relative', overflow: 'hidden'
+          }}>
+            <img src={`/medalhas/${m.id}.jpg`} alt={m.nome}
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ display: 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+              {m.fallback}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
 
                     {rodando ? (
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
