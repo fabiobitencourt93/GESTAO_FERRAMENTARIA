@@ -32,12 +32,41 @@ INSERT INTO pecas (estampo_id, pos, quantidade, nome, material, tratamento_termi
 
 INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida, tempo_estimado_horas)
 VALUES
-    ((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 1, 'Desmontar Porta Estampo', 'Bancada de Ferramentas, Pórtico', 1.0),
-    ((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 2, 'Programação CNC', 'Software CAM', 8.0),
-    ((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 3, 'Fresamento CNC', 'Centro de Usinagem', 10.0),
-    ((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 4, 'Rebarbação e usinagem das roscas', 'Bancada de Ferramentas e Furadeira de Coluna', 4.0),
-    ((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 5, 'Montagem das Buchas Guias e Ajustes', 'Bancada de Ferramentas', 2.0);
-    
+((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 1, 'Desmontar Porta Estampo', 'Bancada de Ferramentas, Pórtico', 1.0),
+((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 2, 'Programação CNC', 'Software CAM', 8.0),
+((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 3, 'Fresamento CNC', 'Centro de Usinagem', 10.0),
+((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 4, 'Rebarbação e usinagem das roscas', 'Bancada de Ferramentas e Furadeira de Coluna', 4.0),
+((SELECT id FROM pecas WHERE nome = 'Placa Base Inferior' AND estampo_id = 3 LIMIT 1), 5, 'Montagem das Buchas Guias e Ajustes', 'Bancada de Ferramentas', 2.0);
+
+((SELECT id FROM pecas WHERE nome = 'Placa Base Superior' AND estampo_id = 3 LIMIT 1),'1','Desmontar Porta Estampo','Bancada de Ferramentas, Pórtico','1.0'),
+((SELECT id FROM pecas WHERE nome = 'Placa Base Superior' AND estampo_id = 3 LIMIT 1),'2','Programação CNC','Software CAM','8.0'),
+((SELECT id FROM pecas WHERE nome = 'Placa Base Superior' AND estampo_id = 3 LIMIT 1),'3','Fresamento CNC','Centro de Usinagem','10.0'),
+((SELECT id FROM pecas WHERE nome = 'Placa Base Superior' AND estampo_id = 3 LIMIT 1),'4','Rebarbação e Usinagem das Roscas','Bancada de Ferramentas e Furadeira de Coluna','4.0'),
+((SELECT id FROM pecas WHERE nome = 'Placa Base Superior' AND estampo_id = 3 LIMIT 1),'5','Montagem das Colunas Guias','Bancada de Ferramentas','2.0'),
+
+((SELECT id FROM pecas WHERE nome = 'Placa Flutuante' AND estampo_id = 3 LIMIT 1),'1','Desmontar Porta Estampo','Bancada de Ferramentas, Pórtico','1.0'),
+((SELECT id FROM pecas WHERE nome = 'Placa Flutuante' AND estampo_id = 3 LIMIT 1),'2','Programação CNC','Software CAM','8.0'),
+((SELECT id FROM pecas WHERE nome = 'Placa Flutuante' AND estampo_id = 3 LIMIT 1),'3','Fresamento CNC','Centro de Usinagem','10.0'),
+((SELECT id FROM pecas WHERE nome = 'Placa Flutuante' AND estampo_id = 3 LIMIT 1),'4','Rebarbação e Usinagem das Roscas','Bancada de Ferramentas e Furadeira de Coluna','4.0'),
+((SELECT id FROM pecas WHERE nome = 'Placa Flutuante' AND estampo_id = 3 LIMIT 1),'5','Montagem das Buchas Guias','Bancada de Ferramentas','2.0'),
+
+((SELECT id FROM pecas WHERE nome = 'Batente Estabilizador-Ø 31,8 x 71,2' AND estampo_id = 3 LIMIT 1),'1','Verificar Material','Bancada de Ferramentas','0.25'),
+((SELECT id FROM pecas WHERE nome = 'Batente Estabilizador-Ø 31,8 x 71,2' AND estampo_id = 3 LIMIT 1),'2','Torneamento','Torno Convencional','3.0'),
+((SELECT id FROM pecas WHERE nome = 'Batente Estabilizador-Ø 31,8 x 71,2' AND estampo_id = 3 LIMIT 1),'3','Retificação','Retífica Plana','1.5'),
+((SELECT id FROM pecas WHERE nome = 'Batente Estabilizador-Ø 31,8 x 71,2' AND estampo_id = 3 LIMIT 1),'4','Controle Dimensional','Bancada de Ferramentas','0.25'),
+
+((SELECT id FROM pecas WHERE nome = 'Garra 28 x 40 x 190' AND estampo_id = 3 LIMIT 1),'1','Verificar Material','Bancada de Ferramentas','0.25'),
+((SELECT id FROM pecas WHERE nome = 'Garra 28 x 40 x 190' AND estampo_id = 3 LIMIT 1),'2','Programação CNC','Software CAM','1.5'),
+((SELECT id FROM pecas WHERE nome = 'Garra 28 x 40 x 190' AND estampo_id = 3 LIMIT 1),'3','Fresamento CNC','Centro de Usinagem','4.0'),
+((SELECT id FROM pecas WHERE nome = 'Garra 28 x 40 x 190' AND estampo_id = 3 LIMIT 1),'4','Rebarbação e Usinagem das Roscas','Bancada de Ferramentas e Furadeira de Coluna','1.0'),
+((SELECT id FROM pecas WHERE nome = 'Garra 28 x 40 x 190' AND estampo_id = 3 LIMIT 1),'5','Controle Dimensional','Bancada de Ferramentas','0.25'),
+
+((SELECT id FROM pecas WHERE nome = 'Guia Blank' AND estampo_id = 3 LIMIT 1),'1','Verificar Material','Bancada de Ferramentas','0.25'),
+((SELECT id FROM pecas WHERE nome = 'Guia Blank' AND estampo_id = 3 LIMIT 1),'2','Programação CNC','Software CAM','1.5'),
+((SELECT id FROM pecas WHERE nome = 'Guia Blank' AND estampo_id = 3 LIMIT 1),'3','Fresamento Convencional','Fresadora Universal','1.5'),
+((SELECT id FROM pecas WHERE nome = 'Guia Blank' AND estampo_id = 3 LIMIT 1),'4','Retíficação','Retífica Plana','1.5'),
+((SELECT id FROM pecas WHERE nome = 'Guia Blank' AND estampo_id = 3 LIMIT 1),'5','Corte dos perfis','Eletroerosão a fio','3.0'),
+((SELECT id FROM pecas WHERE nome = 'Guia Blank' AND estampo_id = 3 LIMIT 1),'6','Rebarbação','Bancada de Ferramentas','1.5'),
 
 
 
@@ -79,3 +108,7 @@ INSERT INTO processos (peca_id, ordem_execucao, nome_operacao, maquina_sugerida,
 (4, 7, 'Cortar Janelas dos Insertos', 'Erosão a fio', 24),
 (4, 8, 'Montagem dos Insertos', 'Retífica Plana e Bancada', 24),
 (4, 9, 'Cortar Perfis dos Insertos', 'Erosão a fio', 8);
+
+
+
+                
