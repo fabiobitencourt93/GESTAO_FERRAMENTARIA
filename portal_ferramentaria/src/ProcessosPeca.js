@@ -237,7 +237,8 @@ function ProcessosPeca() {
             <div style={{ backgroundColor: '#F3F4F6', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
               <p style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#111827', fontWeight: '600' }}>{processoSelecionado?.nome_operacao}</p>
               <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500' }}>Tempo Alvo:</span>
+                <div>
+                  <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500' }}>Tempo Alvo:</span>
                 <span>
                     Tempo Alvo: {
                       !processoSelecionado.tempo_planejado_min || processoSelecionado.tempo_planejado_min === 0 
@@ -249,6 +250,7 @@ function ProcessosPeca() {
                           : `${processoSelecionado.tempo_planejado_min} Minutos`
                     }
                 </span>
+              </div>
               </div>
             
               </div>
