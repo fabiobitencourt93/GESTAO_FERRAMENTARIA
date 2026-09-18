@@ -236,26 +236,6 @@ function ProcessosPeca() {
         <button onClick={fecharModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: 0 }}><X size={24} /></button>
       </div>
       
-      {/* INFORMAÇÕES DA OPERAÇÃO (CAIXA CINZA) */}
-      <div style={{ backgroundColor: '#F3F4F6', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
-        <p style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#111827', fontWeight: '600' }}>{processoSelecionado?.nome_operacao}</p>
-        <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500', marginRight: '8px' }}>Tempo Alvo:</span>
-            <span style={{ fontSize: '14px', color: '#111827', fontWeight: '700' }}>
-              {
-                !processoSelecionado?.tempo_planejado_min || processoSelecionado.tempo_planejado_min === 0 
-                  ? 'Não definido' 
-                  : processoSelecionado.tempo_planejado_min >= 60 
-                    ? processoSelecionado.tempo_planejado_min % 60 === 0 
-                      ? `${Math.floor(processoSelecionado.tempo_planejado_min / 60)} Horas` 
-                      : `${Math.floor(processoSelecionado.tempo_planejado_min / 60)}h ${processoSelecionado.tempo_planejado_min % 60}m`
-                    : `${processoSelecionado.tempo_planejado_min} Minutos`
-              }
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* INFORMAÇÕES DA OPERAÇÃO (CAIXA CINZA) */}
       <div style={{ backgroundColor: '#F3F4F6', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
