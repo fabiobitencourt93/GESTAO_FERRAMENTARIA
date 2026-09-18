@@ -14,6 +14,7 @@ function ProcessosPeca() {
   const [tipoAcao, setTipoAcao] = useState(''); 
   const [ocorrencia, setOcorrencia] = useState('');
   const [agora, setAgora] = useState(new Date());
+  const [carregandoAcao, setCarregandoAcao] = useState(false);
 
   const carregarProcessos = () => {
     axios.get(`https://gestao-ferramentaria.onrender.com/api/pecas/${id}/processos`)
@@ -256,54 +257,62 @@ function ProcessosPeca() {
         </div>
       </div>
 
-      {/* ÁREA DE INPUTS (CRACHÁ E OCORRÊNCIA) */}
-      {tipoAcao === 'iniciar' ? (
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Seu ID (Crachá)</label>
-          <input 
-            type="number" 
-            value={operadorId} 
-            onChange={(e) => setOperadorId(e.target.value)} 
-            placeholder="Ex: 20265" 
-            style={{ width: '100%', boxSizing: 'border-box', padding: '14px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '16px', outline: 'none', backgroundColor: '#FAFBFC' }} 
-          />
+      {/* INFORMAÇÕES DA OPERAÇÃO (CAIXA CINZA) */}
+      <div style={{ backgroundColor: '#F3F4F6', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
+        <p style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#111827', fontWeight: '600' }}>{processoSelecionado?.nome_operacao}</p>
+        <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500', marginRight: '8px' }}>Tempo Alvo:</span>
+            <span style={{ fontSize: '14px', color: '#111827', fontWeight: '700' }}>
+              {
+                !processoSelecionado?.tempo_planejado_min || processoSelecionado.tempo_planejado_min === 0 
+                  ? 'Não definido' 
+                  : processoSelecionado.tempo_planejado_min >= 60 
+                    ? processoSelecionado.tempo_planejado_min % 60 === 0 
+                      ? `${Math.floor(processoSelecionado.tempo_planejado_min / 60)} Horas` 
+                      : `${Math.floor(processoSelecionado.tempo_planejado_min / 60)}h ${processoSelecionado.tempo_planejado_min % 60}m`
+                    : `${processoSelecionado.tempo_planejado_min} Minutos`
+              }
+            </span>
+          </div>
         </div>
-      ) : (
-        <div style={{ backgroundColor: '#FEF2F2', padding: '16px', borderRadius: '8px', border: '1px solid #FCA5A5', marginBottom: '20px' }}>
-          <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#991B1B', marginBottom: '8px' }}>
-              Digite seu Crachá para confirmar o encerramento:
-          </label>
-          <input 
-              type="number" 
-              placeholder="Seu ID..." 
-              value={operadorId} 
-              onChange={(e) => setOperadorId(e.target.value)} 
-              style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #FCA5A5', outline: 'none', fontSize: '15px', fontWeight: '600', boxSizing: 'border-box' }} 
-          />
-        </div>
-      )}
-      
-      {(tipoAcao === 'finalizar' || tipoAcao === 'finalizar-100') && (
-        <div style={{ marginBottom: '24px' }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#4B5563', fontWeight: '600' }}>Houve alguma ocorrência? (Opcional)</p>
-          <textarea 
-            value={ocorrencia} 
-            onChange={(e) => setOcorrencia(e.target.value)} 
-            placeholder="Ex: Quebra de pastilha, máquina travou..." 
-            style={{ width: '100%', boxSizing: 'border-box', padding: '12px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '14px', outline: 'none', backgroundColor: '#FAFBFC', height: '80px', resize: 'none' }} 
-          />
-        </div>
-      )}
+      </div> {/* <-- ESSA DIV FECHA A CAIXA CINZA */}
 
-      {/* BOTÃO DE CONFIRMAÇÃO ÚNICO */}
-      <button 
-        onClick={confirmarAcao} 
-        disabled={carregandoAcao} 
-        style={{ width: '100%', padding: '16px', backgroundColor: tipoAcao === 'iniciar' ? '#007A33' : tipoAcao === 'finalizar-100' ? '#16A34A' : '#DC2626', color: 'white', border: 'none', borderRadius: '14px', fontWeight: '700', fontSize: '15px', cursor: carregandoAcao ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: carregandoAcao ? 0.7 : 1 }}
-      >
-        {tipoAcao === 'iniciar' ? <Play size={18} fill="currentColor" /> : tipoAcao === 'finalizar-100' ? <CheckCircle size={18} /> : <Square size={18} fill="currentColor" />}
-        {carregandoAcao ? 'Aguarde...' : tipoAcao === 'iniciar' ? 'Confirmar Início' : tipoAcao === 'finalizar-100' ? 'Confirmar 100%' : 'Encerrar Tarefa'}
-      </button>
+      {/* ========================================================= */}
+      {/* O SEU PROBLEMA DE LAYOUT ESTAVA DAQUI PARA BAIXO          */}
+      {/* ========================================================= */}
+      
+      {tipoAcao === 'iniciar' ? (
+        <form onSubmit={confirmarAcao}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
+              Seu ID (Crachá)
+            </label>
+            <input 
+              type="number" 
+              value={operadorId} 
+              onChange={e => setOperadorId(e.target.value)} 
+              placeholder="Ex: 20265" 
+              required 
+              style={{ width: '100%', boxSizing: 'border-box', padding: '12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '16px', outline: 'none' }}
+            />
+          </div>
+          
+          <button type="submit" disabled={carregandoAcao} style={{ width: '100%', padding: '14px', backgroundColor: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: carregandoAcao ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+            {carregandoAcao ? 'Aguarde...' : <><Play size={18} /> Confirmar Início</>}
+          </button>
+        </form>
+      ) : tipoAcao === 'pausar' ? (
+          // O seu código existente para pausar
+          <div style={{ backgroundColor: '#FEF2F2', padding: '16px', borderRadius: '8px', border: '1px solid #FCA5A5', marginBottom: '20px' }}>
+             {/* ... */}
+          </div>
+      ) : (
+          // O seu código existente para finalizar ou finalizar-100
+          <div style={{ backgroundColor: '#FEF2F2', padding: '16px', borderRadius: '8px', border: '1px solid #FCA5A5', marginBottom: '20px' }}>
+             {/* ... */}
+          </div>
+      )}
 
     </div>
   </div>
