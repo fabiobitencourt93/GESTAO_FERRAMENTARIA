@@ -44,69 +44,51 @@ function PecasEstampo() {
 
         {/* Lista de Peças (Estilo Cards) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {pecas.map((peca) => (
-            <div 
-              key={peca.id} 
-              style={{ 
-                backgroundColor: '#FFFFFF', 
-                borderRadius: '20px', 
-                padding: '20px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
-              }}
-            >
-              {/* Esquerda: Caixa de Posição + Textos */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                {/* Destaque para o Número da Posição (Fundo azul claro) */}
-                <div style={{ 
-                  backgroundColor: '#E6F0FF', 
-                  color: '#0B5ED7', 
-                  minWidth: '48px', 
-                  height: '48px', 
-                  borderRadius: '14px', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  justifyContent: 'center', 
-                  alignItems: 'center',
-                  padding: '0 8px'
-                }}>
-                  <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.5px' }}>POS</span>
-                  <span style={{ fontSize: '16px', fontWeight: '800' }}>{peca.pos}</span>
-                </div>
-                
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#111827' }}>{peca.nome}</h3>
-                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6B7280' }}>
-                    {peca.material} • {peca.tratamento_termico}
-                  </p>
-                </div>
-              </div>
+          {pecas.map((peca) => {
+  // 1. Calcula a percentagem (Evita divisão por zero caso a peça ainda não tenha roteiro)
+  const total = parseInt(peca.total_processos) || 0;
+  const concluidos = parseInt(peca.processos_concluidos) || 0;
+  const percentagem = total > 0 ? Math.round((concluidos / total) * 100) : 0;
 
-              {/* Direita: Botão de Ação */}
-              <button 
-                onClick={() => navigate(`/peca/${peca.id}/processos`)}
-                style={{ 
-                  backgroundColor: '#007A33', 
-                  color: '#FFFFFF', 
-                  border: 'none', 
-                  borderRadius: '12px', 
-                  padding: '10px 16px',
-                  fontWeight: '600',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 2px 8px rgba(0, 122, 51, 0.25)',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Processos <ArrowRight size={16} />
-              </button>
-            </div>
-          ))}
+  return (
+    <div 
+      key={peca.id} 
+      style={{
+        // ==========================================
+        // A MÁGICA VISUAL DA BARRA DE PROGRESSO AQUI
+        // Pinta de verde claro (#ECFDF5) até à percentagem, e o resto fica branco (#FFFFFF)
+        // ==========================================
+        background: `linear-gradient(to right, #ECFDF5 ${percentagem}%, #FFFFFF ${percentagem}%)`,
+        
+        border: '1px solid #E5E7EB',
+        borderRadius: '16px',
+        padding: '20px',
+        marginBottom: '12px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        position: 'relative', // Importante para organizar os itens dentro
+      }}
+    >
+      <div>
+        <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>
+          {peca.nome}
+        </h3>
+        <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
+          {concluidos} de {total} operações concluídas
+        </p>
+      </div>
+
+      {/* Exibe o selo de 100% se a peça estiver totalmente pronta */}
+      <div style={{ fontWeight: '800', fontSize: '15px', color: percentagem === 100 ? '#059669' : '#9CA3AF' }}>
+        {percentagem}%
+      </div>
+      
+      {/* Aqui vão os seus botões de aceder ao roteiro, editar, etc. */}
+    </div>
+  );
+})}
         </div>
       </div>
 

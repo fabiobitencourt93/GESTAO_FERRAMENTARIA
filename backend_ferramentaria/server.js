@@ -127,9 +127,20 @@ app.delete('/api/projetos/:id', async (req, res) => {
 
 app.get('/api/estampos/:id/pecas', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM pecas WHERE estampo_id = $1 ORDER BY pos ASC', [req.params.id]);
+        const query = `
+            SELECT 
+                pe.*,
+                (SELECT COUNT(*) FROM processos pr WHERE pr.peca_id = pe.id) AS total_processos,
+                (SELECT COUNT(*) FROM processos pr WHERE pr.peca_id = pe.id AND pr.status = 'Concluído') AS processos_concluidos
+            FROM pecas pe
+            WHERE pe.estampo_id = $1
+            ORDER BY pe.pos ASC
+        `;
+        const result = await pool.query(query, [req.params.id]);
         res.json(result.rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
 app.get('/api/pecas/:id/processos', async (req, res) => {
