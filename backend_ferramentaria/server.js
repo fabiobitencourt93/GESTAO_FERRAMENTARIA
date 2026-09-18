@@ -160,6 +160,59 @@ app.put('/api/apontamentos/finalizar', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ROTA PARA PAUSAR OU FINALIZAR UMA OPERAÇÃO (100%)
+app.post('/api/apontamentos/finalizar', async (req, res) => {
+    try {
+        const { processo_id, operador_id, ocorrencia, concluido } = req.body;
+
+        // 1. Encontra o apontamento aberto deste aluno nesta máquina e regista a hora de fim
+        const resultApontamento = await pool.query(`
+            UPDATE apontamentos 
+            SET data_hora_fim = CURRENT_TIMESTAMP 
+            WHERE processo_id = $1 
+              AND operador_id = $2 
+              AND data_hora_fim IS NULL 
+            RETURNING *
+        `, [processo_id, operador_id]);
+
+        // Se não encontrou nenhum apontamento a rodar para este crachá
+        if (resultApontamento.rowCount === 0) {
+            return res.status(400).json({ error: "Nenhum apontamento a decorrer encontrado para este crachá nesta operação." });
+        }
+
+        // 2. Se o aluno digitou alguma ocorrência (ferramenta partida, etc.), guarda na base de dados
+        if (ocorrencia && ocorrencia.trim() !== '') {
+            await pool.query(`
+                INSERT INTO ocorrencias (projeto, peca, operacao, operador, ocorrencia, data_registro) 
+                VALUES (
+                    (SELECT proj.nome FROM projetos proj JOIN estampos est ON proj.id = est.projeto_id JOIN pecas pec ON est.id = pec.estampo_id JOIN processos pr ON pec.id = pr.peca_id WHERE pr.id = $1),
+                    (SELECT pec.nome FROM pecas pec JOIN processos pr ON pec.id = pr.peca_id WHERE pr.id = $1),
+                    (SELECT nome_operacao FROM processos WHERE id = $1),
+                    (SELECT nome FROM operadores WHERE id = $2),
+                    $3,
+                    CURRENT_TIMESTAMP
+                )
+            `, [processo_id, operador_id, ocorrencia]);
+        }
+
+        // 3. Se o aluno clicou no botão verde de "100%", atualiza o status da peça inteira
+        if (concluido) {
+            await pool.query(`
+                UPDATE processos 
+                SET status = 'Concluído' 
+                WHERE id = $1
+            `, [processo_id]);
+        }
+
+        res.json({ message: "Ação registada com sucesso!" });
+
+    } catch (err) {
+        console.error("Erro ao pausar/finalizar a operação:", err);
+        res.status(500).json({ error: "Erro interno no servidor ao tentar parar a máquina." });
+    }
+});
+
+
 // ==========================================
 // ROTA: Encerrar Apontamento 100% (COM AUTO-APONTAMENTO E XP)
 // ==========================================
