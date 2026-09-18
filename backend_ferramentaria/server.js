@@ -486,7 +486,41 @@ app.put(['/api/projetos/:id', '/api/projetos/:id/editar'], async (req, res) => {
 });
 
 
+// ROTA PARA EDITAR NOME DA PEÇA
+app.put('/api/pecas/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome } = req.body;
+        
+        await pool.query('UPDATE pecas SET nome = $1 WHERE id = $2', [nome, id]);
+        
+        res.json({ message: "Peça atualizada com sucesso!" });
+    } catch (err) {
+        console.error("Erro ao atualizar peça:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
+// ROTA PARA EDITAR PROCESSO
+app.put('/api/processos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Pega os dados que o Front-end enviou. Se o seu front-end envia minutos em vez de horas, 
+        // ajuste os nomes dos campos conforme o seu Axios
+        const { nome_operacao, maquina_sugerida, tempo_estimado_horas, tempo_planejado_min } = req.body;
+        
+        // Exemplo genérico atualizando nome e máquina:
+        await pool.query(
+            'UPDATE processos SET nome_operacao = $1, maquina_sugerida = $2 WHERE id = $3', 
+            [nome_operacao, maquina_sugerida, id]
+        );
+        
+        res.json({ message: "Processo atualizado com sucesso!" });
+    } catch (err) {
+        console.error("Erro ao atualizar processo:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
 
