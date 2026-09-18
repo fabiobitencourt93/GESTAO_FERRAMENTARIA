@@ -259,6 +259,64 @@ function ProcessosPeca() {
       </div> {/* <-- ESSA DIV FECHA A CAIXA CINZA */}
 
       {/* ========================================================= */}
+      {/* ÁREA DE INPUTS: CRACHÁ, OCORRÊNCIA E BOTÃO DE CONFIRMAÇÃO */}
+      {/* ========================================================= */}
+      
+      {tipoAcao === 'iniciar' ? (
+        <form onSubmit={confirmarAcao}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
+              Seu ID (Crachá)
+            </label>
+            <input 
+              type="number" 
+              value={operadorId} 
+              onChange={e => setOperadorId(e.target.value)} 
+              placeholder="Ex: 20265" 
+              required 
+              style={{ width: '100%', boxSizing: 'border-box', padding: '12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '16px', outline: 'none' }}
+            />
+          </div>
+          
+          <button type="submit" disabled={carregandoAcao} style={{ width: '100%', padding: '14px', backgroundColor: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '15px', cursor: carregandoAcao ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+            {carregandoAcao ? 'Aguarde...' : <><Play size={18} /> Confirmar Início</>}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={confirmarAcao}>
+          <div style={{ backgroundColor: '#FEF2F2', padding: '16px', borderRadius: '8px', border: '1px solid #FCA5A5', marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#991B1B', marginBottom: '8px' }}>
+                Digite seu Crachá para confirmar:
+            </label>
+            <input 
+                type="number" 
+                placeholder="Seu ID..." 
+                value={operadorId} 
+                onChange={(e) => setOperadorId(e.target.value)}
+                required 
+                style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #FCA5A5', outline: 'none', fontSize: '15px', fontWeight: '600', boxSizing: 'border-box', backgroundColor: '#FFFFFF' }} 
+            />
+          </div>
+
+          {/* CAMPO DE OCORRÊNCIA APENAS PARA FINALIZAR OU PAUSAR (SE NECESSÁRIO) */}
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#4B5563', fontWeight: '600' }}>Houve alguma ocorrência? (Opcional)</p>
+            <textarea 
+              value={ocorrencia} 
+              onChange={(e) => setOcorrencia(e.target.value)} 
+              placeholder="Ex: Quebra de pastilha, máquina travou..." 
+              style={{ width: '100%', boxSizing: 'border-box', padding: '12px', border: '1px solid #D1D5DB', borderRadius: '12px', fontSize: '14px', outline: 'none', backgroundColor: '#FAFBFC', height: '80px', resize: 'none' }} 
+            />
+          </div>
+
+          <button type="submit" disabled={carregandoAcao} style={{ width: '100%', padding: '16px', backgroundColor: tipoAcao === 'finalizar-100' ? '#16A34A' : '#DC2626', color: 'white', border: 'none', borderRadius: '14px', fontWeight: '700', fontSize: '15px', cursor: carregandoAcao ? 'not-allowed' : 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+            {tipoAcao === 'finalizar-100' ? <CheckCircle size={18} /> : <Square size={18} fill="currentColor" />}
+            {carregandoAcao ? 'Aguarde...' : tipoAcao === 'finalizar-100' ? 'Confirmar 100%' : 'Encerrar Tarefa / Pausar'}
+          </button>
+        </form>
+      )}
+
+      {/* ========================================================= */}
       {/* O SEU PROBLEMA DE LAYOUT ESTAVA DAQUI PARA BAIXO          */}
       {/* ========================================================= */}
       
