@@ -240,7 +240,8 @@ function ProcessosPeca() {
                 <div>
                   <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500' }}>Tempo Alvo:</span>
                 <span>
-                    Tempo Alvo: {
+                                     
+                    {
                       !processoSelecionado.tempo_planejado_min || processoSelecionado.tempo_planejado_min === 0 
                         ? 'Não definido' 
                         : processoSelecionado.tempo_planejado_min >= 60 
