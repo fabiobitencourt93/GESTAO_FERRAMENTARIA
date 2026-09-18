@@ -240,15 +240,17 @@ function ProcessosPeca() {
                 <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500' }}>Tempo Alvo:</span>
                 <span>
                     Tempo Alvo: {
-                      !processo.tempo_planejado_min || processo.tempo_planejado_min === 0 
+                      !processoSelecionado.tempo_planejado_min || processoSelecionado.tempo_planejado_min === 0 
                         ? 'Não definido' 
-                        : processo.tempo_planejado_min >= 60 
-                          ? processo.tempo_planejado_min % 60 === 0 
-                            ? `${Math.floor(processo.tempo_planejado_min / 60)} Horas` 
-                            : `${Math.floor(processo.tempo_planejado_min / 60)}h ${processo.tempo_planejado_min % 60}m`
-                          : `${processo.tempo_planejado_min} Minutos`
+                        : processoSelecionado.tempo_planejado_min >= 60 
+                          ? processoSelecionado.tempo_planejado_min % 60 === 0 
+                            ? `${Math.floor(processoSelecionado.tempo_planejado_min / 60)} Horas` 
+                            : `${Math.floor(processoSelecionado.tempo_planejado_min / 60)}h ${processoSelecionado.tempo_planejado_min % 60}m`
+                          : `${processoSelecionado.tempo_planejado_min} Minutos`
                     }
                 </span>
+              </div>
+            
               </div>
             </div>
 
@@ -289,7 +291,7 @@ function ProcessosPeca() {
               {tipoAcao === 'iniciar' ? 'Confirmar Início' : tipoAcao === 'finalizar-100' ? 'Confirmar 100%' : 'Encerrar Tarefa'}
             </button>
           </div>
-        </div>
+        
       )}
 
       {/* MENU INFERIOR PADRONIZADO COM 4 BOTÕES */}
