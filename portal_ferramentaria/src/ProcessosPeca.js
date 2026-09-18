@@ -238,7 +238,17 @@ function ProcessosPeca() {
               <p style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#111827', fontWeight: '600' }}>{processoSelecionado?.nome_operacao}</p>
               <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '13px', color: '#4B5563', fontWeight: '500' }}>Tempo Alvo:</span>
-                <span style={{ fontSize: '14px', color: '#007A33', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={16} /> {formatarTempoAlvo(processoSelecionado.tempo_planejado_min)} min</span>
+                <span>
+                    Tempo Alvo: {
+                      !processo.tempo_planejado_min || processo.tempo_planejado_min === 0 
+                        ? 'Não definido' 
+                        : processo.tempo_planejado_min >= 60 
+                          ? processo.tempo_planejado_min % 60 === 0 
+                            ? `${Math.floor(processo.tempo_planejado_min / 60)} Horas` 
+                            : `${Math.floor(processo.tempo_planejado_min / 60)}h ${processo.tempo_planejado_min % 60}m`
+                          : `${processo.tempo_planejado_min} Minutos`
+                    }
+                </span>
               </div>
             </div>
 
