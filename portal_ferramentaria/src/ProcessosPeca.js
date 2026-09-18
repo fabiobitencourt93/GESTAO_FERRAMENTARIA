@@ -55,71 +55,65 @@
       setModalAberto(true);
     };
 
-    const confirmarAcao = async () => {
-      if (!operadorId) return alert("Digite o ID do Aluno (Crachá)!");
-      
+    const confirmarAcao = async (e) => {
+    // ISSO É A SALVAÇÃO: Impede a tela de piscar e cancelar o envio da pausa!
+    if (e) e.preventDefault(); 
+
+    if (!operadorId) return alert("Digite o ID do Aluno (Crachá)!");
+    
+    setCarregandoAcao(true);
+
+    try {
       // ==========================================
       // AÇÃO 1: INICIAR OPERAÇÃO
       // ==========================================
       if (tipoAcao === 'iniciar') {
-        try {
-          await axios.post('https://gestao-ferramentaria.onrender.com/api/apontamentos/iniciar', {
-            processo_id: processoSelecionado.id, 
-            operador_id: operadorId
-          });
-          fecharModal();
-          carregarProcessos(); 
-          alert('▶️ Operação iniciada com sucesso!');
-        } catch (error) {
-          alert('❌ Erro ao iniciar. Verifique se o ID deste aluno está cadastrado.');
-        }
+        await axios.post('https://gestao-ferramentaria.onrender.com/api/apontamentos/iniciar', {
+          processo_id: processoSelecionado.id, 
+          operador_id: operadorId
+        });
+        alert('▶️ Operação iniciada com sucesso!');
       } 
       // ==========================================
-      // AÇÃO 2: PAUSAR (PARCIAL)
+      // AÇÃO 2: PAUSAR / PARAR O PROCESSO (O que você quer)
       // ==========================================
       else if (tipoAcao === 'finalizar') {
-        try {
-          await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
-            processo_id: processoSelecionado.id, 
-            operador_id: operadorId,
-            ocorrencia: ocorrencia
-          });
-          fecharModal();
-          carregarProcessos(); 
-          alert('⏱️ Operação pausada com sucesso!');
-        } catch (error) {
-          alert('❌ ACESSO NEGADO: O número do crachá está incorreto ou a operação não está aberta.');
-        }
+        await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
+          processo_id: processoSelecionado.id, 
+          operador_id: operadorId,
+          ocorrencia: ocorrencia
+        });
+        alert('⏱️ Operação pausada com sucesso!');
       }
       // ==========================================
       // AÇÃO 3: CONCLUIR 100%
       // ==========================================
       else if (tipoAcao === 'finalizar-100') {
         const certeza = window.confirm("ATENÇÃO: Você está marcando esta operação como 100% CONCLUÍDA. Confirma esta ação?");
-        if (!certeza) return; 
-
-        try {
-          await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar-100', {
-            processo_id: processoSelecionado.id, 
-            operador_id: operadorId,
-            ocorrencia: ocorrencia
-          });
-          
-          // MÁGICA VISUAL AQUI: Altera o status da operação na mesma hora no Front-end
-          setProcessos(processosAnteriores => 
-            processosAnteriores.map(proc => 
-              proc.id === processoSelecionado.id ? { ...proc, concluido: true, data_hora_inicio: null } : proc
-            )
-          );
-
-          fecharModal();
-          // Não precisamos mais do carregarProcessos() aqui porque a tela já se atualizou lindamente!
-          alert('✅ Sucesso! Operação concluída em 100%!');
-        } catch (error) {
-          alert('❌ ACESSO NEGADO: O número do crachá está incorreto ou a operação não está aberta.');
+        if (!certeza) {
+          setCarregandoAcao(false);
+          return; 
         }
+
+        await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar-100', {
+          processo_id: processoSelecionado.id, 
+          operador_id: operadorId,
+          ocorrencia: ocorrencia
+        });
+        alert('✅ Sucesso! Operação concluída em 100%!');
       }
-    };
+
+      // Fecha o modal, limpa os campos e RECARREGA A TELA para travar o cronômetro!
+      fecharModal();
+      carregarProcessos(); 
+
+    } catch (error) {
+      console.error(error);
+      alert('❌ ACESSO NEGADO: O número do crachá está incorreto ou a operação não está aberta para este crachá.');
+    } finally {
+      setCarregandoAcao(false);
+    }
+  };
 
     const fecharModal = () => {
       setModalAberto(false);
