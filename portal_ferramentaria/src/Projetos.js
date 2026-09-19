@@ -53,6 +53,16 @@ function Projetos() {
     }
   };
 
+
+  const total = parseInt(projetos.total_processos) || 0;
+  const concluidos = parseInt(projetos.processos_concluidos) || 0;
+  const percentagem = total > 0 ? Math.round((concluidos / total) * 100) : 0;
+
+
+
+
+
+
   const handleAlterarStatus = async (id, novoStatus, e) => {
     e.stopPropagation(); 
     if (!window.confirm(`Deseja ${novoStatus === 'Concluído' ? 'concluir' : 'reabrir'} este projeto?`)) return;
@@ -190,11 +200,41 @@ function Projetos() {
         
         {/* LISTA DE PROJETOS */}
         {projetos.map((proj) => (
+          
+          
           <div 
             key={proj.projeto_id} 
             onClick={() => navigate(`/estampo/${proj.estampo_id}`)}
             style={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}
           >
+            {/* BARRA DE PROGRESSO */}
+      <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '12px', fontWeight: '700', color: '#6B7280' }}>
+            Progresso de Fabricação
+          </span>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: percentagem === 100 ? '#059669' : '#2563EB' }}>
+            {percentagem}%
+          </span>
+        </div>
+        
+        <div style={{ width: '100%', backgroundColor: '#E5E7EB', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
+          <div style={{ 
+            width: `${percentagem}%`, 
+            backgroundColor: percentagem === 100 ? '#10B981' : '#3B82F6', 
+            height: '100%', 
+            borderRadius: '999px',
+            transition: 'width 0.8s ease-in-out'
+          }}></div>
+        </div>
+        
+        <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#9CA3AF', textAlign: 'right', fontWeight: '500' }}>
+          {concluidos} de {total} operações finalizadas
+        </p>
+      </div>
+
+
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               
               {/* === INÍCIO DA ÁREA DA IMAGEM + TÍTULOS === */}

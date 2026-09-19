@@ -17,7 +17,7 @@ function Ajustes() {
   const [erroSenha, setErroSenha] = useState(false);
   const [carregandoLogin, setCarregandoLogin] = useState(false);
   const [telaAtual, setTelaAtual] = useState('menu'); 
-  
+  const [termoPesquisa, setTermoPesquisa] = useState('');
   // ==========================================
   // 2. ESTADOS: TURMAS / SEMESTRES 
   // ==========================================
@@ -919,113 +919,145 @@ const baixarRelatorioEstoque = async () => {
 
 
               {/* LISTAGEM DE ESTOQUE */}
+{/* LISTAGEM DE ESTOQUE */}
 <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
-  <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#111827', fontWeight: '700' }}>Materiais na Prateleira</h3>
+  
+  {/* CABEÇALHO COM TÍTULO E BARRA DE PESQUISA */}
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+    <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>
+      Materiais na Prateleira
+    </h3>
+    
+    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '8px 16px', width: '100%', maxWidth: '320px' }}>
+      <span style={{ fontSize: '16px', marginRight: '8px' }}>🔍</span>
+      <input 
+        type="text" 
+        placeholder="Pesquisar por nome ou código..." 
+        value={termoPesquisa}
+        onChange={(e) => setTermoPesquisa(e.target.value)}
+        style={{ border: 'none', backgroundColor: 'transparent', width: '100%', fontSize: '14px', outline: 'none', color: '#374151' }}
+      />
+    </div>
+  </div>
   
   {carregandoEstoque ? (
-    <p style={{ color: '#6B7280', textAlign: 'center' }}>Buscando gavetas...</p>
+    <p style={{ color: '#6B7280', textAlign: 'center', padding: '24px 0' }}>Buscando gavetas...</p>
   ) : estoque.length === 0 ? (
-    <p style={{ color: '#6B7280', textAlign: 'center' }}>O estoque está vazio.</p>
+    <p style={{ color: '#6B7280', textAlign: 'center', padding: '24px 0' }}>O estoque está vazio.</p>
   ) : (
     
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '16px' }}>
       
-      {estoque.map(item => {
-        const qtAtual = Number(item.quantidade_atual);
-        const qtMinima = Number(item.estoque_minimo);
-        const semEstoque = qtAtual <= 0;
+      {/* LÓGICA DE FILTRAGEM INTEGRADA */}
+      {(() => {
+        const estoqueFiltrado = estoque.filter(item => {
+          const termo = termoPesquisa.toLowerCase();
+          const descricaoMatch = item.descricao && item.descricao.toLowerCase().includes(termo);
+          const codigoMatch = item.codigo_interno && item.codigo_interno.toLowerCase().includes(termo);
+          return descricaoMatch || codigoMatch;
+        });
 
-        return (
-          <div
-            key={item.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              backgroundColor: '#F8FAFC',
-              border: '1px solid #E5E7EB',
-              borderRadius: '12px',
-              padding: '16px 24px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-              width: '100%',
-              boxSizing: 'border-box'
-            }}
-          >
-            {/* 1. INFORMAÇÕES DA PEÇA (Esquerda) */}
-            <div style={{ flex: '1', minWidth: '250px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  {item.categoria}
-                </span>
-                <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
-                  {item.codigo_interno ? `• ${item.codigo_interno}` : '• S/N'}
-                </span>
-              </div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>
-                {item.descricao}
-              </h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
-                {item.especificacao || 'Sem especificação'}
-              </p>
-            </div>
+        if (estoqueFiltrado.length === 0) {
+          return <p style={{ color: '#6B7280', textAlign: 'center', padding: '24px 0' }}>Nenhum material encontrado para "{termoPesquisa}".</p>;
+        }
 
-            {/* 2. ESTOQUE (Meio) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '32px', backgroundColor: '#FFFFFF', padding: '12px 24px', borderRadius: '8px', border: '1px solid #F3F4F6', marginRight: '24px' }}>
-              <div>
-                <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Em Estoque</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: '800', color: semEstoque ? '#DC2626' : '#111827' }}>
-                    {qtAtual}
+        return estoqueFiltrado.map(item => {
+          const qtAtual = Number(item.quantidade_atual);
+          const qtMinima = Number(item.estoque_minimo);
+          const semEstoque = qtAtual <= 0;
+
+          return (
+            <div
+              key={item.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E5E7EB',
+                borderRadius: '12px',
+                padding: '16px 24px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            >
+              {/* 1. INFORMAÇÕES DA PEÇA (Esquerda) */}
+              <div style={{ flex: '1', minWidth: '250px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {item.categoria}
                   </span>
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#6B7280' }}>Unid</span>
+                  <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
+                    {item.codigo_interno ? `• ${item.codigo_interno}` : '• S/N'}
+                  </span>
+                </div>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>
+                  {item.descricao}
+                </h4>
+                <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
+                  {item.especificacao || 'Sem especificação'}
+                </p>
+              </div>
+
+              {/* 2. ESTOQUE (Meio) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '32px', backgroundColor: '#FFFFFF', padding: '12px 24px', borderRadius: '8px', border: '1px solid #F3F4F6', marginRight: '24px' }}>
+                <div>
+                  <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Em Estoque</span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    <span style={{ fontSize: '20px', fontWeight: '800', color: semEstoque ? '#DC2626' : '#111827' }}>
+                      {qtAtual}
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#6B7280' }}>Unid</span>
+                  </div>
+                </div>
+                
+                <div style={{ width: '1px', height: '32px', backgroundColor: '#E5E7EB' }}></div>
+                
+                <div>
+                  <span style={{ display: 'block', fontSize: '11px', color: '#9CA3AF', marginBottom: '4px' }}>Mínimo ideal</span>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#4B5563' }}>{qtMinima}</span>
                 </div>
               </div>
-              
-              <div style={{ width: '1px', height: '32px', backgroundColor: '#E5E7EB' }}></div>
-              
-              <div>
-                <span style={{ display: 'block', fontSize: '11px', color: '#9CA3AF', marginBottom: '4px' }}>Mínimo ideal</span>
-                <span style={{ fontSize: '14px', fontWeight: '700', color: '#4B5563' }}>{qtMinima}</span>
-              </div>
-            </div>
 
-            {/* 3. BOTÕES DE AÇÃO E EDIÇÃO (Direita) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button
-                onClick={() => abrirPainelMovimentacao(item, 'Entrada')}
-                style={{ backgroundColor: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <PlusCircle size={16}/> Entrada
-              </button>
-              
-              <button
-                onClick={() => abrirPainelMovimentacao(item, 'Saída')}
-                style={{ backgroundColor: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <MinusCircle size={16}/> Saída
-              </button>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderLeft: '1px solid #E5E7EB', paddingLeft: '12px', marginLeft: '4px' }}>
+              {/* 3. BOTÕES DE AÇÃO E EDIÇÃO (Direita) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <button
-                  onClick={() => prepararEdicaoEstoque(item)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EA580C', padding: '8px', borderRadius: '6px' }}
-                  title="Editar"
+                  onClick={() => abrirPainelMovimentacao(item, 'Entrada')}
+                  style={{ backgroundColor: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <Edit2 size={18} />
+                  <PlusCircle size={16}/> Entrada
                 </button>
                 
                 <button
-                  onClick={() => deletarItemEstoque(item.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', padding: '8px', borderRadius: '6px' }}
-                  title="Apagar"
+                  onClick={() => abrirPainelMovimentacao(item, 'Saída')}
+                  style={{ backgroundColor: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  <Trash2 size={18} />
+                  <MinusCircle size={16}/> Saída
                 </button>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderLeft: '1px solid #E5E7EB', paddingLeft: '12px', marginLeft: '4px' }}>
+                  <button
+                    onClick={() => prepararEdicaoEstoque(item)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EA580C', padding: '8px', borderRadius: '6px' }}
+                    title="Editar"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                  
+                  <button
+                    onClick={() => deletarItemEstoque(item.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', padding: '8px', borderRadius: '6px' }}
+                    title="Apagar"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        });
+      })()}
       
     </div>
   )}
