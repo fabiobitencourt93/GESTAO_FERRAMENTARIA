@@ -53,16 +53,6 @@ function Projetos() {
     }
   };
 
-
-  const total = parseInt(projetos.total_processos) || 0;
-  const concluidos = parseInt(projetos.processos_concluidos) || 0;
-  const percentagem = total > 0 ? Math.round((concluidos / total) * 100) : 0;
-
-
-
-
-
-
   const handleAlterarStatus = async (id, novoStatus, e) => {
     e.stopPropagation(); 
     if (!window.confirm(`Deseja ${novoStatus === 'Concluído' ? 'concluir' : 'reabrir'} este projeto?`)) return;
@@ -91,7 +81,6 @@ function Projetos() {
   // ==========================================
   const buscarProcessoLimpeza = async () => {
     try {
-      // 1. Busca o projeto que contenha "5S" ou "Limpeza" no nome
       const resProj = await axios.get('https://gestao-ferramentaria.onrender.com/api/projetos');
       const projetoLimpeza = resProj.data.find(p => p.projeto.toLowerCase().includes('5s') || p.projeto.toLowerCase().includes('limpeza') || p.projeto.toLowerCase().includes('rotina'));
       
@@ -100,7 +89,6 @@ function Projetos() {
         return null;
       }
 
-      // 2. Busca o ID do processo genérico de limpeza dentro desse projeto
       const resEng = await axios.get(`https://gestao-ferramentaria.onrender.com/api/projetos/${projetoLimpeza.projeto_id}/engenharia`);
       const pecas = resEng.data;
       if (pecas.length === 0 || !pecas[0].processos || pecas[0].processos.length === 0) {
@@ -108,7 +96,7 @@ function Projetos() {
         return null;
       }
 
-      return pecas[0].processos[0].id; // Retorna o ID da operação de Limpeza
+      return pecas[0].processos[0].id; 
     } catch (error) {
       alert("Erro ao se comunicar com o banco de dados.");
       return null;
@@ -132,7 +120,6 @@ function Projetos() {
         });
         alert("✅ Bom trabalho! Seu tempo de Organização/Limpeza começou a rodar.");
       } else {
-        // Usamos o 'finalizar' normal (parcial) em vez de 100%, para que a tarefa possa ser usada infinitamente!
         await axios.put('https://gestao-ferramentaria.onrender.com/api/apontamentos/finalizar', {
           processo_id: processoId, operador_id: idAlunoLimpeza, ocorrencia: "Apontamento Rápido de 5S / Limpeza Concluído"
         });
@@ -199,86 +186,94 @@ function Projetos() {
         {mensagemSucesso && <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #22C55E', padding: '16px', borderRadius: '12px', marginBottom: '20px', color: '#166534', fontWeight: '600' }}>{mensagemSucesso}</div>}
         
         {/* LISTA DE PROJETOS */}
-        {projetos.map((proj) => (
+        {projetos.map((proj) => {
           
-          
-          <div 
-            key={proj.projeto_id} 
-            onClick={() => navigate(`/estampo/${proj.estampo_id}`)}
-            style={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}
-          >
-            {/* BARRA DE PROGRESSO */}
-      <div style={{ marginTop: '16px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: '#6B7280' }}>
-            Progresso de Fabricação
-          </span>
-          <span style={{ fontSize: '13px', fontWeight: '800', color: percentagem === 100 ? '#059669' : '#2563EB' }}>
-            {percentagem}%
-          </span>
-        </div>
-        
-        <div style={{ width: '100%', backgroundColor: '#E5E7EB', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
-          <div style={{ 
-            width: `${percentagem}%`, 
-            backgroundColor: percentagem === 100 ? '#10B981' : '#3B82F6', 
-            height: '100%', 
-            borderRadius: '999px',
-            transition: 'width 0.8s ease-in-out'
-          }}></div>
-        </div>
-        
-        <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#9CA3AF', textAlign: 'right', fontWeight: '500' }}>
-          {concluidos} de {total} operações finalizadas
-        </p>
-      </div>
+          // O CÁLCULO DEVE FICAR AQUI DENTRO DO MAP! 
+          const total = Number(proj.total_processos) || 0;
+          const concluidos = Number(proj.processos_concluidos) || 0;
+          let percentagem = 0;
+          if (total > 0) {
+              percentagem = Math.round((concluidos / total) * 100);
+              if (percentagem > 100) percentagem = 100;
+              if (percentagem < 0) percentagem = 0;
+          }
 
-
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          return (
+            <div 
+              key={proj.projeto_id} 
+              onClick={() => navigate(`/estampo/${proj.estampo_id}`)}
+              style={{ cursor: 'pointer', backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '16px', padding: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', transition: 'all 0.2s ease' }}
+            >
               
-              {/* === INÍCIO DA ÁREA DA IMAGEM + TÍTULOS === */}
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 
-                {/* MINIATURA DA IMAGEM */}
-                {proj.imagem ? (
-                  <img src={proj.imagem} alt="Referência" style={{ width: '120px', height: '120px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E5E7EB', flexShrink: 0 }} />
-                ) : (
-                  <div style={{ width: '120px', height: '120px', borderRadius: '8px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #D1D5DB', flexShrink: 0 }}>
-                    <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' }}>Sem Foto</span>
-                  </div>
-                )}
+                {/* === INÍCIO DA ÁREA DA IMAGEM + TÍTULOS === */}
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  
+                  {/* MINIATURA DA IMAGEM */}
+                  {proj.imagem ? (
+                    <img src={proj.imagem} alt="Referência" style={{ width: '120px', height: '120px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E5E7EB', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: '120px', height: '120px', borderRadius: '8px', backgroundColor: '#F9FAFB', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed #D1D5DB', flexShrink: 0 }}>
+                      <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' }}>Sem Foto</span>
+                    </div>
+                  )}
 
-                {/* TEXTOS (NOME, BADGES E SUBTÍTULO) */}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                    <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
-                    <span style={{ backgroundColor: proj.status === 'Concluído' ? '#DCFCE7' : proj.status === 'Em Execução' ? '#DBEAFE' : '#FEF9C3', color: proj.status === 'Concluído' ? '#166534' : proj.status === 'Em Execução' ? '#1D4ED8' : '#A16207', padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{proj.status}</span>
-                    <span style={{ backgroundColor: '#F3F4F6', color: '#4B5563', padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{proj.tipo || 'TIPO NÃO DEFINIDO'}</span>
+                  {/* TEXTOS (NOME, BADGES E SUBTÍTULO) */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                      <h3 style={{ margin: 0, fontSize: '18px', color: '#111827', fontWeight: '700' }}>{proj.projeto}</h3>
+                      <span style={{ backgroundColor: proj.status === 'Concluído' ? '#DCFCE7' : proj.status === 'Em Execução' ? '#DBEAFE' : '#FEF9C3', color: proj.status === 'Concluído' ? '#166534' : proj.status === 'Em Execução' ? '#1D4ED8' : '#A16207', padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{proj.status}</span>
+                      <span style={{ backgroundColor: '#F3F4F6', color: '#4B5563', padding: '4px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{proj.tipo || 'TIPO NÃO DEFINIDO'}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>ID do Projeto: {proj.projeto_id} | Estampo: {proj.estampo} (ID: {proj.estampo_id})</p>
                   </div>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>ID do Projeto: {proj.projeto_id} | Estampo: {proj.estampo} (ID: {proj.estampo_id})</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                   {proj.status === 'Concluído' ? (
+                     <button onClick={(e) => handleAlterarStatus(proj.projeto_id, 'Em Execução', e)} title="Reabrir Projeto" style={{ background: 'none', border: 'none', color: '#D97706', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}><Undo2 size={24} /></button>
+                   ) : (
+                     <button onClick={(e) => handleAlterarStatus(proj.projeto_id, 'Concluído', e)} title="Marcar como Concluído" style={{ background: 'none', border: 'none', color: '#16A34A', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}><CheckCircle2 size={24} /></button>
+                   )}
+                   <button onClick={(e) => handleDeletar(proj.projeto_id, e)} title="Apagar Projeto" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}><Trash2 size={24} /></button>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px' }}>
-                 {proj.status === 'Concluído' ? (
-                   <button onClick={(e) => handleAlterarStatus(proj.projeto_id, 'Em Execução', e)} title="Reabrir Projeto" style={{ background: 'none', border: 'none', color: '#D97706', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}><Undo2 size={24} /></button>
-                 ) : (
-                   <button onClick={(e) => handleAlterarStatus(proj.projeto_id, 'Concluído', e)} title="Marcar como Concluído" style={{ background: 'none', border: 'none', color: '#16A34A', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}><CheckCircle2 size={24} /></button>
-                 )}
-                 <button onClick={(e) => handleDeletar(proj.projeto_id, e)} title="Apagar Projeto" style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}><Trash2 size={24} /></button>
+              {/* BARRA DE PROGRESSO NO MEIO */}
+              <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#6B7280' }}>
+                    Progresso de Fabricação
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: percentagem === 100 ? '#059669' : '#2563EB' }}>
+                    {percentagem}%
+                  </span>
+                </div>
+                
+                <div style={{ width: '100%', backgroundColor: '#E5E7EB', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${percentagem}%`, 
+                    backgroundColor: percentagem === 100 ? '#10B981' : '#3B82F6', 
+                    height: '100%', 
+                    borderRadius: '999px',
+                    transition: 'width 0.8s ease-in-out'
+                  }}></div>
+                </div>
+                
+                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#9CA3AF', textAlign: 'right', fontWeight: '500' }}>
+                  {concluidos} de {total} operações finalizadas
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '8px', border: '1px solid #F3F4F6' }}>
+                <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Início Planejado</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_inicio || 'Não informado'}</span></div>
+                <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Previsão de Fim</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_fim || 'Não informado'}</span></div>
+                <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Conclusão Real</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_conclusao || 'Aguardando conclusão'}</span></div>
               </div>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px', backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '8px', border: '1px solid #F3F4F6' }}>
-              <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Início Planejado</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_inicio || 'Não informado'}</span></div>
-              <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Previsão de Fim</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_fim || 'Não informado'}</span></div>
-              <div><span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Conclusão Real</span><span style={{ fontSize: '14px', color: '#111827', fontWeight: '600' }}>{proj.data_conclusao || 'Aguardando conclusão'}</span></div>
-            </div>
-          </div>
-      
-      
-        ))}
+          );
+        })}
 
       </div>  
 
