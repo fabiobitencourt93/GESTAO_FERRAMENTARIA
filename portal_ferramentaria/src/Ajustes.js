@@ -865,7 +865,7 @@ const baixarRelatorioEstoque = async () => {
           {/* TELA DE ESTOQUE (NOVO)                         */}
           {/* ============================================== */}
           {telaAtual === 'estoque' && (
-            <div style={{ maxWidth: '900px', margin: '0 auto', marginTop: '10px' }}>
+            <div style={{ maxWidth: '100%', margin: '0 auto', marginTop: '10px' }}>
               
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
                  <button onClick={baixarRelatorioEstoque} style={{ backgroundColor: '#10B981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -917,60 +917,119 @@ const baixarRelatorioEstoque = async () => {
                 </form>
               </div>
 
+
               {/* LISTAGEM DE ESTOQUE */}
-              <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#111827' }}>Materiais na Prateleira</h3>
-                {carregandoEstoque ? (
-                  <p style={{ color: '#6B7280', textAlign: 'center' }}>Buscando gavetas...</p>
-                ) : estoque.length === 0 ? (
-                  <p style={{ color: '#6B7280', textAlign: 'center' }}>O estoque está vazio.</p>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                    {estoque.map(item => {
-                      const qtAtual = Number(item.quantidade_atual);
-                      const qtMinima = Number(item.estoque_minimo);
-                      const emAlerta = qtAtual <= qtMinima && qtMinima > 0;
-                      const semEstoque = qtAtual <= 0;
+<div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', border: '1px solid #F3F4F6' }}>
+  <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#111827', fontWeight: '700' }}>Materiais na Prateleira</h3>
+  
+  {carregandoEstoque ? (
+    <p style={{ color: '#6B7280', textAlign: 'center' }}>Buscando gavetas...</p>
+  ) : estoque.length === 0 ? (
+    <p style={{ color: '#6B7280', textAlign: 'center' }}>O estoque está vazio.</p>
+  ) : (
+    
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '16px' }}>
+      
+      {estoque.map(item => {
+        const qtAtual = Number(item.quantidade_atual);
+        const qtMinima = Number(item.estoque_minimo);
+        const semEstoque = qtAtual <= 0;
 
-                      return (
-                        <div key={item.id} style={{ padding: '16px', backgroundColor: semEstoque ? '#FEF2F2' : emAlerta ? '#FFFBEB' : '#F9FAFB', borderRadius: '12px', border: `1px solid ${semEstoque ? '#FCA5A5' : emAlerta ? '#FDE047' : '#E5E7EB'}`, display: 'flex', flexDirection: 'column' }}>
-                          
-                          {/* CABEÇALHO COM BOTÕES DE EDIÇÃO */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                            <div>
-                              <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' }}>{item.categoria}</span>
-                              <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{item.codigo_interno || 'S/N'}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <button onClick={() => prepararEdicaoEstoque(item)} style={{ background: 'none', border: 'none', color: '#EA580C', cursor: 'pointer', padding: '0' }} title="Editar"><Edit2 size={16} /></button>
-                              <button onClick={() => deletarItemEstoque(item.id)} style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '0' }} title="Apagar"><Trash2 size={16} /></button>
-                            </div>
-                          </div>
-                          
-                          <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: '#111827', fontWeight: '700' }}>{item.descricao}</h4>
-                          <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#6B7280', minHeight: '38px' }}>{item.especificacao || 'Sem especificação'}</p>
-                          
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', marginBottom: '16px', padding: '12px', backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #F3F4F6' }}>
-                            <div>
-                              <span style={{ display: 'block', fontSize: '11px', color: '#6B7280' }}>Em Estoque</span>
-                              <span style={{ fontSize: '20px', fontWeight: '800', color: semEstoque ? '#DC2626' : '#111827' }}>{qtAtual} <span style={{ fontSize: '12px', fontWeight: '500' }}>Unid</span></span>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <span style={{ display: 'block', fontSize: '11px', color: '#6B7280' }}>Mínimo ideal</span>
-                              <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>{qtMinima}</span>
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <button onClick={() => abrirPainelMovimentacao(item, 'Entrada')} style={{ flex: 1, padding: '10px', backgroundColor: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}><PlusCircle size={16}/> Entrada</button>
-                            <button onClick={() => abrirPainelMovimentacao(item, 'Saída')} style={{ flex: 1, padding: '10px', backgroundColor: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px' }}><MinusCircle size={16}/> Saída</button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
+        return (
+          <div
+            key={item.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E5E7EB',
+              borderRadius: '12px',
+              padding: '16px 24px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+              width: '100%',
+              boxSizing: 'border-box'
+            }}
+          >
+            {/* 1. INFORMAÇÕES DA PEÇA (Esquerda) */}
+            <div style={{ flex: '1', minWidth: '250px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {item.categoria}
+                </span>
+                <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
+                  {item.codigo_interno ? `• ${item.codigo_interno}` : '• S/N'}
+                </span>
               </div>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>
+                {item.descricao}
+              </h4>
+              <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
+                {item.especificacao || 'Sem especificação'}
+              </p>
+            </div>
+
+            {/* 2. ESTOQUE (Meio) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '32px', backgroundColor: '#FFFFFF', padding: '12px 24px', borderRadius: '8px', border: '1px solid #F3F4F6', marginRight: '24px' }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>Em Estoque</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: '800', color: semEstoque ? '#DC2626' : '#111827' }}>
+                    {qtAtual}
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#6B7280' }}>Unid</span>
+                </div>
+              </div>
+              
+              <div style={{ width: '1px', height: '32px', backgroundColor: '#E5E7EB' }}></div>
+              
+              <div>
+                <span style={{ display: 'block', fontSize: '11px', color: '#9CA3AF', marginBottom: '4px' }}>Mínimo ideal</span>
+                <span style={{ fontSize: '14px', fontWeight: '700', color: '#4B5563' }}>{qtMinima}</span>
+              </div>
+            </div>
+
+            {/* 3. BOTÕES DE AÇÃO E EDIÇÃO (Direita) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button
+                onClick={() => abrirPainelMovimentacao(item, 'Entrada')}
+                style={{ backgroundColor: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <PlusCircle size={16}/> Entrada
+              </button>
+              
+              <button
+                onClick={() => abrirPainelMovimentacao(item, 'Saída')}
+                style={{ backgroundColor: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA', padding: '10px 16px', borderRadius: '8px', fontWeight: '600', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <MinusCircle size={16}/> Saída
+              </button>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderLeft: '1px solid #E5E7EB', paddingLeft: '12px', marginLeft: '4px' }}>
+                <button
+                  onClick={() => prepararEdicaoEstoque(item)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EA580C', padding: '8px', borderRadius: '6px' }}
+                  title="Editar"
+                >
+                  <Edit2 size={18} />
+                </button>
+                
+                <button
+                  onClick={() => deletarItemEstoque(item.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', padding: '8px', borderRadius: '6px' }}
+                  title="Apagar"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      
+    </div>
+  )}
+</div>
             </div>
           )}
 
@@ -982,7 +1041,7 @@ const baixarRelatorioEstoque = async () => {
       {/* ============================================== */}
       {modalMovimentacao && itemMovimentacao && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(17, 24, 39, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
-          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: tipoMovimentacao === 'Entrada' ? '#166534' : '#991B1B', display: 'flex', alignItems: 'center', gap: '8px' }}>
