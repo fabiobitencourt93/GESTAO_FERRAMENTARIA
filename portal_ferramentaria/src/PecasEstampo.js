@@ -53,13 +53,10 @@ function PecasEstampo() {
   return (
     <div 
       key={peca.id} 
+      // RESTAURA A AÇÃO DE CLICAR (Altere o link abaixo para a sua rota real)
+      onClick={() => navigate(`/peca/${peca.id}/processos`)}
       style={{
-        // ==========================================
-        // A MÁGICA VISUAL DA BARRA DE PROGRESSO AQUI
-        // Pinta de verde claro (#ECFDF5) até à percentagem, e o resto fica branco (#FFFFFF)
-        // ==========================================
         background: `linear-gradient(to right, #ECFDF5 ${percentagem}%, #FFFFFF ${percentagem}%)`,
-        
         border: '1px solid #E5E7EB',
         borderRadius: '16px',
         padding: '20px',
@@ -68,24 +65,36 @@ function PecasEstampo() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        position: 'relative', // Importante para organizar os itens dentro
+        
+        // RESTAURA O MOUSE COMO MÃOZINHA PARA INDICAR QUE É CLICÁVEL
+        cursor: 'pointer', 
+        
+        // Efeito para escurecer de leve ao passar o mouse (dá mais cara de botão)
+        transition: 'all 0.2s ease',
       }}
+      // Um truquezinho em CSS inline para dar feedback ao passar o mouse
+      onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+      onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
     >
       <div>
         <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#111827' }}>
-          {peca.nome}
+          Pos. {peca.pos} - {peca.nome}
         </h3>
         <p style={{ margin: 0, fontSize: '13px', color: '#6B7280' }}>
           {concluidos} de {total} operações concluídas
         </p>
       </div>
 
-      {/* Exibe o selo de 100% se a peça estiver totalmente pronta */}
-      <div style={{ fontWeight: '800', fontSize: '15px', color: percentagem === 100 ? '#059669' : '#9CA3AF' }}>
-        {percentagem}%
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ fontWeight: '800', fontSize: '15px', color: percentagem === 100 ? '#059669' : '#9CA3AF' }}>
+          {percentagem}%
+        </div>
+        
+        {/* Um ícone de seta sutil para mostrar que o card vai para outra tela */}
+        <div style={{ color: '#D1D5DB' }}>
+          <ChevronRight size={20} />
+        </div>
       </div>
-      
-      {/* Aqui vão os seus botões de aceder ao roteiro, editar, etc. */}
     </div>
   );
 })}
