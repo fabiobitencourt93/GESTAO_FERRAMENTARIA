@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Bell, ArrowRight, LayoutGrid, BarChart2, Settings, Home, Monitor } from 'lucide-react';
+import { ChevronLeft, Bell, ChevronRight, LayoutGrid, BarChart2, Settings, Home, Monitor } from 'lucide-react';
 
 function PecasEstampo() {
   const { id } = useParams();
