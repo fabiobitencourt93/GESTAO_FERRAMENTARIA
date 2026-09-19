@@ -54,8 +54,8 @@ app.put('/api/turmas/:id/ativar', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-/// ==========================================
-// ROTA 1: Lista Geral de Projetos (COM CÁLCULO DE PROGRESSO)
+// ==========================================
+// ROTA 1: Lista Geral de Projetos (COM CÁLCULO BLINDADO DE PROGRESSO)
 // ==========================================
 app.get('/api/projetos', async (req, res) => {
     try {
@@ -68,19 +68,19 @@ app.get('/api/projetos', async (req, res) => {
                 TO_CHAR(p.data_conclusao, 'DD/MM/YYYY') AS data_conclusao,
                 e.nome AS estampo, e.id AS estampo_id, e.tipo AS tipo,
                 
-                -- CONTA TODAS AS OPERAÇÕES DE TODAS AS PEÇAS DESTE PROJETO
+                -- CONTA TODAS AS OPERAÇÕES (Total)
                 (SELECT COUNT(pr.id) 
                  FROM processos pr 
                  JOIN pecas pe ON pr.peca_id = pe.id 
                  JOIN estampos es ON pe.estampo_id = es.id 
                  WHERE es.projeto_id = p.id) AS total_processos,
                  
-                -- CONTA APENAS AS OPERAÇÕES CONCLUÍDAS DESTE PROJETO
+                -- CONTA APENAS AS CONCLUÍDAS (Ignorando letras maiúsculas e acentos)
                 (SELECT COUNT(pr.id) 
                  FROM processos pr 
                  JOIN pecas pe ON pr.peca_id = pe.id 
                  JOIN estampos es ON pe.estampo_id = es.id 
-                 WHERE es.projeto_id = p.id AND pr.status = 'Concluído') AS processos_concluidos
+                 WHERE es.projeto_id = p.id AND (pr.status = 'Concluído' OR pr.status = 'concluido')) AS processos_concluidos
 
             FROM projetos p
             LEFT JOIN estampos e ON p.id = e.projeto_id
